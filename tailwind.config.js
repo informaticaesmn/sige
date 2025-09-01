@@ -1,11 +1,17 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+
+const { fontFamily } = require('tailwindcss/defaultTheme')
+
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+    './index.html',
+    './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Open Sans', ...fontFamily.sans], // ← fuente global
+      },
+    },
   },
   plugins: [],
 }
