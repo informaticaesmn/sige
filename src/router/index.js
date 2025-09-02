@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth'
 import LoginE         from '@/views/LoginE.vue'
 import DashboardE    from '@/views/DashboardE.vue'
 import InscripcionesE from '@/views/InscripcionesE.vue'
-import OtrasFunciones from '../views/OtrasFunciones.vue'
+import OtrasFunciones from '@/views/OtrasFunciones.vue'
 
 
 const routes = [

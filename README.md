@@ -1,5 +1,14 @@
-# Vue 3 + Vite
+# RAC - ESMN
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+usando: 
+    Vue 3
+    Vite
+    Tailwindcss
+    VueRouter
+    GitHub Pages
+    Firebase Auth
+    Firebase Firestore
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+
+Esta es una primeraa implementación de para un pequeño sistema de [Gestion Educativa Interno de la Escuela Superior de Música de Neuquén] (https://informaticaesmn.github.io/rac/) 
+Desarrollado por personal de la escuela, para suplir la falta de gestion que ofrece el Consejo Provincial de Educación, institucion que debería proveernos de las herramientas de gestion necesaria, para una educación de nivel acorde a los tiempos que corren y con la tecnologia que implica.
