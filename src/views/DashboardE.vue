@@ -15,6 +15,10 @@
       Cerrar sesión
     </button>
   </div>
+  <main>
+    <h1 class="text-2xl font-bold mb-4">Dashboard Estudiante</h1>
+    <p>Contenido del dashboard para estudiantes. Aca tienen que ir sus datos personales</p>
+  </main>
 </template>
 
 <script setup>
@@ -31,3 +35,4 @@ const logout = async () => {
   router.push('/')
 }
 </script>
+

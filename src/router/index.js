@@ -3,9 +3,10 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { getAuth } from 'firebase/auth'
 
 import LoginE         from '@/views/LoginE.vue'
-import DashboardE    from '@/views/DashboardE.vue'
+import DashboardE     from '@/views/DashboardE.vue'
 import InscripcionesE from '@/views/InscripcionesE.vue'
 import OtrasFunciones from '@/views/OtrasFunciones.vue'
+import TableroE       from '@/views/TableroE.vue'  
 
 
 const routes = [
@@ -13,6 +14,7 @@ const routes = [
   { path: '/dashboard',     name: 'Dashboard',      component: DashboardE },
   { path: '/inscripciones', name: 'Inscripciones',  component: InscripcionesE },
   { path: '/otras',         name: 'OtrasFunciones', component: OtrasFunciones, meta: { requiresAuth: true } },
+  { path: '/tablero',       name: 'Tablero',        component: TableroE}
 ]
 
 const router = createRouter({

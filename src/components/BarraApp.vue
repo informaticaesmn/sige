@@ -17,16 +17,22 @@
     </button>
 
     <!-- Links desktop -->
-    <div class="hidden md:flex items-center space-x-6">
+    <div class="hidden md:flex items-center space-x-4">
       <router-link to="/dashboard" class="hover:bg-teal-500 px-3 py-3 transition">
         Dashboard
       </router-link>
       <router-link to="/inscripciones" class="hover:bg-teal-500 px-3 py-2 rounded transition">
         Inscripciones
       </router-link>
-      <router-link to="/otras" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
-          Otras Funciones
+      <router-link to="/otras" @click="menuOpen=false" class="hover:bg-teal-500 px-5 py-2 rounded transition">
+          Funciones
       </router-link>
+              <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
+          Tablero
+        </router-link>
+        <button @click="logout" class="w-full text-left hover:bg-red-600 px-3 py-2 rounded transition">
+          Cerrar sesión <i class="fas fa-sign-out-alt ml-2"></i>
+        </button> 
     </div>
 
     <!-- Menú móvil desplegable -->
@@ -41,6 +47,12 @@
         <router-link to="/otras" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
           Otras Funciones
         </router-link>
+        <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
+          Tablero
+        </router-link>
+        <button @click="logout" class="w-full text-left hover:bg-red-600 px-3 py-2 rounded transition">
+          Cerrar sesión <i class="fas fa-sign-out-alt ml-2"></i>
+        </button> 
       </div>
     </transition>
 
