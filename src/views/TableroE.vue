@@ -17,46 +17,40 @@
             
             <div class="space-y-3">
               <div class="flex items-center">
-                <i class="fas fa-envelope text-teal-600 mr-3"></i>
-                <span>juanperez@gmail.com</span>
+                <envelope-icon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+                <span class="px-2">juanperez@gmail.com</span>
               </div>
               <div class="flex items-center">
-                <i class="fas fa-id-card text-teal-600 mr-3"></i>
-                <span>DNI: 40123123</span>
+                <IdentificationIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+                <span class="px-2">DNI: 40123123</span>
               </div>
               <div class="flex items-center">
-                <i class="fas fa-user-graduate text-teal-600 mr-3"></i>
-                <span>Legajo: 40123123</span>
+                <AcademicCapIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+                <span class="px-2">Legajo: 40123123</span>
               </div>
               <div class="flex items-center">
-                <i class="fas fa-check-circle text-teal-600 mr-3"></i>
-                <span>Estado: Activo</span>
+                <PlayIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+                <span class="px-2">Estado: Activo</span>
               </div>
             </div>
             
             <button class="mt-6 w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">
-              <i class="fas fa-edit mr-2"></i>Editar Perfil
+              <PencilSquareIcon class="h-5 w-5 inline-block ml-2" /> 
+              <span class="px-2">Editar Perfil</span>
             </button>
           </div>
           
-          <!-- Tarjeta de Contacto -->
+          <!-- Acciones-->
           <div class="bg-white rounded-lg shadow-md p-6 card-hover transition-all duration-300">
-            <h3 class="text-lg font-bold mb-4 flex items-center text-stone-800">
-              <i class="fas fa-address-book text-teal-600 mr-2"></i> Contacto
-            </h3>
-            <div class="space-y-3">
-              <div class="flex items-center">
-                <i class="fas fa-phone text-teal-600 mr-3"></i>
-                <span>+54 11 2345-6789</span>
-              </div>
-              <div class="flex items-center">
-                <i class="fas fa-map-marker-alt text-teal-600 mr-3"></i>
-                <span>Av. Siempre Viva 742, Springfield</span>
-              </div>
-            </div>
+            <div class="flex items-center mb-4">
+            <WrenchIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <span class="text-lg font-bold flex items-center text-stone-800 px-2">Acciones</span></div>
             <button class="mt-4 w-full py-2 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
-              <i class="fas fa-comment-alt mr-2"></i>Enviar Mensaje
-            </button>
+              <FingerPrintIcon class="h-5 w-5 inline-block text-stone-400" /> Datos Personales</button>
+            <button  class="mt-4 w-full py-2 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
+              <ArchiveBoxIcon class="h-5 w-5 inline-block text-stone-400" /> Legajo</button>
+             <button class="mt-4 w-full py-2 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
+              <ChatBubbleLeftEllipsisIcon class="h-5 w-5 inline-block text-stone-400" /> Mensaje a Bedelia</button>
           </div>
         </div>
         
@@ -64,9 +58,9 @@
         <div class="lg:col-span-2">
           <!-- Planes de Estudio -->
           <div class="bg-white rounded-lg shadow-md p-6 mb-6 card-hover transition-all duration-300">
-            <h3 class="text-lg font-bold mb-4 flex items-center text-stone-800">
-              <i class="fas fa-bookmark text-teal-600 mr-2"></i> Planes de Estudio
-            </h3>
+             <div class="flex items-center mb-4">
+            <ChevronDoubleDownIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <span class="text-lg font-bold flex items-center text-stone-800 px-2">Planes de Estudio</span></div>
             
             <div class="overflow-x-auto">
               <table class="w-full">
@@ -93,7 +87,7 @@
                     </td>
                     <td class="p-3">
                       <button class="text-teal-600 hover:text-teal-800">
-                        <i class="fas fa-eye"></i>
+                        <EyeIcon class="h-5 w-5 inline-block" /> Detalle
                       </button>
                     </td>
                   </tr>
@@ -104,9 +98,9 @@
           
           <!-- Materias Aprobadas -->
           <div class="bg-white rounded-lg shadow-md p-6 card-hover transition-all duration-300">
-            <h3 class="text-lg font-bold mb-4 flex items-center text-stone-800">
-              <i class="fas fa-check-circle text-teal-600 mr-2"></i> Materias Aprobadas
-            </h3>
+              <div class="flex items-center mb-4">
+            <CheckCircleIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <span class="text-lg font-bold flex items-center text-stone-800 px-2">Materias Aprobadas</span></div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Materia -->
@@ -122,8 +116,8 @@
               </div>
             </div>
             
-            <button class="mt-4 w-full py-2 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
-              <i class="fas fa-list mr-2"></i>Ver todas las materias
+            <button class="mt-4 w-full py-3 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
+              <ListBulletIcon class="h-6 w-6 inline-block text-stone-400" /> Detalle del historial académico
             </button>
           </div>
         </div>
@@ -134,7 +128,7 @@
 </template>
 
 <script setup>
-
+  import { AcademicCapIcon, ArchiveBoxIcon, ChatBubbleLeftEllipsisIcon, CheckCircleIcon, ChevronDoubleDownIcon, EnvelopeIcon, EyeIcon, FingerPrintIcon, IdentificationIcon, ListBulletIcon, PencilSquareIcon, PlayIcon,  WrenchIcon } from '@heroicons/vue/24/outline';
 </script>
 
 <style scoped>

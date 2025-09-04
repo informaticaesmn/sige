@@ -8,7 +8,8 @@
 - GitHub Pages
 - Firebase Auth
 - Firebase Firestore
-- y ahora tambien Vercel
+- Heroicons
+- Vercel
 
 
 ## Porque estamos acá

@@ -1,7 +1,18 @@
 <!-- src/components/FooterApp.vue -->
 <template>
-  <footer class="bg-gray-700 text-white text-xs text-center py-3">
-    <p>--- Sistema en desarrollo ---</p>
-    <p>&copy; {{ new Date().getFullYear() }} Escuela Superior de Música de Neuquén</p>
+  <footer class="bg-gray-700 text-white text-xs text-center py-2">
+    <CodeBracketSquareIcon class="h-5 w-5 inline-block ml-2 text-teal-200"/>
+    <span>Sistema en desarrollo</span> |
+    <span> Versión <i>0.0.1</i></span> |
+    <span> <i>InformaticaESMN</i>  </span>
+    <CubeTransparentIcon class="h-5 w-5 inline-block ml-2 text-teal-200"/>
+    <div flex>
+    <span>&copy; {{ new Date().getFullYear() }} Escuela Superior de Música de Neuquén</span>
+    <AcademicCapIcon class="h-5 w-5 inline-block ml-2"/>  
+    </div>
   </footer>
 </template>
+<script setup>
+  import { CodeBracketSquareIcon } from '@heroicons/vue/16/solid';
+import { AcademicCapIcon, CodeBracketIcon, CubeTransparentIcon } from '@heroicons/vue/24/outline'
+</script>

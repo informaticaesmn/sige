@@ -8,17 +8,26 @@
     </router-link> -->
 
     <!-- Hamburguesa móvil -->
+    <!-- class="md:hidden text-white hover:text-teal-200 transition" -->
+    <!-- <button
+      @click="toggleMenu"
+      class="md:hidden bg-red text-white hover:text-teal-200 transition"
+      aria-label="Menú"
+    >
+     Men <i class="fas fa-bars text-xl"></i>
+    </button>
+ -->    <!-- Menú Mobile -->
     <button
       @click="toggleMenu"
       class="md:hidden text-white hover:text-teal-200 transition"
       aria-label="Menú"
     >
-      <i class="fas fa-bars text-xl"></i>
+      <Bars3Icon class="h-8 w-8" />
     </button>
 
     <!-- Links desktop -->
     <div class="hidden md:flex items-center space-x-4">
-      <router-link to="/dashboard" class="hover:bg-teal-500 px-3 py-3 transition">
+      <router-link to="/dashboard" class="hover:bg-teal-500 px-3 py-2 rounded transition">
         Dashboard
       </router-link>
       <router-link to="/inscripciones" class="hover:bg-teal-500 px-3 py-2 rounded transition">
@@ -30,9 +39,9 @@
               <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
           Tablero
         </router-link>
-        <button @click="logout" class="w-full text-left hover:bg-red-600 px-3 py-2 rounded transition">
-          Cerrar sesión <i class="fas fa-sign-out-alt ml-2"></i>
-        </button> 
+          <button @click="logout" class="w-full flex text-left hover:bg-red-600 px-3 py-2 rounded transition">
+            Salir <arrow-right-start-on-rectangle-icon class="h-6 w-6" />
+          </button> 
     </div>
 
     <!-- Menú móvil desplegable -->
@@ -50,9 +59,9 @@
         <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded transition">
           Tablero
         </router-link>
-        <button @click="logout" class="w-full text-left hover:bg-red-600 px-3 py-2 rounded transition">
-          Cerrar sesión <i class="fas fa-sign-out-alt ml-2"></i>
-        </button> 
+          <button @click="logout" class="w-full flex text-left hover:bg-red-600 px-3 py-2 rounded transition">
+              Salir <arrow-right-start-on-rectangle-icon class="h-6 w-6" />
+          </button> 
       </div>
     </transition>
 
@@ -74,6 +83,8 @@ import { useAuth } from '@/composables/useAuth'
 import { auth } from '@/config/firebase'
 import { signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
+import { Bars3Icon } from '@heroicons/vue/24/outline'
+import {ArrowRightStartOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const menuOpen = ref(false)
 
