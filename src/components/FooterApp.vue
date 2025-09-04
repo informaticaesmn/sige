@@ -14,5 +14,5 @@
 </template>
 <script setup>
   import { CodeBracketSquareIcon } from '@heroicons/vue/16/solid';
-import { AcademicCapIcon, CodeBracketIcon, CubeTransparentIcon } from '@heroicons/vue/24/outline'
+import { AcademicCapIcon, CubeTransparentIcon } from '@heroicons/vue/24/outline'
 </script>
