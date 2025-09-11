@@ -84,6 +84,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/config/firebase'
+import { vincularUsuario } from '@/scripts/vincular'
 
 const email    = ref('')
 const password = ref('')
@@ -98,6 +99,7 @@ const login = async () => {
   error.value   = ''
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value)
+    await vincularUsuario(auth.currentUser.uid, auth.currentUser.email)
     router.push('/dashboard')
   } catch (e) {
     error.value =
