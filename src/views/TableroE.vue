@@ -10,7 +10,7 @@
         <div class="lg:col-span-1">
           <div class="bg-white rounded-lg shadow-md p-6 mb-6 card-hover transition-all duration-300">
             <div class="flex flex-col items-center mb-4">
-              <img src="/logoesmn140.png" alt="Foto estudiante" class="w-24 h-24 rounded-full border-4 border-teal-500 mb-4">
+              <img src="/avatar.png" alt="Foto estudiante" class="w-24 h-24 rounded-full border-4 border-teal-500 mb-4">
               <h2 class="text-xl font-bold text-stone-800">Juan Perez</h2>
               <p class="text-stone-600">662- Profesorado de Música</p>
             </div>

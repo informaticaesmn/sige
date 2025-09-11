@@ -6,7 +6,7 @@
       <div class="max-w-4xl w-full grid md:grid-cols-3 bg-white rounded-xl shadow-2xl overflow-hidden">
         <!-- Panel izquierdo -->
         <div class="md:col-span-1 bg-teal-600 text-white flex flex-col items-center justify-center p-8">
-          <img src="/logoesmn140.png" alt="Logo ESMN" class="max-h-36 mb-4">
+          <img src="/avatar.png" alt="Logo ESMN" class="max-h-36 mb-4">
           <h1 class="text-2xl font-light">RAC - ESMN</h1>
           <p class="font-light text-sm text-center opacity-80 mt-1">Sistema interno de gestión educativa</p>
         </div>
