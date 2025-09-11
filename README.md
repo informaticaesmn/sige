@@ -28,4 +28,7 @@ Esta pequeña app. Esta pensada para ir sumando funcionalidades por etapas siend
 - Segunda etapa: que resuelva las inscripciones a cursados y empiece a ser repositorio de la trazabilidad de todos los procesos academicos de cada estudiante de la institución.
 - Tercera y demas etapas por ver... hay muchas ideas que plasmar.
 
+### Notas e Ideas
+> Hay un archivo con [notas e ideas](NOTAS.md) que se van generando en el equipo de trabajo reunido para pensar en este sistema 
+
 <br><br><br><p align="right"> <i>Genaro Villar   </i></p>

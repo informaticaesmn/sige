@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { getFirestore } from 'firebase/firestore/lite'
 import { getAuth } from 'firebase/auth'
 
 // Configuración pública (no secretos sensibles)
@@ -13,3 +14,4 @@ const firebaseConfig = {
 
 const app  = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+export const db   = getFirestore(app)

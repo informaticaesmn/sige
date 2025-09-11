@@ -1,12 +1,6 @@
-import 'dotenv/config'
 import { getAuth } from 'firebase/auth'
-import { getFirestore, doc, getDocs, setDoc, deleteDoc, collection, query, where } from 'firebase/firestore'
-import { initializeApp } from 'firebase/app'
-
-const firebaseConfig = { /* mismo que antes */ }
-const app = initializeApp(firebaseConfig)
-const auth = getAuth(app)
-const db = getFirestore(app)
+import { getFirestore, doc, getDocs, setDoc, deleteDoc, collection, query, where } from 'firebase/firestore/lite'
+import { auth, db } from '@/config/firebase.js'
 
 export async function vincularUsuario(uid, email) {
   // 1. buscar por email
