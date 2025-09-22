@@ -1,4 +1,4 @@
-import { getAuth } from 'firebase/auth'
+//import { getAuth } from 'firebase/auth'
 import { getFirestore, doc, getDocs, setDoc, deleteDoc, collection, query, where } from 'firebase/firestore/lite'
 import { auth, db } from '@/config/firebase.js'
 
@@ -8,6 +8,7 @@ export async function vincularUsuario(uid, email) {
   const snap = await getDocs(q)
 
   if (snap.empty) {
+    //ver de mostrar mensaje en UI
     console.log('❌ no existe estudiante con ese email')
     return
   }

@@ -2,14 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { getAuth } from 'firebase/auth'
 
 import LoginE         from '@/views/LoginE.vue'
+import LoginReg       from '@/views/LoginReg.vue'
 import DashboardE     from '@/views/DashboardE.vue'
 import InscripcionesE from '@/views/InscripcionesE.vue'
 import OtrasFunciones from '@/views/OtrasFunciones.vue'
 import TableroE       from '@/views/TableroE.vue'  
 
-
 const routes = [
   { path: '/',              name: 'Login',          component: LoginE },
+  { path: '/login',         name: 'LoginE',         component: LoginReg },
   { path: '/dashboard',     name: 'Dashboard',      component: DashboardE, meta: { requiresAuth: true } },
   { path: '/inscripciones', name: 'Inscripciones',  component: InscripcionesE, meta: { requiresAuth: true } },
   { path: '/otras',         name: 'OtrasFunciones', component: OtrasFunciones, meta: { requiresAuth: true } },
