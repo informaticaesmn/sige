@@ -24,6 +24,7 @@ for (const row of records) {
     nombre: row.nombre.trim(),
     apellido: row.apellido.trim(),
     email: row.email.trim().toLowerCase(),
+    rol: row.rol.trim().toLowerCase(),
     plan: row.plan.trim(),
     estado: 'pendiente_registro',
     materiasAprobadas: [],

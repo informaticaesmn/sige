@@ -1,20 +1,47 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getAuth } from 'firebase/auth'
 
-import LoginE         from '@/views/LoginE.vue'
-import LoginReg       from '@/views/LoginReg.vue'
-import DashboardE     from '@/views/DashboardE.vue'
-import InscripcionesE from '@/views/InscripcionesE.vue'
-import OtrasFunciones from '@/views/OtrasFunciones.vue'
-import TableroE       from '@/views/TableroE.vue'  
 
+// router/index.js
 const routes = [
-  { path: '/',              name: 'Login',          component: LoginE },
-  { path: '/login',         name: 'LoginE',         component: LoginReg },
-  { path: '/dashboard',     name: 'Dashboard',      component: DashboardE, meta: { requiresAuth: true } },
-  { path: '/inscripciones', name: 'Inscripciones',  component: InscripcionesE, meta: { requiresAuth: true } },
-  { path: '/otras',         name: 'OtrasFunciones', component: OtrasFunciones, meta: { requiresAuth: true } },
-  { path: '/tablero',       name: 'Tablero',        component: TableroE, meta: { requiresAuth: true } }
+  // LOGIN (sin layout)
+  { path: '/', name: 'Login', component: () => import('@/views/Login.vue') },
+
+  // SELECCIONAR ROL (sin layout)
+  { path: '/seleccionar-rol', 
+    name: 'SeleccionarRol', 
+    component: () => import('@/views/SeleccionarRol.vue') },
+  
+  // ESTUDIANTE
+  {
+    path: '/estudiante',
+    component: () => import('@/layouts/EstudianteLayout.vue'),
+    meta: { requiresAuth: true, role: 'student' },
+    children: [
+      { path: '', name: 'EstudianteTablero', component: () => import('@/views/TableroE.vue') },
+      { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/InscripcionesE.vue') }
+    ]
+  },
+
+  // ADMIN
+  {
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+    children: [
+      { path: '', name: 'AdminTablero', component: () => import('@/views/TableroA.vue') }
+    ]
+  },
+
+  // BEDEL
+  {
+    path: '/bedel',
+    component: () => import('@/layouts/BedelLayout.vue'),
+    meta: { requiresAuth: true, role: 'bedel' },
+    children: [
+      { path: '', name: 'BedelTablero', component: () => import('@/views/TableroB.vue') }
+    ]
+  }
 ]
 
 const router = createRouter({

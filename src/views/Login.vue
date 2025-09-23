@@ -6,15 +6,15 @@
         <!-- Panel izquierdo (sin cambios) -->
         <div class="md:col-span-1 bg-teal-600 text-white flex flex-col items-center justify-center p-8">
           <img src="/avatar.png" alt="Logo ESMN" class="max-h-36 mb-4">
-          <h1 class="text-2xl font-light">RAC - ESMN</h1>
-          <p class="font-light text-sm text-center opacity-80 mt-1">Sistema interno de gestión educativa</p>
+          <h1 class="text-2xl font-light">SIGE - ESMN</h1>
+          <p class="font-light text-sm text-center opacity-80 mt-1">Sistema Interno de Gestión Educativa</p>
         </div>
 
         <!-- Panel derecho (con cambios) -->
         <div class="md:col-span-2 p-8">
           <!-- Título dinámico -->
           <h2 class="text-xl font-semibold text-center mb-6">
-            {{ isRegisterMode ? 'Registro de Estudiantes' : 'Acceso Estudiantes' }}
+            {{ isRegisterMode ? 'Registro' : 'Acceso' }}
           </h2>
 
           <!-- Mensaje de error visible -->
@@ -61,7 +61,7 @@
             </div>
 
             <!-- Recordarme (lo ocultamos en modo registro para simplificar) -->
-            <label v-if="!isRegisterMode" class="flex items-center py-2 text-sm text-gray-600">
+            <label v-if="!isRegisterMode" class="flex items-center py-2 pb-9 text-sm text-gray-600">
               <input v-model="remember" type="checkbox" class="mr-2 rounded" />
               No me olvides
             </label>
@@ -73,15 +73,29 @@
               <span v-else>{{ isRegisterMode ? 'Crear Cuenta' : 'Ingresar' }}</span>
             </button>
 
-            <!-- Links auxiliares dinámicos -->
-            <p class="text-xs text-center text-gray-500">
-              <a v-if="!isRegisterMode" href="#" class="hover:underline focus:ring-2 focus:ring-teal-500 focus:border-teal-500">¿Olvidaste tu contraseña?</a>
+           <!-- Links auxiliares dinámicos -->
+            <div class="text-xs text-center text-gray-500 flex items-center justify-center gap-2">
+              <button
+                v-if="!isRegisterMode"
+                type="button"
+                @click="goToReset"
+                @keydown.space.prevent="goToReset"
+                class="text-gray-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+
               <span v-if="!isRegisterMode">|</span>
-              <!-- Usamos @click.prevent para llamar a nuestra función de cambio de modo -->
-              <a href="#" @click.prevent="toggleMode" class="hover:underline ml-2">
-                {{ isRegisterMode ? '¿Ya tienes cuenta? Ingresar' : '¿No tienes cuenta? Regístrate' }}
-              </a>
-            </p>
+
+              <button
+                type="button"
+                @click="toggleMode"
+                @keydown.space.prevent="toggleMode"
+                class="text-gray-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1"
+              >
+                {{ isRegisterMode ? '¿Ya tenés cuenta? Ingresar' : '¿No tenés cuenta? Registrate' }}
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -167,7 +181,17 @@
         loading.value = false
       }
     }
+
+    const roles = userDoc.data().roles
+    if (roles.length === 1) {
+      // un solo rol → directo
+      router.push('/' + roles[0])
+    } else {
+      // múltiples roles → pantalla aparte
+      router.push('/seleccionar-rol')
+    }
   }
+  
   /// Código para el componente de Login/Registro combinado
       const emit = defineEmits(["sign-in", "sign-up"]);
       const isRightPanelActive = ref(false);
@@ -180,5 +204,8 @@
       }
       function emitSignIn() {
         emit("sign-in", signInData.value);
+      }
+      function goToReset() {
+        router.push('/reset-password'); // Asegúrate de tener esta ruta configurada
       }
 </script>
