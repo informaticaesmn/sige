@@ -2,8 +2,10 @@
 <template>
   <footer class="bg-gray-700 text-white text-xs flex-1 grid md:grid-cols-2 text-center">
     <div class="flex flex-col md:flex-row items-center justify-center gap-2 p-4">
-      <span>Sistema en desarrollo | <i>Versión 0.1.3 {{ version }} ({{ commit }})</i></span> 
+      <span>Sistema en desarrollo | <i>Versión {{ version }} ({{ commit }})</i>
       <CodeBracketSquareIcon class="h-5 w-5 inline-block ml-2 mr-4 text-teal-200"/>
+      </span> 
+      
       <span> <i> InformaticaESMN</i>  </span>
       <!-- <CubeTransparentIcon class="h-5 w-5 inline-block ml-2 text-teal-200"/> -->
     </div>
