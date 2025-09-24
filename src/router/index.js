@@ -11,7 +11,12 @@ const routes = [
   { path: '/seleccionar-rol', 
     name: 'SeleccionarRol', 
     component: () => import('@/views/SeleccionarRol.vue') },
-  
+
+  // Restablecer contraseña (sin layout)
+  { path: '/reset-password', 
+    name: 'ResetPassword', 
+    component: () => import('@/views/ResetPassword.vue') },
+
   // ESTUDIANTE
   {
     path: '/estudiante',
