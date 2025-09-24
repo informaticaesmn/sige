@@ -8,9 +8,12 @@
       <!-- <CubeTransparentIcon class="h-5 w-5 inline-block ml-2 text-teal-200"/> -->
     </div>
     <div class="flex items-center justify-center">
-      <AcademicCapIcon class="h-5 w-5 inline-block ml-2 mr-2"/>  
-      <span> Escuela Superior de Música de Neuquén &copy; {{ new Date().getFullYear() }}</span>
-      <img src="/avatar.png" alt="Logo ESMN" class="w-10 mx-auto m-1">
+      <AcademicCapIcon class="h-5 w-5 inline-block ml-2 mr-2 hover:text-teal-200"/>  
+      <span class="hover:text-teal-200">
+        <a href="https://www.esm-nqn.infd.edu.ar" target="_blank" rel="noopener noreferrer">
+          Escuela Superior de Música de Neuquén &copy; {{ new Date().getFullYear() }}</a></span>
+      <a href="https://www.esm-nqn.infd.edu.ar" target="_blank" rel="noopener noreferrer">
+        <img src="/avatar.png" alt="Logo ESMN" class="w-10 mx-auto m-1"></a>
     </div>
   </footer>
 </template>
