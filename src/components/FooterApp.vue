@@ -13,7 +13,7 @@
         <a href="https://www.esm-nqn.infd.edu.ar" target="_blank" rel="noopener noreferrer">
           Escuela Superior de Música de Neuquén &copy; {{ new Date().getFullYear() }}</a></span>
       <a href="https://www.esm-nqn.infd.edu.ar" target="_blank" rel="noopener noreferrer">
-        <img src="/avatar.png" alt="Logo ESMN" class="w-10 mx-auto m-1"></a>
+        <img src="/avatar.png" alt="Logo ESMN" class="w-10 mx-auto m-1 ml-6"></a>
     </div>
   </footer>
 </template>
