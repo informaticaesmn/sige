@@ -3,7 +3,7 @@
     <!-- panel derecho (solo login) -->
     <div class="bg-white p-8 flex items-center justify-center">
         <form @submit.prevent="login" class="w-full max-w-sm">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Ingresar</h2>
+            <h2 class="text-xl font-semibold text-stone-600 mb-4">Ingresar</h2>
 
             <FormInput v-model="email" label="Email" type="email" :error="emailError" />
             <FormInput v-model="password" label="Contraseña" type="password" :error="passwordError" />

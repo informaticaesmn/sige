@@ -2,10 +2,10 @@
   <!-- panel derecho -->
       <div class="bg-white p-8 flex items-center justify-center">
         <div class="max-w-sm mx-auto p-8">
-          <h1 class="text-2xl font-semibold mb-4">Restablecer contraseña</h1>
+          <h2 class="text-xl font-semibold text-stone-600 mb-4">Restablecer contraseña</h2>
 
           <form @submit.prevent="sendReset">
-            <label class="block text-sm font-medium mb-1">Email</label>
+            <label class="block text-sm text-stone-600 mb-1">Email</label>
             <input
               v-model="email"
               type="email"
@@ -24,7 +24,7 @@
           <button
             type="button"
             @click="router.back()"
-            class="text-sm text-gray-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1 mt-4"
+            class="text-sm text-stone-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1 mt-4"
           >
             Volver
           </button>
