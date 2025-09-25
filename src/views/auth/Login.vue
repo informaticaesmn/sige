@@ -1,22 +1,20 @@
 <!-- src/views/auth/Login.vue -->
 <template>
-  
-  
-      <!-- panel derecho (solo login) -->
-      <div class="bg-white p-8 flex items-center justify-center">
+    <!-- panel derecho (solo login) -->
+    <div class="bg-white p-8 flex items-center justify-center">
         <form @submit.prevent="login" class="w-full max-w-sm">
-          <h2 class="text-xl font-bold text-gray-800 mb-4">Ingresar</h2>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Ingresar</h2>
 
-          <FormInput v-model="email" label="Email" type="email" :error="emailError" />
-          <FormInput v-model="password" label="Contraseña" type="password" :error="passwordError" />
+            <FormInput v-model="email" label="Email" type="email" :error="emailError" />
+            <FormInput v-model="password" label="Contraseña" type="password" :error="passwordError" />
 
-          <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
+            <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
             Ingresar
-          </button>
+            </button>
 
-          <AuthFooter @reset="goToReset" />
+            <AuthFooter @reset="goToReset" @register="goToRegister" />
         </form>
-      </div>
+    </div>
   
 </template>
 
@@ -74,5 +72,8 @@ async function login() {
 
 function goToReset() {
   router.push('/reset-password')
+}
+function goToRegister() {
+  router.push('/registro')
 }
 </script>

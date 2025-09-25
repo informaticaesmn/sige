@@ -1,8 +1,11 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { getAuth } from 'firebase/auth'
+import { initializeApp } from 'firebase/app'
+import { auth, db } from '@/config/firebase.js'
 
 const routes = [
+
   // SIN LAYOUT (autenticación)
   {
     path: '/',

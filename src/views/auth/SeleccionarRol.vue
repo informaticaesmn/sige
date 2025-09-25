@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-sm mx-auto p-8">
-    <h1 class="text-xl font-bold mb-4">Seleccioná tu rol</h1>
+    <h1 class="text-xl font-semibold mb-4">Seleccioná tu rol</h1>
 
     <div class="space-y-3">
       <button

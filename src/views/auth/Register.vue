@@ -1,13 +1,5 @@
 <!-- src/views/auth/Register.vue -->
 <template>
-  <div class="min-h-screen flex flex-col">
-    <AuthHeader :showBack="true" />
-    <main class="flex-1 grid md:grid-cols-2">
-      <!-- panel izquierdo (igual que Login) -->
-      <div class="bg-teal-800 text-white p-8 flex items-center justify-center">
-        <!-- mismo panel que Login -->
-      </div>
-
       <!-- panel derecho (solo registro) -->
       <div class="bg-white p-8 flex items-center justify-center">
         <form @submit.prevent="register" class="w-full max-w-sm">
@@ -22,10 +14,10 @@
           </button>
         </form>
       </div>
-    </main>
 
-    <AuthFooter @reset="goToReset" />
-  </div>
+
+    <AuthFooter @reset="goToReset" @register="goToRegister" />
+
 </template>
 
 <script setup>

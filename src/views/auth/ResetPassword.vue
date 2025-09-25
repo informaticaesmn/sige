@@ -1,19 +1,8 @@
 <template>
-  <div class="min-h-screen flex flex-col">
-    <main class="flex-1 grid md:grid-cols-2">
-      <!-- panel izquierdo -->
-      <div class="bg-teal-800 text-white p-8 flex items-center justify-center">
-        <div class="text-center">
-          <img src="/avatar.png" alt="Logo ESMN" class="w-24 mx-auto mb-4">
-          <h1 class="text-2xl">SIGE - ESMN</h1>
-          <p class="text-sm opacity-80">Sistema Interno de Gestión Educativa</p>
-        </div>
-      </div>
-
-      <!-- panel derecho -->
+  <!-- panel derecho -->
       <div class="bg-white p-8 flex items-center justify-center">
         <div class="max-w-sm mx-auto p-8">
-          <h1 class="text-2xl font-bold mb-4">Restablecer contraseña</h1>
+          <h1 class="text-2xl font-semibold mb-4">Restablecer contraseña</h1>
 
           <form @submit.prevent="sendReset">
             <label class="block text-sm font-medium mb-1">Email</label>
@@ -41,8 +30,6 @@
           </button>
         </div>
       </div>
-    </main>
-  </div>
 </template>
 
 <script setup>
