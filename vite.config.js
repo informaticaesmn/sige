@@ -5,7 +5,11 @@ import { execSync } from 'child_process'
 import pkg from './package.json'
 
 // tomar hash corto del último commit
-const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+//const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+
+//otra opcion para versiones sin git
+const version = process.env.npm_package_version || '0.0.0';
+const commit = process.env.VERCEL_GIT_COMMIT_SHA || 'dev-' + version;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,8 +24,8 @@ export default defineConfig({
     },
   },
   define: {
-    __APP_COMMIT__: JSON.stringify(commitHash), // Define la variable global del Commit
-    __APP_VERSION__: JSON.stringify(pkg.version) // Define la variable global de la versión del package.json
-  },
+    __APP_COMMIT__: JSON.stringify(commit), // Define la variable global del Commit
+    __APP_VERSION__: JSON.stringify(version) // Define la variable global de la versión del package.json
+  }
 
 })
