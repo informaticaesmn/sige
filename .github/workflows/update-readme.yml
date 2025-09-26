@@ -3,7 +3,15 @@ name: Update README with version
 on:
   push:
     tags:
-      - 'v*'   # solo se dispara cuando hacés push de un tag tipo v1.2.3
+      - 'v*.*.*'   # solo se dispara cuando hacés push de un tag tipo v1.2.3
+  workflow_dispatch:   # permite correrlo manualmente desde la UI (útil para pruebas)
+    inputs:
+      version:
+        description: 'Opcional: versión a fijar (ej: v1.2.3). Si se deja vacío usa el tag que disparó el run.'
+        required: false
+
+permissions:
+  contents: write  # necesario para hacer push al repo
 
 jobs:
   update-readme:
@@ -12,18 +20,30 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+            persist-credentials: true # para poder pushear después
 
-      - name: Get version from tag
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Update README.md
+      - name: Determine version 
+        id: ver
         run: |
-            sed -i "s/<!--VERSION-->.*<!--\/VERSION-->/<!--VERSION-->Versión actual: ${{ steps.ver.outputs.version }}<!--\/VERSION-->/" README.md
+            if [[ "GITHUB_REF" == "refs/tags/"* ]]; then
+              TAG=${GITHUB_REF#refs/tags/}
+              echo "version=$TAG" >> $GITHUB_OUTPUT
+            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "No version found from tag or input. Exiting."
+              echo "version=UNSET" >> $GITHUB_OUTPUT
+            fi
 
-      - name: Commit and push changes
+      - name: Show chosen version (debug)
+        run: echo "Version to set = ${{ steps.ver.outputs.version }}"
+
+      - name: Update README VERSION block
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          set -e
+          sed -i "s/<!--VERSION-->.*<!--\/VERSION-->/<!--VERSION-->Versión actual: ${{ steps.ver.outputs.version }}<!--\/VERSION-->/" README.md
+          git status --porcelain
           git add README.md
-          git commit -m "chore: update README with version $VERSION" || echo "No changes"
+          git commit -m "chore: update README version to ${{ steps.ver.outputs.version }}" || echo "No changes to commit"
           git push

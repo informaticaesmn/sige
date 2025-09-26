@@ -3,6 +3,7 @@
 <!--VERSION-->
 Versión actual: v1.0.3
 <!--/VERSION-->
+
 ### Estamos utilizando para este desarrollo: 
 - Vue 3
 - Vite
@@ -17,7 +18,7 @@ Versión actual: v1.0.3
 
 ## Porque estamos acá
 Esta es una primera implementación de para un pequeño
-> **Sistema de Gestion Educativa de la Escuela Superior de Música de Neuquén** 
+> **S.I.G.E. - Sistema Interno de Gestion Educativa para la Escuela Superior de Música de Neuquén** 
 
 [Link de GitHub Pages](https://informaticaesmn.github.io/sige/)
 

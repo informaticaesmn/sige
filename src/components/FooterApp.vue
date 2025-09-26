@@ -2,7 +2,7 @@
 <template>
   <footer class="bg-gray-700 text-white text-xs flex-1 grid md:grid-cols-2 text-center">
     <div class="flex flex-col md:flex-row items-center justify-center gap-2 p-4">
-      <span>Sistema en desarrollo | <i>Versión {{ version }} ({{ commit }})</i>
+      <span>Sistema en desarrollo | <i>Versión {{ version }}</i>
       <CodeBracketSquareIcon class="h-5 w-5 inline-block ml-2 mr-2 text-teal-200"/>
       <i>InformaticaESMN</i>  </span>
       <!-- <CubeTransparentIcon class="h-5 w-5 inline-block ml-2 text-teal-200"/> -->
@@ -22,5 +22,5 @@
   import { CodeBracketSquareIcon } from '@heroicons/vue/16/solid';
   import { AcademicCapIcon, CubeTransparentIcon } from '@heroicons/vue/24/outline';
   const version = __APP_VERSION__;
-  const commit = __APP_COMMIT__;
+  //const commit = __APP_COMMIT__;
 </script>

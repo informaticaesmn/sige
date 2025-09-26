@@ -2,21 +2,7 @@
 <template>
   <nav class="bg-teal-800 text-white px-4 py-3 md:px-6 flex items-center justify-between relative">
 
-    <!-- Logo / nombre -->
-   <!--  <router-link to="/dashboard" class="tracking-tight">
-      RAC - ESMN
-    </router-link> -->
-
-    <!-- Hamburguesa móvil -->
-    <!-- class="md:hidden text-white hover:text-teal-200 transition" -->
-    <!-- <button
-      @click="toggleMenu"
-      class="md:hidden bg-red text-white hover:text-teal-200 transition"
-      aria-label="Menú"
-    >
-     Men <i class="fas fa-bars text-xl"></i>
-    </button>
- -->    <!-- Menú Mobile -->
+  <!-- Menú Mobile -->
     <button
       @click="toggleMenu"
       class="md:hidden text-white hover:text-teal-200 transition"
@@ -28,16 +14,16 @@
     <!-- Links desktop -->
     <div class="hidden md:flex items-center">
       <router-link to="/dashboard" class="hover:bg-teal-500 px-2 py-2 flex rounded transition">
-         <BookOpenIcon class="h-5 w-5" /> <span class="px-1">Dashboard  </span> 
+         <BookOpenIcon class="h-5 w-5" /> <span class="px-1">Dashboard</span> 
       </router-link>
       <router-link to="/inscripciones" class="hover:bg-teal-500 px-2 py-2 flex rounded transition">
-         <Square3Stack3DIcon class="h-5 w-5" /> <span class="px-1"> Inscripciones</span>
+         <Square3Stack3DIcon class="h-5 w-5" /> <span class="px-1">Inscripciones</span>
       </router-link>
       <router-link to="/otras" @click="menuOpen=false" class="hover:bg-teal-500 px-2 py-2 flex rounded transition">
-        <CogIcon class="h-5 w-5" /> <span class="px-1"> Funciones</span>
+        <CogIcon class="h-5 w-5" /> <span class="px-1">Funciones</span>
       </router-link>
               <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-2 py-2 flex rounded transition">
-         <WindowIcon class="h-5 w-5" /> <span class="px-1"> Tablero</span>
+         <WindowIcon class="h-5 w-5" /> <span class="px-1">Tablero</span>
         </router-link>
           <button @click="logout" class="w-full flex text-left hover:bg-red-600 px-2 py-2 rounded transition">
             <arrow-right-start-on-rectangle-icon class="h-6 w-6" /><span class="px-1">Salir</span> 
@@ -47,17 +33,14 @@
     <!-- Menú móvil desplegable -->
     <transition name="slide">
       <div v-if="menuOpen" class="md:hidden absolute top-full left-0 w-full bg-teal-800 flex flex-col space-y-2 px-4 py-3 shadow-lg">
-        <router-link to="/dashboard" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 flex rounded transition">
-          <BookOpenIcon class="h-5 w-5" /> <span class="px-2">Dashboard  </span> 
+        <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded flex transition">
+          <WindowIcon class="h-5 w-5" /> <BookOpenIcon class="h-5 w-5" /> <span class="px-2">Tablero</span>
         </router-link>
         <router-link to="/inscripciones" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 flex rounded transition">
-          <Square3Stack3DIcon class="h-5 w-5" /> <span class="px-2"> Inscripciones</span>
+          <Square3Stack3DIcon class="h-5 w-5" /> <span class="px-2">Inscripciones</span>
         </router-link>
         <router-link to="/otras" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded flex transition">
-          <CogIcon class="h-5 w-5" /> <span class="px-2"> Otras funciones</span>
-        </router-link>
-        <router-link to="/tablero" @click="menuOpen=false" class="hover:bg-teal-500 px-3 py-2 rounded flex transition">
-          <WindowIcon class="h-5 w-5" /> <span class="px-2"> Tablero</span>
+          <CogIcon class="h-5 w-5" /> <span class="px-2">Funciones</span>
         </router-link>
           <button @click="logout" class="w-full flex text-left hover:bg-red-600 px-3 py-2 rounded transition">
             <arrow-right-start-on-rectangle-icon class="h-6 w-6" /><span class="px-2">Salir</span>
