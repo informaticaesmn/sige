@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'   // ← necesario para el alias
-import { execSync } from 'child_process'
-import pkg from './package.json'
 
 // tomar hash corto del último commit
 //const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
