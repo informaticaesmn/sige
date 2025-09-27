@@ -1,6 +1,6 @@
 # SIGE - ESMN
 <!--VERSION-->
-Versión actual: v1.0.3
+Versión actual: pendiente
 <!--/VERSION-->
 ### Estamos utilizando para este desarrollo: 
 - Vue 3

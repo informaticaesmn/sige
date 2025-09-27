@@ -7,7 +7,8 @@ import { resolve } from 'path'   // ← necesario para el alias
 
 //otra opcion para versiones sin git
 const version = process.env.npm_package_version || '0.0.0';
-const commit = process.env.VERCEL_GIT_COMMIT_SHA || 'dev-' + version;
+const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local' + version;
+const branch = process.env.VERCEL_GIT_COMMIT_REF || 'local'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -22,8 +23,9 @@ export default defineConfig({
     },
   },
   define: {
-    __APP_COMMIT__: JSON.stringify(commit), // Define la variable global del Commit
-    __APP_VERSION__: JSON.stringify(version) // Define la variable global de la versión del package.json
+    __APP_VERSION__: JSON.stringify(version), // Define la variable global de la versión del package.json
+    __APP_BRANCH__: JSON.stringify(branch), // Define la variable global de la Branch
+    __APP_COMMIT__: JSON.stringify(commit) // Define la variable global del Commit
   }
 
 })

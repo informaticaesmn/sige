@@ -1,49 +1,36 @@
-name: Update README with version
+name: Update README with version info
 
 on:
   push:
-    tags:
-      - 'v*.*.*'   # solo se dispara cuando hacés push de un tag tipo v1.2.3
-  workflow_dispatch:   # permite correrlo manualmente desde la UI (útil para pruebas)
-    inputs:
-      version:
-        description: 'Opcional: versión a fijar (ej: v1.2.3). Si se deja vacío usa el tag que disparó el run.'
-        required: false
-
-permissions:
-  contents: write  # necesario para hacer push al repo
+    branches:
+      - main
+      - dev
 
 jobs:
   update-readme:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-            persist-credentials: true # para poder pushear después
 
-      - name: Determine version 
-        id: ver
+      - name: Get version, branch and commit
+        id: vars
         run: |
-            if [[ "GITHUB_REF" == "refs/tags/"* ]]; then
-              TAG=${GITHUB_REF#refs/tags/}
-              echo "version=$TAG" >> $GITHUB_OUTPUT
-            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            else
-              echo "No version found from tag or input. Exiting."
-              echo "version=UNSET" >> $GITHUB_OUTPUT
-            fi
+          VERSION=$(node -p "require('./package.json').version")
+          BRANCH=${GITHUB_REF##*/}
+          COMMIT=$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Show chosen version (debug)
-        run: echo "Version to set = ${{ steps.ver.outputs.version }}"
-
-      - name: Update README VERSION block
+      - name: Update README.md
         run: |
-          set -e
-          sed -i "s/<!--VERSION-->.*<!--\/VERSION-->/<!--VERSION-->Versión actual: ${{ steps.ver.outputs.version }}<!--\/VERSION-->/" README.md
-          git status --porcelain
+          sed -i "s|<!--VERSION-->.*<!--/VERSION-->|<!--VERSION-->Versión actual: ${{ steps.vars.outputs.branch }} v${{ steps.vars.outputs.version }} (commit ${{ steps.vars.outputs.commit }})<!--/VERSION-->|" README.md
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add README.md
-          git commit -m "chore: update README version to ${{ steps.ver.outputs.version }}" || echo "No changes to commit"
-          git push
+          git commit -m "chore: update README with version info [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF##*/}
