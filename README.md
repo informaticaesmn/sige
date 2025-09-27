@@ -1,9 +1,7 @@
 # SIGE - ESMN
-
 <!--VERSION-->
 Versión actual: v1.0.3
 <!--/VERSION-->
-
 ### Estamos utilizando para este desarrollo: 
 - Vue 3
 - Vite
@@ -14,7 +12,6 @@ Versión actual: v1.0.3
 - Firebase Firestore
 - Heroicons
 - Vercel
-
 
 ## Porque estamos acá
 Esta es una primera implementación de para un pequeño
