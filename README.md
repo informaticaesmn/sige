@@ -14,11 +14,15 @@
 
 ## Porque estamos acá
 Esta es una primera implementación de para un pequeño
-> **S.I.G.E. - Sistema Interno de Gestion Educativa para la Escuela Superior de Música de Neuquén** 
 
-[Link de GitHub Pages](https://informaticaesmn.github.io/sige/)
+**S.I.G.E.**  
+_Sistema Interno de Gestion Educativa para la Escuela Superior de Música de Neuquén_ 
 
-Por ahora funcionando en el [link de Vercel](https://rac-sigma.vercel.app)
+> [Link definito en Firebase Hosting](https://sige-esmn-git-dev-informaticaesmns-projects.vercel.app) aún no funciona ...
+
+> [Link de Vercel](https://sige-esmn.vercel.app)
+
+> Por ahora funcionando en el rama de desarrolo [dev en Vercel](https://sige-esmn-git-dev-informaticaesmns-projects.vercel.app)
 
 Desarrollado por personal de la escuela, para suplir la falta de gestion que ofrece el Consejo Provincial de Educación, institucion que debería proveernos de las herramientas de gestion necesaria, para una educación de nivel acorde a los tiempos que corren y con la tecnologia que implica.
 
