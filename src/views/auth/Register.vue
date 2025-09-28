@@ -10,7 +10,7 @@
           <FormInput v-model="passwordConfirm" label="Repetir contraseña" type="password" :error="passwordConfirmError" />
 
           <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
-            Registrarse
+            Confirmar registro
           </button>
           <button
               type="button"
@@ -20,18 +20,14 @@
               Volver
           </button>
         </form>
-        
       </div>
-
-
-
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore/lite'
+import { doc, setDoc, getDoc } from 'firebase/firestore/lite'
 import { auth, db } from '@/config/firebase.js'
 import { vincularUsuario } from '@/scripts/vincular.js'
 import FormInput from '@/components/auth/FormInput.vue'

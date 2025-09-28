@@ -4,9 +4,10 @@
 ### Estamos utilizando para este desarrollo: 
 - Vue 3
 - Vite
-- Tailwindcss
+- Tailwindcss 3
 - VueRouter
-- GitHub Pages
+- Node.js
+- GitHub
 - Firebase Auth
 - Firebase Firestore
 - Heroicons

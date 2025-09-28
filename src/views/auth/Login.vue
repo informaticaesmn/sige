@@ -45,7 +45,7 @@ async function login() {
     await signInWithEmailAndPassword(auth, email.value, password.value)
 
     // leer rol desde Firestore
-    const userDoc = await getDoc(doc(db, 'Estudiantes', auth.currentUser.uid))
+    const userDoc = await getDoc(doc(db, 'Usuarios', auth.currentUser.uid))
     if (!userDoc.exists()) {
       alert('Usuario no encontrado en base de datos')
       return
