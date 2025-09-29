@@ -1,6 +1,6 @@
 <!-- src/components/auth/AuthFooter.vue -->
 <template>
-  <div class="text-xs text-center text-gray-500 flex items-center justify-center gap-2 mt-4">
+  <div class="text-xs text-center text-gray-600 flex items-center justify-center gap-2 mt-4">
     <button
       type="button"
       @click="$emit('reset')"

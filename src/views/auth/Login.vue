@@ -1,7 +1,6 @@
 <!-- src/views/auth/Login.vue -->
 <template>
     <!-- panel derecho (solo login) -->
-    <div class="bg-white p-8 flex items-center justify-center">
         <form @submit.prevent="login" class="w-full max-w-sm">
             <h2 class="text-xl font-semibold text-stone-600 mb-4">Ingresar</h2>
 
@@ -14,7 +13,6 @@
 
             <AuthFooter @reset="goToReset" @register="goToRegister" />
         </form>
-    </div>
   
 </template>
 

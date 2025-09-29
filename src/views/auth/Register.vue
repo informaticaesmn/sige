@@ -1,7 +1,6 @@
 <!-- src/views/auth/Register.vue -->
 <template>
       <!-- panel derecho (solo registro) -->
-      <div class="bg-white p-8 flex items-center justify-center">
         <form @submit.prevent="register" class="w-full max-w-sm">
           <h2 class="text-xl font-semibold text-stone-600 mb-4">Registrate</h2>
 
@@ -15,12 +14,12 @@
           <button
               type="button"
               @click="router.back()"
-              class="text-sm text-stone-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500
+              class="text-xs text-stone-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500
                     rounded px-2 py-1 mt-4">
               Volver
           </button>
+          
         </form>
-      </div>
 </template>
 
 <script setup>
