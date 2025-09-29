@@ -6,10 +6,13 @@
     </label>
     <input
       :id="id"
+      :name="id"
       :type="type"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+      :autocomplete="autocomplete || id"
+      class="w-full px-3 py-2 border border-gray-300 rounded-md 
+        focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
       :aria-invalid="!!error"
       :aria-describedby="error ? `${id}-error` : null"
     />
@@ -25,7 +28,8 @@ defineProps({
   label: String,
   type: { type: String, default: 'text' },
   modelValue: String,
-  error: String
+  error: String,
+  autocomplete: String
 })
 defineEmits(['update:modelValue'])
 </script>
