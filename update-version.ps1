@@ -5,40 +5,48 @@ param (
     [string]$msg = "Trabajo del día"
 )
 
-# 1️⃣ Agregar cambios locales
-git add .
-
-# 2️⃣ Commit preliminar con mensaje recibido
-git commit -m "$msg"
-
-# 3️⃣ Incrementar versión según tipo
-npm version $v
-
-# 4️⃣ Push de la rama actual
+# -----------------------------
+# 1️⃣ Detectar branch actual
+# -----------------------------
 $branch = git rev-parse --abbrev-ref HEAD
-git push origin $branch
+Write-Host "Branch actual: $branch"
 
-# 5️⃣ Push de tags generados por npm version
-git push origin --tags
+# -----------------------------
+# 2️⃣ Verificar cambios no comiteados
+# -----------------------------
+$changes = git status --porcelain
+if ($changes) {
+    Write-Host "Hay cambios sin commit. Comiteando..."
+    git add .
+    git commit -m "$msg"
+}
 
-# 6️⃣ Pull de la rama para traer README actualizado por GitHub Actions
-git pull origin $branch
-
-# 7️⃣ Obtener info de versión y commit
+# -----------------------------
+# 3️⃣ Incrementar versión
+# -----------------------------
+npm version $v
 $package = Get-Content package.json | ConvertFrom-Json
 $version = $package.version
 $commit = git rev-parse --short HEAD
+Write-Host "Nueva version: v$version ($commit)"
 
-# 8️⃣ Obtener URL del repositorio remoto
-$repoUrl = git config --get remote.origin.url
-
-# 9️⃣ Mostrar toda la info
-Write-Host "✅ Rama actual: $branch"
-Write-Host "✅ Versión actual: v$version"
-Write-Host "✅ Commit actual: $commit"
-Write-Host "✅ Repo remoto: $repoUrl"
-
-# 10️⃣ Actualizar README.md con la nueva versión
-#(Get-Content README.md) -replace '(<!--VERSION-->)(.*?)(<!--/VERSION-->)',
-# "`$1`nVersión actual: v$version`n`$3" | Set-Content README.md
-# manera de usarlo: .\update-version.ps1 -v minor -msg "Mensaje del commit"
+# -----------------------------
+# 4️⃣ Push según branch
+# -----------------------------
+if ($branch -eq "main") {
+    git push origin $branch
+    git push origin --tags
+    Write-Host "Push completado en main con tags"
+    
+    # -----------------------------
+    # 5️⃣ Actualizar README.md
+    # -----------------------------
+    $readme = Get-Content README.md
+    $pattern = '(<!--VERSION-->)(.*?)(<!--/VERSION-->)'
+    $replacement = "`$1`nVersion actual: v$version (`$commit)`n`$3"
+    $readme -replace $pattern, $replacement | Set-Content README.md
+    Write-Host "README.md actualizado con version"
+} else {
+    git push origin $branch
+    Write-Host "Push completado en dev (sin tags)"
+}
