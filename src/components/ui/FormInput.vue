@@ -1,35 +1,35 @@
-<!-- src/components/auth/FormInput.vue -->
 <template>
-  <div class="mb-4">
-    <label :for="id" class="block text-sm font-medium text-gray-700 mb-1">
+  <div>
+    <label
+      v-if="label"
+      :for="id"
+      class="block text-sm font-medium text-stone-600"
+    >
       {{ label }}
     </label>
+
     <input
       :id="id"
-      :name="id"
+      :name="name"
       :type="type"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
-      :autocomplete="autocomplete || id"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md 
-        focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-      :aria-invalid="!!error"
-      :aria-describedby="error ? `${id}-error` : null"
+      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
     />
-    <p v-if="error" :id="`${id}-error`" class="text-xs text-red-600 mt-1">
-      {{ error }}
-    </p>
+
+    <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
   </div>
 </template>
 
 <script setup>
 defineProps({
-  id: String,
-  label: String,
-  type: { type: String, default: 'text' },
-  modelValue: String,
-  error: String,
-  autocomplete: String
+  id: String,       // identificador único → conecta label e input
+  name: String,     // nombre del campo → útil para autocompletar / forms
+  label: String,    // texto visible del label
+  type: String,     // tipo de input: text, password, email, etc
+  error: String,    // mensaje de error
+  modelValue: String // valor que viene del padre con v-model
 })
+
 defineEmits(['update:modelValue'])
 </script>

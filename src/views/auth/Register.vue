@@ -3,9 +3,30 @@
   <form @submit.prevent="register" class="w-full max-w-sm">
     <h2 class="text-xl font-semibold text-stone-600 mb-4">Registrate</h2>
 
-    <FormInput v-model="email" label="Email" type="email" :error="emailError" />
-    <FormInput v-model="password" label="Contraseña" type="password" :error="passwordError" />
-    <FormInput v-model="passwordConfirm" label="Repetir contraseña" type="password" :error="passwordConfirmError" />
+    <FormInput
+      id="email"
+      name="email"  
+      v-model="email"
+      label="Email"
+      type="email"
+      :error="emailError"
+    />
+    <FormInput
+      id="password"
+      name="password"
+      v-model="password"
+      label="Contraseña"
+      type="password"
+      :error="passwordError"
+    />
+    <FormInput
+      id="passwordConfirm"
+      name="passwordConfirm"
+      v-model="passwordConfirm"
+      label="Repetir contraseña"
+      type="password"
+      :error="passwordConfirmError"
+    />
 
     <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
       Confirmar registro

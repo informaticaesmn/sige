@@ -4,8 +4,23 @@
     <h2 class="text-xl font-semibold text-stone-600 mb-4">Ingresar</h2>
 
     <!-- Inputs de email y contraseña -->
-    <FormInput v-model="email" label="Email" type="email" :error="emailError" />
-    <FormInput v-model="password" label="Contraseña" type="password" :error="passwordError" />
+     <FormInput
+        id="email"
+        name="email"
+        v-model="email"
+        label="Email"
+        type="email"
+        :error="emailError"
+      />
+    
+      <FormInput
+        id="password"
+        name="password"
+        v-model="password"
+        label="Contraseña"
+        type="password"
+        :error="passwordError"
+      />
 
     <!-- Botón de login -->
     <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">

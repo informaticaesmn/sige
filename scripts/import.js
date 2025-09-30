@@ -1,35 +1,41 @@
 import 'dotenv/config'
-import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, addDoc } from 'firebase/firestore'
+import { collection, addDoc } from 'firebase/firestore'
 import { readFileSync } from 'fs'
 import { parse } from 'csv-parse/sync'
 
-const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID
-}
-const app = initializeApp(firebaseConfig)
-const db = getFirestore(app)
+// ✅ Reutilizamos tu firebaseNode.js
+import { db } from './firebaseNode.js'
 
 const csv = readFileSync('./muestra.csv', 'utf8')
 const records = parse(csv, { columns: true, skip_empty_lines: true })
 
 for (const row of records) {
-  await addDoc(collection(db, 'Estudiantes'), {
+  let roles = []
+  let materias = []
+
+  try {
+    roles = JSON.parse(row.rol) // parsea array de roles
+  } catch {
+    roles = [row.rol.trim()]
+  }
+
+  try {
+    materias = JSON.parse(row.materias) // parsea array de objetos materia
+  } catch {
+    materias = []
+  }
+
+  await addDoc(collection(db, 'usuarios'), {
     dni: row.dni.trim(),
     nombre: row.nombre.trim(),
     apellido: row.apellido.trim(),
     email: row.email.trim().toLowerCase(),
-    rol: row.rol.trim().toLowerCase(),
+    rol: roles, // ahora es array
     plan: row.plan.trim(),
+    materias, // array de objetos {nombre, nota}
     estado: 'pendiente_registro',
-    materiasAprobadas: [],
     fechaImport: new Date().toISOString()
   })
 }
 
-console.log('✅ estudiantes importados')
+console.log('✅ Datos importados correctamente')
