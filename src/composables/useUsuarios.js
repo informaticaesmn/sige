@@ -43,7 +43,6 @@ export async function vincularUsuario(uid, email) {
 
   const oldDoc = snap.docs[0]
   const datos = oldDoc.data()
-
   const batch = writeBatch(db)
 
   // Crear nuevo documento con UID
@@ -62,7 +61,6 @@ export async function vincularUsuario(uid, email) {
   })
 
   await batch.commit()
-
   console.log('✅ usuario vinculado con UID (doc viejo marcado como migrado):', uid)
 }
 
@@ -101,4 +99,12 @@ export async function crearUsuario(uid, email, extra = {}) {
     ...extra
   })
   console.log('✅ usuario creado en Firestore:', uid)
+}
+
+/**
+ * 🔹 Helper que devuelve los roles de un usuario
+ */
+export async function getRoles(uid) {
+  const usuario = await obtenerUsuario(uid)
+  return usuario?.roles || []
 }

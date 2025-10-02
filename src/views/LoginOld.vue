@@ -1,6 +1,6 @@
 <template>
 <!-- Estructura original-->
-<div class="min-h-screen flex flex-col bg-gradient-to-br from-teal-600 to-gray-600">
+<div class="min-h-screen flex flex-col bg-gradient-to-br from-teal-600 to-stone-600">
     <main class="flex-1 flex items-center justify-center p-4">
       <div class="max-w-4xl w-full grid md:grid-cols-3 bg-white rounded-xl shadow-2xl overflow-hidden">
         <!-- Panel izquierdo (sin cambios) -->

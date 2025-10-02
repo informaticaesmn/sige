@@ -1,50 +1,50 @@
 <template>
-  <!-- panel derecho (solo login) -->
+  <!-- panel derecho -->
   <form @submit.prevent="login" class="w-full max-w-sm">
-    <h2 class="text-xl font-semibold text-stone-600 mb-4">Ingresar</h2>
-
-    <!-- Inputs de email y contraseña -->
-     <FormInput
-        id="email"
-        name="email"
-        v-model="email"
-        label="Email"
+    <h2 class="mb-6">Ingresar</h2>
+    <div class="space-y-4">
+    
+      <!-- Email -->  
+      <FormInput 
+        id="email" 
+        label="Email" 
+        name="email" 
         type="email"
+        v-model="email" 
         :error="emailError"
       />
-    
+
+      <!-- Password -->
       <FormInput
         id="password"
-        name="password"
-        v-model="password"
         label="Contraseña"
         type="password"
+        v-model="password"
         :error="passwordError"
       />
-
+    </div>
     <!-- Botón de login -->
-    <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
+    <button type="submit" class="btn btn-primary w-full my-4">
       Ingresar
     </button>
-
     <!-- Footer con enlaces a registro y reset -->
-    <AuthFooter @reset="goToReset" @register="goToRegister" />
+    <AuthFooter @reset="goToReset" @register="goToRegister" class="mt-2"/>
   </form>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import AuthFooter from '@/components/auth/AuthFooter.vue'
 import FormInput from '@/components/ui/FormInput.vue'
 
-// Importamos funciones centralizadas de usuarios
-import { obtenerUsuario } from '@/composables/useUsuarios.js'
+// Importamos funciones centralizadas de los composables
+import { useAuth } from '@/composables/useAuth'
+import { obtenerUsuario, getRoles } from '@/composables/useUsuarios.js'
 
+//Reative
 const router = useRouter()
-
-// Reactive refs para inputs y errores
+const { loginFirebase } = useAuth()
 const email = ref('')
 const password = ref('')
 const emailError = ref('')
@@ -62,51 +62,26 @@ async function login() {
   if (!email.value) { emailError.value = 'Ingresá tu email'; return }
   if (!password.value) { passwordError.value = 'Ingresá tu contraseña'; return }
 
+  // Intentamos loguear
   try {
-    const authInstance = getAuth()
-    // Intentamos loguear al usuario con Firebase Auth
-    await signInWithEmailAndPassword(authInstance, email.value, password.value)
-    const uid = authInstance.currentUser.uid
+    const { uid } = await loginFirebase(email.value, password.value)
+    const roles = await getRoles(uid)
 
-    // 🔹 Obtenemos el usuario desde Firestore usando la función centralizada
-    const usuario = await obtenerUsuario(uid)
-    if (!usuario) {
-      alert('Usuario no encontrado en la base de datos')
-      return
-    }
-
-    const roles = usuario.roles   // ej: ["student", "teacher"]
-
-    // 🔹 Redirección según roles
     if (roles.length === 1) {
-      // Un solo rol → redirigimos directo a la vista correspondiente
+      // Si solo tiene un rol, redirigir directamente
       switch (roles[0]) {
-        case 'student':
-          router.push('/estudiante')
-          break
-        case 'teacher':
-          router.push('/docente')
-          break
-        case 'bedel':
-          router.push('/bedel')
-          break
-        case 'admin':
-          router.push('/admin')
-          break
-        default:
-          alert('Rol desconocido, contactá al administrador')
+        case 'student': router.push('/estudiante'); break
+        case 'teacher': router.push('/docente'); break
+        case 'bedel':   router.push('/bedel'); break
+        case 'admin':   router.push('/admin'); break
+        default: alert('Rol desconocido, contactá al administrador')
       }
     } else {
-      // Múltiples roles → redirigir a la pantalla de SeleccionarRol
-      router.push({
-        path: '/seleccionar-rol',
-        query: { uid }  // opcional, si querés pasar info al componente
-      })
+      // Si tiene varios roles, ir a seleccionar rol
+      router.push({ path: '/seleccionar-rol', query: { uid } })
     }
-
   } catch (e) {
     console.error('Error en login:', e)
-    // Mensajes de error amigables según código de Firebase Auth
     switch (e.code) {
       case 'auth/user-not-found':
         emailError.value = 'Usuario no encontrado'
@@ -120,9 +95,7 @@ async function login() {
   }
 }
 
-/**
- * Funciones de navegación a registro y reset
- */
+
 function goToReset() {
   router.push('/reset-password')
 }

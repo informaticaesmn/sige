@@ -1,7 +1,6 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { getAuth } from 'firebase/auth'
-import { initializeApp } from 'firebase/app'
 import { auth, db } from '@/config/firebase.js'
 
 const routes = [
@@ -9,7 +8,9 @@ const routes = [
   // SIN LAYOUT (autenticación)
   {
     path: '/',
-    component: () => import('@/layouts/Acceso.vue'),
+    name: 'Acceso',
+    alias: '/login',
+    component: () => import('@/layouts/AccesoLayout.vue'),
     children: [
       { path: '', name: 'Login', component: () => import('@/views/auth/Login.vue') },
       { path: 'registro', name: 'Registro', component: () => import('@/views/auth/Register.vue') },
@@ -58,7 +59,7 @@ const router = createRouter({
 // 👇 Guardia global para no dar acceso hasta que Firebase responda
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(r => r.meta.requiresAuth)
-  const auth =getAuth()
+  //const auth =getAuth()
   const user = auth.currentUser
 
     if (requiresAuth && !user) {

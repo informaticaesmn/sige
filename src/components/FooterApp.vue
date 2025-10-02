@@ -1,6 +1,6 @@
 <!-- src/components/FooterApp.vue -->
 <template>
-  <footer class="bg-gray-700 text-white text-xs flex-1 grid md:grid-cols-2 text-center">
+  <footer class="bg-stone-700 text-white text-xs flex-1 grid md:grid-cols-2 text-center">
     <div class="flex flex-col md:flex-row items-center justify-center gap-2 p-4">
       <span> {{ branch == "dev" ? 'Sistema en Desarrollo' : 'Versión' }} | <i>{{ branch }} v{{ version }} ({{ commit }})</i>
       <CodeBracketSquareIcon class="h-5 w-5 inline-block ml-2 mr-2 text-teal-200"/>

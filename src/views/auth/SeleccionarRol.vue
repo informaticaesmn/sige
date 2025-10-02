@@ -16,7 +16,7 @@
 
     <button
       @click="router.back()"
-      class="text-sm text-gray-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2 py-1 mt-4"
+      class="text-sm text-stone-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2 py-1 mt-4"
     >
       Volver
     </button>
