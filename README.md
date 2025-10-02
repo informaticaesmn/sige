@@ -1,5 +1,7 @@
 # SIGE - ESMN
-<!--VERSION-->Versión actual: dev v0.6.13 (commit 15663d2)<!--/VERSION-->
+<!--VERSION-->
+Version actual: dev v0.6.15 (commit 6e6c858)
+<!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
 - Vue 3
