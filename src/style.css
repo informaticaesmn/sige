@@ -9,7 +9,7 @@
   }
 
     /* ---------- DEFINICIÓN DE TEMAS (CON COMAS) ---------- */
-  .theme-student {
+  .theme-estudiante {
     --color-primary: 13, 148, 136;      /* #0d9488 - teal-600 */
     --color-primary-light: 45, 212, 191;/* #2dd4bf - teal-400 */
     --color-primary-dark: 15, 118, 110; /* #0f766e - teal-700 */
@@ -36,7 +36,7 @@
   /* ... puedes añadir un tema por defecto en :root si quieres */
   :root {
     /* Tema por defecto (ej. Acceso o Estudiante) */
-    @apply theme-student;
+    @apply theme-estudiante;
   }
 }
 
@@ -78,7 +78,7 @@
     @apply text-xs font-medium rounded-sm
          text-stone-600 transition-colors
          hover:text-primary hover:underline underline-offset-4
-         focus:outline-none focus:ring-2 focus:ring-primary-light focus:ring-offset-4;
+         focus:outline-none focus:ring-2 focus:ring-primary-light focus:ring-offset-2;
   }
   /* ... el resto de tus componentes ... */
   .alert { @apply rounded-md px-4 py-2 text-sm; }

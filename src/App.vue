@@ -1,3 +1,4 @@
+<!-- src/App.vue -->
 <template>
   <div class="min-h-screen bg-stone-100 flex flex-col">
     <main class="flex-grow">
@@ -24,8 +25,8 @@ onAuthStateChanged(authInstance, (user) => {
     if (rol && currentRoute !== '/'+rol) {
       // redirige directo al layout correspondiente si no estamos ya ahí
       switch (rol) {
-        case 'student': router.push('/estudiante'); break
-        case 'teacher': router.push('/docente'); break
+        case 'estudiante': router.push('/estudiante'); break
+        case 'docente': router.push('/docente'); break
         case 'bedel': router.push('/bedel'); break
         case 'admin': router.push('/admin'); break
       }

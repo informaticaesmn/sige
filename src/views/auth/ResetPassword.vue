@@ -1,35 +1,42 @@
 <template>
   <!-- panel derecho -->
   <form @submit.prevent="sendReset">
-    <h2 class="text-xl font-semibold text-stone-600 mb-4">Restablecer contraseña</h2>
-    <label class="block text-sm text-stone-600 mb-1">Email</label>
-    <input
-      v-model="email"
-      type="email"
-      required
-      class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-teal-500"
-      >
+    <div class="space-y-4">
+    <h2 class="mb-6">Restablecer contraseña</h2>
+      <!-- Email -->
+      <FormInput
+        id="email"
+        label="Email"
+        name="email"
+        type="email"
+        v-model="email"
+        :error="emailError"
+      />
+      
       <button
-        type="submit"
-        class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700 mt-4"
-      >
+        type="button"
+        class="btn btn-primary w-full my-4"
+        @click="sendReset"
+        >
         Enviar enlace
       </button>
-
+    
       <button
         type="button"
         @click="router.back()"
-        class="text-xs text-stone-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1 mt-4"
-      >
+        class="btn btn-link mt-2"
+        >
         Volver
       </button>
+    </div>
   </form>
-</template>
+</template> 
 
 <script setup>
 import { ref } from 'vue'
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth'
 import { useRouter } from 'vue-router'
+import FormInput from '@/components/ui/FormInput.vue'
 
 const router = useRouter()
 const auth = getAuth()

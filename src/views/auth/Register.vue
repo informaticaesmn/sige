@@ -1,42 +1,44 @@
 <!-- src/views/auth/Register.vue -->
 <template>
   <form @submit.prevent="register" class="w-full max-w-sm">
-    <h2 class="text-xl font-semibold text-stone-600 mb-4">Registrate</h2>
-
-    <FormInput
-      id="email"
-      name="email"  
-      v-model="email"
-      label="Email"
-      type="email"
-      :error="emailError"
-    />
-    <FormInput
-      id="password"
-      name="password"
-      v-model="password"
-      label="Contraseña"
-      type="password"
-      :error="passwordError"
-    />
-    <FormInput
-      id="passwordConfirm"
-      name="passwordConfirm"
-      v-model="passwordConfirm"
-      label="Repetir contraseña"
-      type="password"
-      :error="passwordConfirmError"
-    />
-
-    <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700">
-      Confirmar registro
-    </button>
-    <button
+    <div class="space-y-4">
+    <h2 class="mb-6">Registrate</h2>
+      <FormInput
+        id="email"
+        name="email"  
+        label="Email"
+        type="email"
+        v-model="email"
+        :error="emailError"
+      />
+      <FormInput
+        id="password"
+        name="password"
+        label="Contraseña"
+        type="password"
+        v-model="password"
+        :error="passwordError"
+      />
+      <FormInput
+        id="passwordConfirm"
+        name="passwordConfirm"
+        label="Repetir contraseña"
+        type="password"
+        v-model="passwordConfirm"
+        :error="passwordConfirmError"
+      />
+      
+      <button type="submit" class="btn btn-primary w-full my-4">
+        Confirmar registro
+      </button>
+      <button
       type="button"
       @click="router.back()"
-      class="text-xs text-stone-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1 mt-4">
+      class="btn btn-link mt-2"
+      >
       Volver
     </button>
+  </div>
   </form>
 </template>
 
@@ -44,8 +46,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import FormInput from '@/components/ui/FormInput.vue'
 import { vincularUsuario, crearUsuario } from '@/composables/useUsuarios.js'
+import FormInput from '@/components/ui/FormInput.vue'
 
 const router = useRouter()
 const email = ref('')

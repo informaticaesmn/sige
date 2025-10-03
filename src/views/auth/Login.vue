@@ -1,8 +1,9 @@
+<!-- src/views/auth/Login.vue -->
 <template>
   <!-- panel derecho -->
   <form @submit.prevent="login" class="w-full max-w-sm">
-    <h2 class="mb-6">Ingresar</h2>
     <div class="space-y-4">
+    <h2 class="mb-6">Ingresar</h2>
     
       <!-- Email -->  
       <FormInput 
@@ -22,20 +23,32 @@
         v-model="password"
         :error="passwordError"
       />
-    </div>
-    <!-- Botón de login -->
-    <button type="submit" class="btn btn-primary w-full my-4">
-      Ingresar
+      <!-- Botón de login -->
+      <button type="submit" class="btn btn-primary w-full my-4">
+        Ingresar
+      </button>
+      <!-- Footer con enlaces a registro y reset -->
+             <button
+      type="button"
+      @click  ="goToReset"
+      class="btn btn-link mt-2"
+      >
+      ¿Olvidaste tu contraseña?
     </button>
-    <!-- Footer con enlaces a registro y reset -->
-    <AuthFooter @reset="goToReset" @register="goToRegister" class="mt-2"/>
+          <button
+      type="button"
+      @click="goToRegister"
+      class="btn btn-link mt-2"
+      >
+      ¿No tenés cuenta? Registrate
+    </button>
+    </div>
   </form>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AuthFooter from '@/components/auth/AuthFooter.vue'
 import FormInput from '@/components/ui/FormInput.vue'
 
 // Importamos funciones centralizadas de los composables
@@ -70,7 +83,7 @@ async function login() {
     if (roles.length === 1) {
       // Si solo tiene un rol, redirigir directamente
       switch (roles[0]) {
-        case 'student': router.push('/estudiante'); break
+        case 'estudiante': router.push('/estudiante'); break
         case 'teacher': router.push('/docente'); break
         case 'bedel':   router.push('/bedel'); break
         case 'admin':   router.push('/admin'); break

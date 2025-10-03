@@ -94,7 +94,7 @@ export async function crearUsuario(uid, email, extra = {}) {
   await setDoc(userRef, {
     uid,
     email,
-    roles: ['student'], // por defecto estudiante
+    roles: ['estudiante'], // por defecto estudiante
     creadoEn: new Date(),
     ...extra
   })

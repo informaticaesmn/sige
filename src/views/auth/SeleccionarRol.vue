@@ -37,7 +37,7 @@ const route = useRoute()
 
 // Diccionario para mostrar labels amigables
 const labels = {
-  student: 'Estudiante',
+  estudiante: 'Estudiante',
   teacher: 'Docente',
   bedel: 'Bedel',
   admin: 'Administrador'
@@ -71,7 +71,7 @@ onMounted(async () => {
 function elegir(rol) {
   localStorage.setItem('rolActivo', rol) // guardo rol en el localStorage
   switch (rol) {
-    case 'student':
+    case 'estudiante':
       router.push('/estudiante')
       break
     case 'teacher':

@@ -2,22 +2,22 @@
 import { ref, watchEffect } from 'vue'
 
 // Estado global y reactivo que almacena el nombre del layout actual
-const currentLayout = ref('student') // Lo iniciamos en student (o el que prefieras por defecto)
+const currentLayout = ref('estudiante') // Lo iniciamos en estudiante (o el que prefieras por defecto)
 
 // Un array con todos los nombres de temas posibles para facilitar la limpieza
-const themeNames = ['student', 'docente', 'bedel', 'admin']
+const themeNames = ['estudiante', 'docente', 'bedel', 'admin']
 const themeClasses = themeNames.map(name => `theme-${name}`)
 
 export function useLayout() {
   /**
    * Cambia el layout (y por lo tanto el tema) de la aplicación.
-   * @param {'student' | 'docente' | 'bedel' | 'admin' | 'acceso'} layoutName
+   * @param {'estudiante' | 'docente' | 'bedel' | 'admin' | 'acceso'} layoutName
    */
   function setLayout(layoutName) {
     // Manejamos el caso especial de 'acceso' aquí mismo.
-    // Si el layout es 'acceso', el tema que aplicamos es 'student'.
+    // Si el layout es 'acceso', el tema que aplicamos es 'estudiante'.
     if (layoutName === 'acceso') {
-      currentLayout.value = 'student'
+      currentLayout.value = 'estudiante'
     } else {
       currentLayout.value = layoutName
     }
@@ -27,7 +27,7 @@ export function useLayout() {
   // Se ejecutará una vez al inicio y luego cada vez que `currentLayout.value` cambie.
   watchEffect(() => {
     // 1. Limpiamos CUALQUIER clase de tema que pudiera existir en el body.
-    //    Esto previene que se acumulen clases como "theme-student theme-docente".
+    //    Esto previene que se acumulen clases como "theme-estudiante theme-docente".
     document.body.classList.remove(...themeClasses);
 
     // 2. Si hay un layout válido, añadimos la clase de tema correspondiente.

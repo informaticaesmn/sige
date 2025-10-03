@@ -23,10 +23,10 @@ const routes = [
   {
     path: '/estudiante',
     component: () => import('@/layouts/EstudianteLayout.vue'),
-    meta: { requiresAuth: true, role: 'student' },
+    meta: { requiresAuth: true, role: 'estudiante' },
     children: [
-      { path: '', name: 'EstudianteTablero', component: () => import('@/views/student/TableroE.vue') },
-      { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/student/InscripcionesE.vue') }
+      { path: '', name: 'EstudianteTablero', component: () => import('@/views/estudiante/TableroE.vue') },
+      { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/estudiante/InscripcionesE.vue') }
     ]
   },
 
