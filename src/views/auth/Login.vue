@@ -28,14 +28,14 @@
         Ingresar
       </button>
       <!-- Footer con enlaces a registro y reset -->
-             <button
+      <button
       type="button"
       @click  ="goToReset"
       class="btn btn-link mt-2"
       >
       ¿Olvidaste tu contraseña?
     </button>
-          <button
+    <button
       type="button"
       @click="goToRegister"
       class="btn btn-link mt-2"
