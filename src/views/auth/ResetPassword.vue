@@ -1,6 +1,6 @@
 <template>
   <!-- panel derecho -->
-  <form @submit.prevent="sendReset">
+  <form @submit.prevent="sendReset" class="w-full max-w-sm">
     <div class="space-y-4">
     <h2 class="mb-6">Restablecer contraseña</h2>
       <!-- Email -->

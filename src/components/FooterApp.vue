@@ -25,17 +25,15 @@
     <div class="flex items-center justify-center gap-4 p-4">
       <!-- Enlace a la ESMN con ícono -->
       <button 
-        class="btn btn-link text-stone-300 focus:text-primary-light hover:text-primary-light transition
-              focus:ring-2 focus:ring-offset-2 focus:ring-primary-light rounded-sm px-2 py-1 justify-center pr-2">
-        <a 
-          href="https://esm-nqn.infd.edu.ar/sitio/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          class="flex items-center gap-2 transition-colors"
-        >
-          <AcademicCapIcon class="h-5 w-5"/>
-          <span>Escuela Superior de Música de Neuquén &copy; {{ new Date().getFullYear() }}</span>
-        </a>
+        class="btn btn-link text-primary focus:text-stone-50 hover:text-stone-50 transition
+              focus:ring-2 focus:outline-none focus:ring-primary-light rounded-sm px-2 py-1 justify-center pr-2"
+        @click='sitioOficial'
+      >
+        <AcademicCapIcon class="h-5 w-5"/>
+        <span>
+          Escuela Superior de Música de Neuquén &copy; 
+          {{ new Date().getFullYear() }}
+        </span>
       </button>  
       <a 
         href="https://esm-nqn.infd.edu.ar/sitio/" 
@@ -67,4 +65,8 @@
     if (!currentLayout.value) return ' ';
     return currentLayout.value.charAt(0).toUpperCase() + currentLayout.value.slice(1);
   });
+  // Función para navegar al sitio de la escuela
+  const sitioOficial = () => {
+    window.open('https://esm-nqn.infd.edu.ar/sitio/', '_blank', 'noopener,noreferrer');
+  };
 </script>

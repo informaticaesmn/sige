@@ -1,46 +1,46 @@
-// src/composables/useLayout.js (DESPUÉS)
+// src/composables/useLayout.js 
 import { ref, watchEffect } from 'vue'
 
-// Estado global y reactivo que almacena el nombre del layout actual
-const currentLayout = ref('estudiante') // Lo iniciamos en estudiante (o el que prefieras por defecto)
+// Estado global para el layout lógico (lo que muestra el Footer)
+const currentLayout = ref('acceso') // valor por defecto
 
-// Un array con todos los nombres de temas posibles para facilitar la limpieza
+// Estado para el tema visual (lo que aplica CSS)
+const currentTheme = ref('estudiante') // tema por defecto
+
 const themeNames = ['estudiante', 'docente', 'bedel', 'admin']
+const layoutNames = ['estudiante', 'docente', 'bedel', 'admin', 'acceso']
 const themeClasses = themeNames.map(name => `theme-${name}`)
 
 export function useLayout() {
   /**
-   * Cambia el layout (y por lo tanto el tema) de la aplicación.
+   * Cambia el layout de la aplicación.
    * @param {'estudiante' | 'docente' | 'bedel' | 'admin' | 'acceso'} layoutName
    */
   function setLayout(layoutName) {
-    // Manejamos el caso especial de 'acceso' aquí mismo.
-    // Si el layout es 'acceso', el tema que aplicamos es 'estudiante'.
+    currentLayout.value = layoutName
+    
+    // Mapeo de layout a tema visual
     if (layoutName === 'acceso') {
-      currentLayout.value = 'estudiante'
+      currentTheme.value = 'estudiante' // Acceso usa tema visual de estudiante
     } else {
-      currentLayout.value = layoutName
+      currentTheme.value = layoutName // Los demás usan su propio tema
     }
   }
 
-  // watchEffect es el hook perfecto para efectos secundarios que dependen de estado reactivo.
-  // Se ejecutará una vez al inicio y luego cada vez que `currentLayout.value` cambie.
+  // Efecto para aplicar las clases CSS al body
   watchEffect(() => {
-    // 1. Limpiamos CUALQUIER clase de tema que pudiera existir en el body.
-    //    Esto previene que se acumulen clases como "theme-estudiante theme-docente".
+    // Limpiar todas las clases de tema
     document.body.classList.remove(...themeClasses);
-
-    // 2. Si hay un layout válido, añadimos la clase de tema correspondiente.
-    if (themeNames.includes(currentLayout.value)) {
-      document.body.classList.add(`theme-${currentLayout.value}`);
+    
+    // Aplicar la clase del tema visual actual
+    if (themeNames.includes(currentTheme.value)) {
+      document.body.classList.add(`theme-${currentTheme.value}`);
     }
   });
 
-  // Ya no necesitamos devolver `layoutColor`.
-  // La magia ahora ocurre automáticamente en el watchEffect.
-  // Devolvemos solo lo que los componentes necesitan para interactuar.
   return { 
-    currentLayout, // Puede ser útil para mostrar el rol actual en la UI
+    currentLayout, // Para mostrar en Footer: "Acceso", "Estudiante", etc.
+    currentTheme,  // Para casos donde necesites el tema visual
     setLayout 
   }
 }
