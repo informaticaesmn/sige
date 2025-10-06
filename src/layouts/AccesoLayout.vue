@@ -7,7 +7,7 @@
         <div class="text-center">
           <img src="/avatar.png" alt="Logo ESMN" class="w-24 mx-auto mb-4">
           <h2 class="text-stone-400">SIGE - ESMN</h2>
-          <p class="text-sm opacity-80">Sistema interno de gestión educativa</p>
+          <p class="text-sm opacity-80 font-light">Sistema interno de gestión educativa</p>
         </div>
       </div>
 

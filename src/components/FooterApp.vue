@@ -1,6 +1,6 @@
 <!-- src/components/FooterApp.vue -->
 <template>
-  <footer class="bg-stone-800 text-stone-300 text-xs flex-1 grid md:grid-cols-2 text-center">
+  <footer class="bg-stone-800 text-stone-300 text-xs text-light flex-1 grid md:grid-cols-2 text-center">
     
     <!-- Sección Izquierda: Info de Versión y Layout Actual -->
     <div class="flex flex-col md:flex-row items-center justify-center gap-x-4 gap-y-2 p-4">
@@ -15,7 +15,7 @@
       <!-- Indicador de Layout -->
       <div 
         v-if="currentLayout" 
-        class="bg-primary text-white text-xs font-bold uppercase rounded-full px-2 py-0.5"
+        class="bg-primary text-white text-xs font-medium uppercase rounded-full px-2 py-0.5"
       >
         {{ layoutDisplay }}
       </div>
@@ -29,7 +29,7 @@
               focus:ring-2 focus:outline-none focus:ring-primary-light rounded-sm px-2 py-1 justify-center pr-2"
         @click='sitioOficial'
       >
-        <AcademicCapIcon class="h-5 w-5"/>
+        <AcademicCapIcon class="h-5 w-5"/> 
         <span>
           Escuela Superior de Música de Neuquén &copy; 
           {{ new Date().getFullYear() }}

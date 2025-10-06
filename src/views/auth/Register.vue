@@ -1,43 +1,59 @@
 <!-- src/views/auth/Register.vue -->
 <template>
-  <form @submit.prevent="register" class="w-full max-w-sm">
+  <form @submit.prevent="handleRegister" class="w-full max-w-sm">
     <div class="space-y-4">
     <h2 class="mb-6">Registrate</h2>
       <FormInput
         id="email"
-        name="email"  
         label="Email"
         type="email"
+        name="email"  
         v-model="email"
+        placeholder="mail con el que accedés al campus de la ESMN"
+        autocomplete="email"
         :error="emailError"
       />
       <FormInput
         id="password"
-        name="password"
         label="Contraseña"
         type="password"
+        name="password"
         v-model="password"
+        placeholder="••••••"
+        autocomplete="new-password"
         :error="passwordError"
+        info="Mínimo 6 caracteres"
       />
       <FormInput
         id="passwordConfirm"
-        name="passwordConfirm"
         label="Repetir contraseña"
         type="password"
+        name="passwordConfirm"
         v-model="passwordConfirm"
+        placeholder="••••••"
+        autocomplete="new-password"
         :error="passwordConfirmError"
       />
       
-      <button type="submit" class="btn btn-primary w-full my-4">
-        Confirmar registro
+      <!-- Mensaje de error general -->
+      <p v-if="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </p>
+      
+      <button type="submit" class="btn btn-primary w-full my-4" :disabled="isLoading">
+        {{ isLoading ? 'Registrando...' : 'Confirmar registro' }}
       </button>
       <button
-      type="button"
-      @click="router.back()"
-      class="btn btn-link mt-2"
-      >
-      Volver
+        type="button"
+        @click="router.back()"
+        class="btn btn-link mt-2"
+        > Volver
     </button>
+
+    <router-link to="/auth/login" class="btn btn-link mt-2">
+      ¿Ya tenés cuenta? Ingresá
+    </router-link>
+      
   </div>
   </form>
 </template>

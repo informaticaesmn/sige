@@ -3,69 +3,64 @@ import { db } from '@/config/firebase.js'
 import {
   doc,
   getDoc,
-  getDocs,
   setDoc,
-  updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
+  limit,
   writeBatch
 } from 'firebase/firestore/lite'
 
 /**
- * Vincular usuario de Auth con documento existente en Firestore
- * Estrategia: si existe documento con mismo email → se migra al UID
+ * Verifica si un email corresponde a un usuario pre-aprobado.
+ * Devuelve los datos del perfil si es válido, o null en caso contrario.
+ * Un perfil es válido para registrar si existe y aún no tiene un UID vinculado.
  */
-export async function vincularUsuario(uid, email) {
-  console.log('🔍 vinculando:', uid, email)
-
-  const userRef = doc(db, 'usuarios', uid)
+export async function verificarPerfilPreAprobado(email) {
+  const userRef = doc(db, 'usuarios', email) // Lectura directa por ID!
   const userSnap = await getDoc(userRef)
 
-  // Si ya existe documento con ese UID, no hacemos nada
-  if (userSnap.exists()) {
-    console.log('⚠️ usuario ya vinculado con UID')
-    return
+  if (userSnap.exists() && !userSnap.data().uid) {
+    // El usuario existe y no se ha registrado aún. ¡Perfecto!
+    return userSnap.data()
   }
 
-  // Buscar documentos con ese email
-  const q = query(collection(db, 'usuarios'), where('email', '==', email))
-  const snap = await getDocs(q)
-
-  if (snap.empty) {
-    console.log('❌ no existe usuario con ese email en Firestore')
-    return
-  }
-  if (snap.size > 1) {
-    console.error('🚨 Hay más de un documento con ese email, revisar base')
-    return
-  }
-
-  const oldDoc = snap.docs[0]
-  const datos = oldDoc.data()
-  const batch = writeBatch(db)
-
-  // Crear nuevo documento con UID
-  batch.set(userRef, {
-    ...datos,
-    email,
-    uid,
-    actualizadoEn: new Date()
-  })
-
-  // Marcar viejo como migrado (no borrar)
-  batch.update(oldDoc.ref, {
-    migrado: true,
-    reemplazadoPor: uid,
-    actualizadoEn: new Date()
-  })
-
-  await batch.commit()
-  console.log('✅ usuario vinculado con UID (doc viejo marcado como migrado):', uid)
+  return null
 }
 
 /**
- * Obtener un usuario por UID
+ * Finaliza el proceso de registro migrando el documento temporal (ID=email)
+ * a un documento definitivo (ID=uid).
+ * Se usa una transacción en lote para garantizar la integridad de los datos.
+ */
+export async function migrarPerfilARegistroCompleto(email, uid, datosPerfil) {
+  const batch = writeBatch(db)
+
+  // Referencia al documento viejo (ID=email)
+  const viejoDocRef = doc(db, 'usuarios', email)
+
+  // Referencia al nuevo documento (ID=uid)
+  const nuevoDocRef = doc(db, 'usuarios', uid)
+
+  // 1. Crea el nuevo documento con el UID como ID
+  batch.set(nuevoDocRef, {
+    ...datosPerfil,
+    uid: uid,
+    email: email, // Aseguramos que el email quede en los datos
+    actualizadoEn: new Date()
+  })
+
+  // 2. Elimina el viejo documento temporal
+  batch.delete(viejoDocRef)
+
+  // Ejecuta ambas operaciones de forma atómica
+  await batch.commit()
+  console.log(`✅ Perfil migrado de ${email} a ${uid} exitosamente.`)
+}
+
+/**
+ * Obtener un usuario por UID. Ahora esto es una lectura directa y eficiente.
  */
 export async function obtenerUsuario(uid) {
   const userRef = doc(db, 'usuarios', uid)
@@ -74,7 +69,7 @@ export async function obtenerUsuario(uid) {
 }
 
 /**
- * Actualizar roles de un usuario
+ * Actualizar roles de un usuario.
  */
 export async function actualizarRoles(uid, roles = []) {
   const userRef = doc(db, 'usuarios', uid)
@@ -83,22 +78,6 @@ export async function actualizarRoles(uid, roles = []) {
     actualizadoEn: new Date()
   })
   console.log('✅ roles actualizados para', uid, roles)
-}
-
-/**
- * Crear un nuevo usuario en Firestore
- * (ej: si viene de un registro directo y no existía nada previo)
- */
-export async function crearUsuario(uid, email, extra = {}) {
-  const userRef = doc(db, 'usuarios', uid)
-  await setDoc(userRef, {
-    uid,
-    email,
-    roles: ['estudiante'], // por defecto estudiante
-    creadoEn: new Date(),
-    ...extra
-  })
-  console.log('✅ usuario creado en Firestore:', uid)
 }
 
 /**
