@@ -46,10 +46,17 @@ Write-Host "Nueva version: v$version ($commit)"
 # Actualizamos el README aqui mismo
 Write-Host "Actualizando README.md..."
 $readmePath = "README.md"
-$readmeContent = Get-Content $readmePath -Raw
-$pattern = "(<!--VERSION-->)(.*?)(<!--/VERSION-->)"
+$readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
+
+# Aseguramos que el patrón funcione con saltos de línea
+$pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
 $replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commit)`n<!--/VERSION-->"
-($readmeContent -replace $pattern, $replacement) | Set-Content $readmePath
+
+# Realizamos el reemplazo
+$updatedContent = $readmeContent -replace $pattern, $replacement
+
+# Guardamos el contenido actualizado
+Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8# Actualizamos el README aqui mismo
 
 # Anadimos el README al ultimo commit (el de la version) para mantener el historial limpio
 git add README.md
