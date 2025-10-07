@@ -53,7 +53,7 @@ La aplicación sigue una arquitectura moderna basada en componentes y servicios 
 *   Flujo de registro de usuarios con pre-aprobación y migración de datos.
 
 ### 🚧 EN DESARROLLO:
-*   Refinamiento de la experiencia de usuario en los formularios de autenticación.
+*   Refinamiento de la experiencia de usuario en los formularios de autenticación. Revisar la seguridad y todos los pasos que tienen que ver con el acceso y autenticación.
 *   Implementación de la vista "Seleccionar Rol" para usuarios con múltiples perfiles.
 *   Construcción de los tableros principales para cada rol (Estudiante, Bedel, Admin).
 

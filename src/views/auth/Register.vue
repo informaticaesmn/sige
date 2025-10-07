@@ -39,15 +39,28 @@
         {{ errorMessage }}
       </p>
       
-      <button type="submit" class="btn btn-primary w-full my-4" :disabled="isLoading || !isFormValid">
+      <button
+        type="submit"
+        class="btn btn-primary w-full my-4"
+        :class="{ 'opacity-50 cursor-not-allowed': isLoading }"
+        @click="handleRegister"
+      >
         {{ isLoading ? 'Registrando...' : 'Confirmar registro' }}
       </button>
-    <!--   <button
-        type="button"
-        @click="router.back()"
-        class="btn btn-link mt-2"
-        > Volver
-    </button> -->
+      <!-- tenemos que agregar terminos y condiciones y politica de privacidad??? -->
+      <div class="text-center text-xs text-stone-400">
+        Al registrarte, aceptás nuestros 
+        <button class="btn-min"
+          type="button"
+          @click="() => router.push('/terminos')"
+        >Términos y Condiciones</button>
+        y la 
+        <button class="btn-min"
+          type="button"
+          @click="() => router.push('/privacidad')"
+        >Política de Privacidad</button>.
+      </div>
+
 
     <button
       type="button"
@@ -99,6 +112,9 @@ function validateForm() {
 
 async function handleRegister() {
   errorMessage.value = ''
+  if (isLoading.value) return
+
+  errorMessage.value = ''
   if (!validateForm()) return
 
   isLoading.value = true
@@ -110,10 +126,10 @@ async function handleRegister() {
       // Si se necesita una redirección específica post-registro, aquí es el lugar.
       router.push('/estudiante') // O a una página de "Bienvenido"
     } else {
-      if (error.message === 'auth/user-not-pre-approved-or-already-registered') {
-        errorMessage.value = 'Tu email no está en la lista de usuarios habilitados para registrarse, o ya te has registrado. Contacta a Bedelía.'
-      } else if (error.code === 'auth/email-already-in-use') {
-        errorMessage.value = 'El email ya está en uso por otra cuenta. Si olvidaste tu contraseña, puedes restablecerla.'
+      if (error.code === 'auth/weak-password') {
+        errorMessage.value = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.'
+      } else if (error.message === 'auth/user-not-pre-approved-or-already-registered' || error.code === 'auth/email-already-in-use') {
+        errorMessage.value = 'Error: su mail no se encuentra entre los usuarios con registro pendiente. Si cree que esto es un error y su mail es el que usa para el acceso al campus, por favor comuníquese con Bedelía.'
       } else {
         errorMessage.value = 'Ocurrió un error inesperado durante el registro.'
       }

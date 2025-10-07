@@ -9,7 +9,7 @@ import {
   createUserWithEmailAndPassword
 } from 'firebase/auth'
 // Necesitaremos interactuar con Firestore desde aquí
-import { verificarPerfilPreAprobado, migrarPerfilARegistroCompleto } from './useUsuarios'
+import { verificarPerfilPreAprobado, migrarPerfilARegistroCompleto, obtenerUsuario } from './useUsuarios'
 
 // El 'user' ahora contendrá tanto datos de Auth como de Firestore
 const user = ref(null)
@@ -67,8 +67,13 @@ async function registrarUsuario(email, password) {
     const nuevoUid = cred.user.uid
 
     // 3. Migrar el documento de Firestore al nuevo UID
-    await migrarPerfilARegistroCompleto(email, nuevoUid, perfilTemporal)
+    const perfilCompleto = await migrarPerfilARegistroCompleto(email, nuevoUid, perfilTemporal)
     
+    // 4. Actualizar el estado local del usuario inmediatamente.
+    // onAuthStateChanged puede ser lento o no tener el perfil de Firestore listo aún.
+    // Esto asegura que la UI reaccione instantáneamente al registro exitoso.
+    user.value = perfilCompleto
+
     console.log('✅ Usuario registrado y vinculado exitosamente:', nuevoUid)
     return { exito: true }
     

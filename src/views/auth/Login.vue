@@ -1,102 +1,117 @@
 <!-- src/views/auth/Login.vue -->
 <template>
-  <!-- panel derecho -->
-  <form @submit.prevent="login" class="w-full max-w-sm">
+  <form @submit.prevent="handleLogin" class="w-full max-w-sm">
     <div class="space-y-4">
-    <h2 class="mb-6">Ingresar</h2>
-    
-      <!-- Email -->  
-      <FormInput 
-        id="email" 
-        label="Email" 
+      <h2 class="mb-6">Ingresar</h2>
+      <FormInput
+        id="email"
+        label="Email"
         type="email"
-        name="email" 
+        name="email"
         v-model="email"
         autocomplete="email"
         :error="emailError"
-      />
-
-      <!-- Password -->
+        :info="'Mail con el que accedés al campus de la ESMN'"
+      />  
       <FormInput
         id="password"
         label="Contraseña"
         type="password"
         name="password"
+        v-model="password"
         placeholder="••••••"
         autocomplete="current-password"
-        v-model="password"
         :error="passwordError"
       />
-      <!-- Botón de login -->
-      <button type="submit" class="btn btn-primary w-full my-4">
-        Ingresar
+
+      <!-- Mensaje de error general -->
+      <p v-if="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </p>
+      <button
+        type="submit"
+        class="btn btn-primary w-full my-4"
+        :disabled="isLoginDisabled"
+        :class="{ 'opacity-50 cursor-not-allowed': isLoginDisabled }"
+      >
+        {{ buttonText }}
       </button>
-      <!-- Footer con enlaces a registro y reset -->
-    <button
-      type="button"
-      @click  ="goToReset"
-      class="btn btn-link mt-2"
-      >
-      ¿Olvidaste tu contraseña?
-    </button>
-    <button
-      type="button"
-      @click="goToRegister"
-      class="btn btn-link mt-2"
-      >
-      ¿No tenés cuenta? Registrate
-    </button>
+
+      <div class="flex justify-between items-center text-sm">
+        <button
+          type="button"
+          @click="() => router.push('/reset-password')"
+          class="btn btn-link"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+        <button
+          type="button"
+          @click="() => router.push('/registro')"
+          class="btn btn-link"
+        >
+          ¿No tenés cuenta? Registrate
+        </button>
+      </div>
     </div>
   </form>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import FormInput from '@/components/ui/FormInput.vue'
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuth } from '@/composables/useAuth.js';
+import FormInput from '@/components/ui/FormInput.vue';
 
-// Importamos funciones centralizadas de los composables
-import { useAuth } from '@/composables/useAuth'
-import { obtenerUsuario, getRoles } from '@/composables/useUsuarios.js'
+const router = useRouter();
+const { loginFirebase } = useAuth();
 
-//Reative
-const router = useRouter()
-const { loginFirebase } = useAuth()
 const email = ref('')
 const password = ref('')
 const emailError = ref('')
 const passwordError = ref('')
+const errorMessage = ref('');
+const isLoading = ref(false);
 
-/**
- * Función principal de login
- */
-async function login() {
-  // Limpiamos errores
-  emailError.value = ''
-  passwordError.value = ''
+// --- Lógica anti-fuerza bruta ---
+const loginAttempts = ref(0);
+const isLocked = ref(false);
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 60000; // 60 segundos
 
-  // Validaciones simples
-  if (!email.value) { emailError.value = 'Ingresá tu email'; return }
-  if (!password.value) { passwordError.value = 'Ingresá tu contraseña'; return }
+const isLoginDisabled = computed(() => isLoading.value || isLocked.value);
+const buttonText = computed(() => {
+  if (isLoading.value) return 'Ingresando...';
+  if (isLocked.value) return `Demasiados intentos. Esperá...`;
+  return 'Ingresar';
+});
 
-  // Intentamos loguear
+async function handleLogin() {
+  errorMessage.value = '';
+  if (isLoginDisabled.value) return;
+
+  isLoading.value = true;
   try {
-    const { uid } = await loginFirebase(email.value, password.value)
-    const roles = await getRoles(uid)
+    const { exito, error } = await loginFirebase(email.value, password.value);
+    isLoading.value = false;
 
-    if (roles.length === 1) {
-      // Si solo tiene un rol, redirigir directamente
-      switch (roles[0]) {
-        case 'estudiante': router.push('/estudiante'); break
-        case 'teacher': router.push('/docente'); break
-        case 'bedel':   router.push('/bedel'); break
-        case 'admin':   router.push('/admin'); break
-        default: alert('Rol desconocido, contactá al administrador')
-      }
+    if (exito) {
+      // La redirección por rol ahora la maneja App.vue o el router guard.
+      // Aquí solo nos aseguramos de que el login fue exitoso.
+      // Podríamos redirigir a una ruta "neutra" como '/dashboard' y dejar que el guard haga el resto.
+      router.push('/estudiante');
     } else {
-      // Si tiene varios roles, ir a seleccionar rol
-      router.push({ path: '/seleccionar-rol', query: { uid } })
-    }
+      errorMessage.value = 'El email o la contraseña son incorrectos.';
+      loginAttempts.value++;
+      if (loginAttempts.value >= MAX_ATTEMPTS) {
+        isLocked.value = true;
+        setTimeout(() => {
+          isLocked.value = false;
+          loginAttempts.value = 0;
+          errorMessage.value = 'Ahora podés intentar ingresar nuevamente.';
+        }, LOCKOUT_TIME);
+      }
+    } 
   } catch (e) {
     console.error('Error en login:', e)
     switch (e.code) {
