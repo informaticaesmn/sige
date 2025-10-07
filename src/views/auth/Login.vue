@@ -9,9 +9,10 @@
       <FormInput 
         id="email" 
         label="Email" 
-        name="email" 
         type="email"
-        v-model="email" 
+        name="email" 
+        v-model="email"
+        autocomplete="email"
         :error="emailError"
       />
 
@@ -20,6 +21,9 @@
         id="password"
         label="Contraseña"
         type="password"
+        name="password"
+        placeholder="••••••"
+        autocomplete="current-password"
         v-model="password"
         :error="passwordError"
       />
@@ -28,7 +32,7 @@
         Ingresar
       </button>
       <!-- Footer con enlaces a registro y reset -->
-      <button
+    <button
       type="button"
       @click  ="goToReset"
       class="btn btn-link mt-2"

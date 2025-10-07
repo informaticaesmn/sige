@@ -26,7 +26,7 @@
         @click="router.back()"
         class="btn btn-link mt-2"
         >
-        Volver
+        Volver al Ingreso
       </button>
     </div>
   </form>

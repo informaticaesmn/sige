@@ -22,7 +22,6 @@
         placeholder="••••••"
         autocomplete="new-password"
         :error="passwordError"
-        info="Mínimo 6 caracteres"
       />
       <FormInput
         id="passwordConfirm"
@@ -40,75 +39,87 @@
         {{ errorMessage }}
       </p>
       
-      <button type="submit" class="btn btn-primary w-full my-4" :disabled="isLoading">
+      <button type="submit" class="btn btn-primary w-full my-4" :disabled="isLoading || !isFormValid">
         {{ isLoading ? 'Registrando...' : 'Confirmar registro' }}
       </button>
-      <button
+    <!--   <button
         type="button"
         @click="router.back()"
         class="btn btn-link mt-2"
         > Volver
+    </button> -->
+
+    <button
+      type="button"
+      @click="() => router.push('/login')"
+      class="btn btn-link mt-2"
+      >¿Ya tenés cuenta? Ingresá
     </button>
 
-    <router-link to="/auth/login" class="btn btn-link mt-2">
-      ¿Ya tenés cuenta? Ingresá
-    </router-link>
-      
   </div>
   </form>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import { vincularUsuario, crearUsuario } from '@/composables/useUsuarios.js'
+import { useAuth } from '@/composables/useAuth.js'
 import FormInput from '@/components/ui/FormInput.vue'
 
 const router = useRouter()
+const { registrarUsuario } = useAuth()
+
 const email = ref('')
 const password = ref('')
 const passwordConfirm = ref('')
+
 const emailError = ref('')
 const passwordError = ref('')
 const passwordConfirmError = ref('')
+const errorMessage = ref('') // Para errores generales
 
+const isLoading = ref(false)
 
-async function register() {
+const isFormValid = computed(() => {
+  return email.value && password.value && password.value === passwordConfirm.value && password.value.length >= 6
+})
+
+function validateForm() {
   emailError.value = ''
   passwordError.value = ''
   passwordConfirmError.value = ''
+  let isValid = true
 
-  if (!email.value) { emailError.value = 'Ingresá tu email'; return }
-  if (!password.value) { passwordError.value = 'Ingresá tu contraseña'; return }
-  if (password.value !== passwordConfirm.value) { passwordConfirmError.value = 'Las contraseñas no coinciden'; return }
+  if (!email.value) { emailError.value = 'Ingresá tu email'; isValid = false }
+  if (password.value.length < 6) { passwordError.value = 'La contraseña debe tener al menos 6 caracteres'; isValid = false }
+  if (password.value !== passwordConfirm.value) { passwordConfirmError.value = 'Las contraseñas no coinciden'; isValid = false }
+  
+  return isValid
+}
 
+async function handleRegister() {
+  errorMessage.value = ''
+  if (!validateForm()) return
+
+  isLoading.value = true
   try {
-    const authInstance = getAuth()
-    await createUserWithEmailAndPassword(authInstance, email.value, password.value)
-    const uid = authInstance.currentUser.uid
-    const userEmail = authInstance.currentUser.email
+    const { exito, error } = await registrarUsuario(email.value, password.value)
 
-    // intentar vincular con doc existente, si no existe lo crea
-    const vinculo = await vincularUsuario(uid, userEmail)
-    if (!vinculo) {
-      await crearUsuario(uid, userEmail)
+    if (exito) {
+      // El onAuthStateChanged en useAuth se encargará de redirigir o actualizar el estado.
+      // Si se necesita una redirección específica post-registro, aquí es el lugar.
+      router.push('/estudiante') // O a una página de "Bienvenido"
+    } else {
+      if (error.message === 'auth/user-not-pre-approved-or-already-registered') {
+        errorMessage.value = 'Tu email no está en la lista de usuarios habilitados para registrarse, o ya te has registrado. Contacta a Bedelía.'
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage.value = 'El email ya está en uso por otra cuenta. Si olvidaste tu contraseña, puedes restablecerla.'
+      } else {
+        errorMessage.value = 'Ocurrió un error inesperado durante el registro.'
+      }
     }
-
-    // 🔹 Guardar rol activo en localStorage
-    const usuario = await obtenerUsuario(uid)      // traer datos actualizados
-    if (usuario.roles && usuario.roles.length > 0) {
-      localStorage.setItem('rolActivo', usuario.roles[0]) // el primer rol por defecto
-    }
-
-    router.push('/estudiante')
-  } catch (e) {
-    console.error('Error en registro o vinculación:', e)
-    if (e.code === 'auth/email-already-in-use') {
-      alert('El email ya está registrado. En caso de no recordar la contraseña, ir a restablecer contraseña')
-      return
-    }
-    alert(e.message)
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

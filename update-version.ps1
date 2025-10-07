@@ -2,7 +2,7 @@ param (
     [ValidateSet("patch","minor","major")]
     [string]$v = "patch",
 
-    [string]$msg = "Trabajo del dia"
+    [string]$msg = "chore(release): version $v Trabajo en desarrollo"
 )
 
 # -----------------------------

@@ -60,7 +60,8 @@
 
   /* ---------- BOTON BASE (Simplificado) ---------- */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium
+    @apply inline-flex items-center justify-center rounded-md px-2
+           text-xs py-2 text-sm font-medium
            focus:outline-none focus:ring-2 transition-colors;
   }
 
@@ -75,8 +76,8 @@
   }
   /* Botón link (UNA SOLA DEFINICIÓN) */
   .btn-link {
-    @apply text-xs font-medium rounded-sm
-         text-stone-600 transition-colors
+    @apply text-xs font-medium rounded-sm mx-2
+         text-stone-600 transition-colors     
          hover:text-primary hover:underline underline-offset-4
          focus:outline-none focus:ring-2 focus:ring-primary-light;
   }

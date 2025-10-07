@@ -38,6 +38,9 @@ export function useLayout() {
     }
   });
 
+  //configurar el layout inicial explicítamente
+  setLayout('acceso')
+
   return { 
     currentLayout, // Para mostrar en Footer: "Acceso", "Estudiante", etc.
     currentTheme,  // Para casos donde necesites el tema visual

@@ -7,6 +7,7 @@ import {
   deleteDoc,
   collection,
   query,
+  updateDoc,
   where,
   limit,
   writeBatch

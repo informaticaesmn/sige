@@ -1,6 +1,6 @@
 # SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.6.15 (commit 6e6c858)
+Version actual: dev v0.6.19 (commit 6e6c858)
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
