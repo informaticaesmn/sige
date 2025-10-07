@@ -1,6 +1,6 @@
-# SIGE - ESMN
+﻿# SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.6.19 (commit 6e6c858)
+Version actual: dev v0.6.22 (commit ad607db)
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
@@ -48,6 +48,7 @@ Esta pequeña app. Esta pensada para ir sumando funcionalidades por etapas siend
 > Hay un archivo con [notas e ideas](NOTAS.md) que se van generando en el equipo de trabajo reunido para pensar en este sistema 
 
 <br><br><br><p align="right"> <i>Genaro Villar   </i></p>
+
 
 
 
