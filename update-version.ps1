@@ -56,7 +56,7 @@ $replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commi
 $updatedContent = $readmeContent -replace $pattern, $replacement
 
 # Guardamos el contenido actualizado
-Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8# Actualizamos el README aqui mismo
+Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8 # Actualizamos el README aqui mismo
 
 # Anadimos el README al ultimo commit (el de la version) para mantener el historial limpio
 git add README.md
