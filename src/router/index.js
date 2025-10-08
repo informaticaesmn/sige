@@ -12,10 +12,10 @@ const routes = [
     alias: '/login',
     component: () => import('@/layouts/AccesoLayout.vue'),
     children: [
-      { path: '', name: 'Login', component: () => import('@/views/auth/Login.vue') },
-      { path: 'registro', name: 'Registro', component: () => import('@/views/auth/Register.vue') },
-      { path: 'reset-password', name: 'ResetPassword', component: () => import('@/views/auth/ResetPassword.vue') },
-      { path: 'seleccionar-rol', name: 'SeleccionarRol', component: () => import('@/views/auth/SeleccionarRol.vue') }
+      { path: '', name: 'login', component: () => import('@/views/auth/Login.vue') },
+      { path: 'registro', name: 'registro', component: () => import('@/views/auth/Register.vue') },
+      { path: 'reset-password', name: 'reset-password', component: () => import('@/views/auth/ResetPassword.vue') },
+      { path: 'seleccionar-rol', name: 'seleccionar-rol', component: () => import('@/views/auth/SeleccionarRol.vue') }
     ]
   },
 

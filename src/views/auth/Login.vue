@@ -9,9 +9,9 @@
         type="email"
         name="email"
         v-model="email"
+        placeholder="mail con el que accedés al campus de la ESMN"
         autocomplete="email"
         :error="emailError"
-        :info="'Mail con el que accedés al campus de la ESMN'"
       />  
       <FormInput
         id="password"
@@ -91,38 +91,22 @@ async function handleLogin() {
   if (isLoginDisabled.value) return;
 
   isLoading.value = true;
-  try {
-    const { exito, error } = await loginFirebase(email.value, password.value);
-    isLoading.value = false;
+  const { exito, error } = await loginFirebase(email.value, password.value);
+  isLoading.value = false;
 
-    if (exito) {
-      // La redirección por rol ahora la maneja App.vue o el router guard.
-      // Aquí solo nos aseguramos de que el login fue exitoso.
-      // Podríamos redirigir a una ruta "neutra" como '/dashboard' y dejar que el guard haga el resto.
-      router.push('/estudiante');
-    } else {
-      errorMessage.value = 'El email o la contraseña son incorrectos.';
-      loginAttempts.value++;
-      if (loginAttempts.value >= MAX_ATTEMPTS) {
-        isLocked.value = true;
-        setTimeout(() => {
-          isLocked.value = false;
-          loginAttempts.value = 0;
-          errorMessage.value = 'Ahora podés intentar ingresar nuevamente.';
-        }, LOCKOUT_TIME);
-      }
-    } 
-  } catch (e) {
-    console.error('Error en login:', e)
-    switch (e.code) {
-      case 'auth/user-not-found':
-        emailError.value = 'Usuario no encontrado'
-        break
-      case 'auth/wrong-password':
-        passwordError.value = 'Contraseña incorrecta'
-        break
-      default:
-        alert(e.message)
+  if (exito) {
+    // La redirección por rol ahora la maneja App.vue o el router guard.
+    router.push('/estudiante');
+  } else {
+    errorMessage.value = 'El email o la contraseña son incorrectos.';
+    loginAttempts.value++;
+    if (loginAttempts.value >= MAX_ATTEMPTS) {
+      isLocked.value = true;
+      setTimeout(() => {
+        isLocked.value = false;
+        loginAttempts.value = 0;
+        errorMessage.value = 'Ahora podés intentar ingresar nuevamente.';
+      }, LOCKOUT_TIME);
     }
   }
 }

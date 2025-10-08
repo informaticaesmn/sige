@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore/lite'
 import { getAuth } from 'firebase/auth'
+import { getFunctions } from 'firebase/functions'
+import { getFirestore } from 'firebase/firestore/lite'
 
 // Configuración pública (no secretos sensibles)
 const firebaseConfig = {
@@ -16,3 +17,6 @@ const app  = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
 export const db   = getFirestore(app)
+export const functions = getFunctions(app) // Inicializar Cloud Functions
+
+export default app

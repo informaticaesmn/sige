@@ -1,15 +1,15 @@
 // src/composables/useAuth.js
 import { ref, computed } from 'vue'
-import { auth } from '@/config/firebase'
+import { auth, functions } from '@/config/firebase'
+import { httpsCallable } from 'firebase/functions' // Importar httpsCallable
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
-  createUserWithEmailAndPassword
+  sendPasswordResetEmail
 } from 'firebase/auth'
 // Necesitaremos interactuar con Firestore desde aquí
-import { verificarPerfilPreAprobado, migrarPerfilARegistroCompleto, obtenerUsuario } from './useUsuarios'
+import { obtenerUsuario } from './useUsuarios'
 
 // El 'user' ahora contendrá tanto datos de Auth como de Firestore
 const user = ref(null)
@@ -53,35 +53,32 @@ export function useAuth() {
   /**
    * Registro de un usuario que YA DEBE existir en Firestore
    */
-async function registrarUsuario(email, password) {
-  try {
-    // 1. Verificar si el usuario está pre-aprobado en Firestore
-    const perfilTemporal = await verificarPerfilPreAprobado(email)
-
-    if (!perfilTemporal) {
-      throw new Error('auth/user-not-pre-approved-or-already-registered')
+  async function registrarUsuario(email, password) {
+    try {
+      // 1. Llamar a la Cloud Function para que haga el trabajo pesado
+      const registrarConFuncion = httpsCallable(functions, 'registrarUsuario')
+      const result = await registrarConFuncion({ email, password })
+      
+      // 2. Si la Cloud Function tuvo éxito, hacemos login en el cliente
+      await loginFirebase(email, password)
+      
+      // El onAuthStateChanged se encargará de poblar el 'user' reactivo.
+      console.log('✅ Usuario registrado y logueado exitosamente:', result.data.uid)
+      return { exito: true }
+      
+    } catch (error) {
+      console.error('Error en el registro (cliente):', error.message)
+      // La Cloud Function devuelve errores con un formato específico que podemos usar.
+      if (error.code === 'functions/not-found') {
+        return { exito: false, error: { message: 'auth/user-not-pre-approved-or-already-registered' } }
+      } else if (error.code === 'functions/already-exists') {
+        return { exito: false, error: { code: 'auth/email-already-in-use' } }
+      } else if (error.code === 'functions/invalid-argument' && error.message.includes('weak-password')) {
+        return { exito: false, error: { code: 'auth/weak-password' } }
+      }
+      return { exito: false, error }
     }
-
-    // 2. Si es válido, crear el usuario en Auth
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
-    const nuevoUid = cred.user.uid
-
-    // 3. Migrar el documento de Firestore al nuevo UID
-    const perfilCompleto = await migrarPerfilARegistroCompleto(email, nuevoUid, perfilTemporal)
-    
-    // 4. Actualizar el estado local del usuario inmediatamente.
-    // onAuthStateChanged puede ser lento o no tener el perfil de Firestore listo aún.
-    // Esto asegura que la UI reaccione instantáneamente al registro exitoso.
-    user.value = perfilCompleto
-
-    console.log('✅ Usuario registrado y vinculado exitosamente:', nuevoUid)
-    return { exito: true }
-    
-  } catch (error) {
-    console.error('Error en el registro:', error.message)
-    return { exito: false, error }
   }
-}
 
   /**
    * Logout
