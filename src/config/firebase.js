@@ -17,6 +17,9 @@ const app  = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
 export const db   = getFirestore(app)
-export const functions = getFunctions(app) // Inicializar Cloud Functions
+
+// Inicializar Cloud Functions especificando la región.
+// Este dato es CRUCIAL para que la app sepa dónde llamar a la función.
+export const functions = getFunctions(app, 'southamerica-east1')
 
 export default app

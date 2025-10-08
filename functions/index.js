@@ -1,7 +1,12 @@
 // functions/index.js
 
-const functions = require("firebase-functions");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const {setGlobalOptions} = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+
+// Especificamos la región para TODAS las funciones en este archivo.
+// Esto asegura que se desplieguen en el mismo lugar donde está tu bd.
+setGlobalOptions({region: "southamerica-east1"});
 
 admin.initializeApp();
 
@@ -21,11 +26,11 @@ const auth = admin.auth();
  * @param {object} context - El contexto de la llamada a la función.
  * @return {Promise<object>} El perfil completo del usuario creado.
  */
-exports.registrarUsuario = functions.https.onCall(async (data, context) => {
-  const {email, password} = data;
+exports.registrarUsuario = onCall(async (request) => {
+  const {email, password} = request.data;
 
   if (!email || !password) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
         "invalid-argument",
         "El email y la contraseña son obligatorios.",
     );
@@ -38,7 +43,7 @@ exports.registrarUsuario = functions.https.onCall(async (data, context) => {
 
     if (!perfilTemporalDoc.exists || perfilTemporalDoc.data().uid) {
       // No existe o ya tiene un UID (ya se registró)
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
           "not-found",
           "auth/user-not-pre-approved-or-already-registered",
       );
@@ -82,25 +87,25 @@ exports.registrarUsuario = functions.https.onCall(async (data, context) => {
   } catch (error) {
     // Manejar errores específicos de Firebase Auth
     if (error.code === "auth/email-already-exists") {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
           "already-exists",
           "auth/email-already-in-use",
       );
     }
     if (error.code === "auth/invalid-password") {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
           "invalid-argument",
           "auth/weak-password",
       );
     }
 
     // Re-lanzar otros errores (como el not-found que lanzamos nosotros)
-    if (error instanceof functions.https.HttpsError) {
+    if (error instanceof HttpsError) {
       throw error;
     }
 
     console.error("Error inesperado en la Cloud Function:", error.message);
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
         "internal",
         "Ocurrió un error inesperado durante el registro.",
     );

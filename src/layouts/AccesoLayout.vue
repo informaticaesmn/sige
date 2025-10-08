@@ -26,7 +26,7 @@ import { useLayout } from '@/composables/useLayout.js'
 
 const { setLayout } = useLayout()
 onMounted(() => {
-  setLayout('estudiante') // fuerza el layout a "estudiante" al entrar aquí
+  setLayout('acceso') // Establece el layout correcto para esta sección
 }) 
 
 defineProps({ showBack: Boolean })

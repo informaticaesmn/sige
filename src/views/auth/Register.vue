@@ -49,7 +49,11 @@
       </button>
       <!-- tenemos que agregar terminos y condiciones y politica de privacidad??? -->
       <div class="text-center text-xs text-stone-400">
-        Al registrarte, aceptás nuestros 
+        <FormCheckbox
+          id="terms"
+          label="Al registrarte, aceptás nuestros "
+          v-model="acceptTerms"
+        />
         <button class="btn-min"
           type="button"
           @click="() => router.push('/terminos')"
@@ -78,6 +82,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
 import FormInput from '@/components/ui/FormInput.vue'
+import FormCheckbox from '@/components/ui/FormCheckbox.vue'
 
 const router = useRouter()
 const { registrarUsuario } = useAuth()
@@ -90,6 +95,7 @@ const emailError = ref('')
 const passwordError = ref('')
 const passwordConfirmError = ref('')
 const errorMessage = ref('') // Para errores generales
+const acceptTerms = ref(false)
 
 const isLoading = ref(false)
 
@@ -120,15 +126,15 @@ async function handleRegister() {
   isLoading.value = true
   try {
     const { exito, error } = await registrarUsuario(email.value, password.value)
-
+    
     if (exito) {
       // El onAuthStateChanged en useAuth se encargará de redirigir o actualizar el estado.
       // Si se necesita una redirección específica post-registro, aquí es el lugar.
       router.push('/estudiante') // O a una página de "Bienvenido"
     } else {
-      if (error.code === 'auth/weak-password') {
+      if (error?.code === 'auth/weak-password') {
         errorMessage.value = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.'
-      } else if (error.message === 'auth/user-not-pre-approved-or-already-registered' || error.code === 'auth/email-already-in-use') {
+      } else if (error?.message === 'auth/user-not-pre-approved-or-already-registered' || error?.code === 'auth/email-already-in-use') {
         errorMessage.value = 'Error: su mail no se encuentra entre los usuarios con registro pendiente. Si cree que esto es un error y su mail es el que usa para el acceso al campus, por favor comuníquese con Bedelía.'
       } else {
         errorMessage.value = 'Ocurrió un error inesperado durante el registro.'

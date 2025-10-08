@@ -5,6 +5,7 @@ import { httpsCallable } from 'firebase/functions' // Importar httpsCallable
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, // No estaba, pero debería estar para la función original
   signOut,
   sendPasswordResetEmail
 } from 'firebase/auth'
@@ -38,10 +39,14 @@ export function useAuth() {
    * Login con Firebase y carga de datos de Firestore
    */
   async function loginFirebase(email, password) {
+    // Necesitamos el router aquí para poder redirigir
+    const router = (await import('@/router')).default
+
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
       // La magia sucede en onAuthStateChanged, que se disparará automáticamente
       // y cargará el perfil completo.
+      router.push('/') // Forzamos la re-evaluación de la guardia de navegación
       return { exito: true, user: cred.user }
     } catch (error) {
       console.error('Error en login:', error.code)

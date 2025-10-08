@@ -1,7 +1,6 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import { getAuth } from 'firebase/auth'
-import { auth, db } from '@/config/firebase.js'
+import { useAuth } from '@/composables/useAuth.js'
 
 const routes = [
 
@@ -9,13 +8,13 @@ const routes = [
   {
     path: '/',
     name: 'Acceso',
-    alias: '/login',
     component: () => import('@/layouts/AccesoLayout.vue'),
     children: [
-      { path: '', name: 'login', component: () => import('@/views/auth/Login.vue') },
+      { path: '', name: 'login', component: () => import('@/views/auth/Login.vue') }, // Se renderiza en la ruta '/'
       { path: 'registro', name: 'registro', component: () => import('@/views/auth/Register.vue') },
       { path: 'reset-password', name: 'reset-password', component: () => import('@/views/auth/ResetPassword.vue') },
-      { path: 'seleccionar-rol', name: 'seleccionar-rol', component: () => import('@/views/auth/SeleccionarRol.vue') }
+      { path: 'seleccionar-rol', name: 'seleccionar-rol', component: () => import('@/views/auth/SeleccionarRol.vue') },
+      { path: 'terminos', name: 'terminos', component: () => import('@/views/auth/Terminos.vue') }
     ]
   },
 
@@ -56,18 +55,70 @@ const router = createRouter({
   routes
 })
 
-// 👇 Guardia global para no dar acceso hasta que Firebase responda
-router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(r => r.meta.requiresAuth)
-  //const auth =getAuth()
-  const user = auth.currentUser
+/**
+ * Guardia de Navegación Global
+ *
+ * 1. Espera a que el estado de autenticación de Firebase esté cargado.
+ * 2. Protege las rutas que requieren autenticación.
+ * 3. Protege las rutas según el rol del usuario.
+ * 4. Redirige a los usuarios logueados si intentan acceder a páginas de autenticación.
+ */
+const { user, estaCargando, isLoggedIn } = useAuth()
 
-    if (requiresAuth && !user) {
-      next('/')           // sin usuario → login
-    } else {
-      next()              // todo OK
+router.beforeEach(async (to, from, next) => {
+  console.log(`%c--- Navegando de ${from.path} a ${to.path} ---`, 'color: yellow; font-weight: bold;');
+
+  // Esperamos a que onAuthStateChanged termine de ejecutarse
+  while (estaCargando.value) {
+    console.log('... ⏳ esperando a que Firebase cargue el estado de auth');
+    // Este bucle ahora funcionará porque 'estaCargando' es la instancia global
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+  console.log(`%cAuth cargado. Usuario logueado: ${isLoggedIn.value}`, 'color: cyan');
+  
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+  const requiredRole = to.meta.role
+  
+  console.log(`Ruta requiere autenticación: ${requiresAuth}`);
+  if (requiredRole) console.log(`Ruta requiere rol: ${requiredRole}`);
+
+  // Caso 1: La ruta requiere autenticación
+  if (requiresAuth) {
+    if (!isLoggedIn.value) {
+      // Usuario no logueado, redirigir a login
+      console.log('🛑 NO LOGUEADO. Redirigiendo a Acceso.');
+      return next({ name: 'Acceso' })
     }
-  })
+    
+    // Usuario logueado, pero la ruta requiere un rol específico
+    // El rol del usuario es un array, así que comprobamos si incluye el rol requerido.
+    const userRoles = Array.isArray(user.value.rol) ? user.value.rol.map(r => r.toLowerCase()) : [];
 
+    if (requiredRole && !userRoles.includes(requiredRole.toLowerCase())) {
+      // El usuario no tiene el rol necesario.
+      console.log(`🛑 ROL INCORRECTO. Usuario tiene rol '${user.value.rol}', se requiere '${requiredRole}'. Redirigiendo a Acceso.`);
+      return next({ name: 'Acceso' })
+    }
+    
+    // Usuario logueado y con el rol correcto (o la ruta no requiere rol)
+    console.log('✅ ACCESO CONCEDIDO a ruta protegida.');
+    return next()
+  }
+  
+  // Caso 2: La ruta es pública (ej. /login), pero el usuario ya está logueado
+  if (isLoggedIn.value && ['login', 'registro', 'reset-password'].includes(to.name)) {
+    // Redirigir al tablero correspondiente según el primer rol del usuario
+    const primerRol = Array.isArray(user.value?.rol) && user.value.rol.length > 0 ? user.value.rol[0] : 'estudiante';
+    const rol = primerRol.toLowerCase();
+    console.log(`↩️ USUARIO YA LOGUEADO. Redirigiendo al tablero de '${rol}'.`);    
+    if (rol === 'admin') return next({ name: 'AdminTablero' });
+    if (rol === 'bedel') return next({ name: 'BedelTablero' });
+    return next({ name: 'EstudianteTablero' });
+  }
+  
+  // Caso 3: Ruta pública y usuario no logueado
+  console.log('✅ ACCESO CONCEDIDO a ruta pública.');
+  return next()
+})
   
 export default router
