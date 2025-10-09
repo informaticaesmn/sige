@@ -1,5 +1,6 @@
 // src/composables/useAuth.js
 import { ref, computed } from 'vue'
+import router from '@/router' // Importamos el router directamente
 import { auth, functions } from '@/config/firebase'
 import { httpsCallable } from 'firebase/functions' // Importar httpsCallable
 import {
@@ -39,14 +40,30 @@ export function useAuth() {
    * Login con Firebase y carga de datos de Firestore
    */
   async function loginFirebase(email, password) {
-    // Necesitamos el router aquí para poder redirigir
-    const router = (await import('@/router')).default
-
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
-      // La magia sucede en onAuthStateChanged, que se disparará automáticamente
-      // y cargará el perfil completo.
-      router.push('/') // Forzamos la re-evaluación de la guardia de navegación
+      
+      // 1. Obtenemos el perfil completo desde Firestore
+      const perfilFirestore = await obtenerUsuario(cred.user.uid)
+      
+      // 2. Actualizamos el estado global del usuario
+      user.value = {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        ...perfilFirestore
+      }
+
+      // 3. Implementamos la lógica de redirección que propusiste
+      const roles = perfilFirestore?.rol || [];
+      if (roles.length === 1) {
+        const rol = roles[0].toLowerCase();
+        router.push(`/${rol}`); // Redirige a /estudiante, /admin, etc.
+      } else if (roles.length > 1) {
+        router.push('/seleccionar-rol');
+      } else {
+        router.push('/'); // Fallback: si no tiene roles, va al inicio
+      }
+
       return { exito: true, user: cred.user }
     } catch (error) {
       console.error('Error en login:', error.code)

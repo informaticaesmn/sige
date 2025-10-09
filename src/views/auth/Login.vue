@@ -95,8 +95,9 @@ async function handleLogin() {
   isLoading.value = false;
 
   if (exito) {
-    // La redirección por rol ahora la maneja App.vue o el router guard.
-    router.push('/estudiante');
+    // ¡No hacemos nada aquí!
+    // La redirección ahora es manejada 100% por la lógica en useAuth.js
+    // que activa la guardia de navegación del router.
   } else {
     errorMessage.value = 'El email o la contraseña son incorrectos.';
     loginAttempts.value++;

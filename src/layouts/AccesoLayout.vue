@@ -21,13 +21,6 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { onMounted } from 'vue'
-import { useLayout } from '@/composables/useLayout.js'
-
-const { setLayout } = useLayout()
-onMounted(() => {
-  setLayout('acceso') // Establece el layout correcto para esta sección
-}) 
 
 defineProps({ showBack: Boolean })
 const router = useRouter()

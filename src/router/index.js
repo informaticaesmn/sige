@@ -1,5 +1,6 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import { useLayout } from '@/composables/useLayout.js'
 import { useAuth } from '@/composables/useAuth.js'
 
 const routes = [
@@ -64,6 +65,7 @@ const router = createRouter({
  * 4. Redirige a los usuarios logueados si intentan acceder a páginas de autenticación.
  */
 const { user, estaCargando, isLoggedIn } = useAuth()
+const { setLayout } = useLayout()
 
 router.beforeEach(async (to, from, next) => {
   console.log(`%c--- Navegando de ${from.path} a ${to.path} ---`, 'color: yellow; font-weight: bold;');
@@ -102,6 +104,8 @@ router.beforeEach(async (to, from, next) => {
     
     // Usuario logueado y con el rol correcto (o la ruta no requiere rol)
     console.log('✅ ACCESO CONCEDIDO a ruta protegida.');
+    // Actualizamos el layout según el rol de la ruta
+    setLayout(requiredRole);
     return next()
   }
   
@@ -118,6 +122,8 @@ router.beforeEach(async (to, from, next) => {
   
   // Caso 3: Ruta pública y usuario no logueado
   console.log('✅ ACCESO CONCEDIDO a ruta pública.');
+  // Para rutas públicas como login, usamos el layout 'acceso'
+  setLayout('acceso');
   return next()
 })
   
