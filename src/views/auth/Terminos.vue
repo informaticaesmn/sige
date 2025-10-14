@@ -6,13 +6,19 @@
     <h2 class="mb-6">Terminos y Condiciones</h2>
       <!-- texto de los terminos -->    
       <p class="text-sm text-gray-600">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-      </p>
+        Términos y Condiciones de Uso
+
+La presente aplicación es de uso interno y exclusivo de la institución. Actualmente se encuentra en etapa de desarrollo y período de prueba, por lo que su funcionamiento, contenidos y características podrán ser modificados o mejorados de manera continua, conforme se identifiquen oportunidades de optimización o se detecten dificultades.
+
+El uso de esta herramienta implica la aceptación de estas condiciones y el compromiso de emplearla de manera responsable y conforme a los fines académicos previstos.
+
+Se recuerda que es responsabilidad de cada usuario conocer su plan de estudios y el régimen de correlatividades vigente, con el fin de planificar y gestionar adecuadamente su trayectoria académica dentro de la institución.</p>
       <FormCheckbox
         id="terms"
-        label="Acepto los términos y condiciones"
+        label="He leído y acepto los términos y condiciones"
         v-model="acceptTerms"
       />
+      <span v-if="!acceptTerms" class="text-xs text-red-500">Debes aceptar los términos y condiciones para continuar.</span>
       <button
         type="button"
         @click="router.back()"

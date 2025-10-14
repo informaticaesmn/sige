@@ -49,26 +49,22 @@
       </button>
       <!-- tenemos que agregar terminos y condiciones y politica de privacidad??? -->
       <div class="text-center text-xs text-stone-400">
-        <FormCheckbox
+        <FormCheckbox 
           id="terms"
-          label="Al registrarte, aceptás nuestros "
           v-model="acceptTerms"
+          class="inline-block"
         />
+        <span>Al registrarte, aceptás nuestros  </span>
         <button class="btn-min"
           type="button"
           @click="() => router.push('/terminos')"
         >Términos y Condiciones</button>
-        y la 
-        <button class="btn-min"
-          type="button"
-          @click="() => router.push('/privacidad')"
-        >Política de Privacidad</button>.
       </div>
 
 
     <button
       type="button"
-      @click="() => router.push('/login')"
+      @click="() => router.push('/')"
       class="btn btn-link mt-2"
       >¿Ya tenés cuenta? Ingresá
     </button>
