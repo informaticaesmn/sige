@@ -54,7 +54,7 @@
           v-model="acceptTerms"
           class="inline-block"
         />
-        <span>Al registrarte, aceptás nuestros  </span>
+        <span>Al registrarte, aceptás nuestros </span>
         <button class="btn-min"
           type="button"
           @click="() => router.push('/terminos')"
