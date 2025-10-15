@@ -15,6 +15,13 @@ function withOpacity(variableName) {
 
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  // Añadimos la safelist para evitar que Tailwind purgue las clases de tema
+  safelist: [
+    'theme-estudiante',
+    'theme-docente',
+    'theme-bedel',
+    'theme-admin',
+  ],
   theme: {
     extend: {
       colors: {

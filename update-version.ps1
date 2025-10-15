@@ -1,47 +1,67 @@
 param (
     [ValidateSet("patch","minor","major")]
     [string]$v = "patch",
-
     [string]$msg = "chore(release): version $v Trabajo en desarrollo"
 )
 
 # -----------------------------
-# 1. Detectar branch actual
+# 1. Detección y Sincronización Inicial
 # -----------------------------
 $branch = git rev-parse --abbrev-ref HEAD
 Write-Host "Branch actual: $branch"
 
-# -----------------------------
-# 2. Sincronizar con el remoto ANTES de empezar
-# -----------------------------
-Write-Host "Sincronizando con origin/$branch..."
-git pull origin $branch
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Error al hacer git pull. Por favor, resuelve los conflictos manualmente y vuelve a intentarlo."
-    exit 1 # Detiene el script si el pull falla
+# Si estamos en 'main', el flujo es diferente y más estricto.
+if ($branch -eq "main") {
+    Write-Host "Estás en la rama 'main'. El script se ejecutará en modo 'release'." -ForegroundColor Cyan
+    # 1. Asegurarse de que 'main' esté limpia y sincronizada con el remoto.
+    if (git status --porcelain) {
+        Write-Host "Error: La rama 'main' tiene cambios locales sin comitear. Por favor, guárdalos o descártalos." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Sincronizando 'main' con el repositorio remoto..."
+    git pull origin main
+    if ($LASTEXITCODE -ne 0) { Write-Host "Error al sincronizar 'main'." -ForegroundColor Red; exit 1 }
+
+    # 2. Traer los cambios de 'dev' a 'main'.
+    Write-Host "Fusionando 'dev' en 'main'..."
+    git merge dev
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error durante el merge de 'dev'. Resuelve los conflictos y ejecuta el script de nuevo en 'main'." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "'dev' fusionado correctamente en 'main'." -ForegroundColor Green
+
+} else { # Flujo normal para ramas de desarrollo (ej. 'dev')
+    # 1. Sincronizar con el remoto ANTES de empezar
+    Write-Host "Sincronizando con origin/$branch..."
+    git pull origin $branch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error al hacer git pull. Resuelve los conflictos y vuelve a intentarlo." -ForegroundColor Red
+        exit 1
+    }
+
+    # 2. Comitear cambios de desarrollo (si los hay)
+    if (git status --porcelain) {
+        Write-Host "Hay cambios sin guardar. Comiteando como '$msg'..."
+        git add .
+        git commit -m "$msg"
+    } else {
+        Write-Host "No hay cambios de desarrollo que comitear."
+    }
+
+    # 3. Incrementar versión en la rama de desarrollo
+    Write-Host "Incrementando versión de desarrollo ($v)..."
+    npm version $v -m "feat(release): bump version to %s"
 }
 
 # -----------------------------
-# 3. Comitear cambios de desarrollo (si los hay)
+# 4. Actualizar README.md (se hace en todas las ramas)
 # -----------------------------
-if (git status --porcelain) {
-    Write-Host "Hay cambios sin guardar. Comiteando como '$msg'..."
-    git add .
-    git commit -m "$msg"
-} else {
-    Write-Host "No hay cambios de desarrollo que comitear. Continuando..."
-}
-
-# -----------------------------
-# 4. Incrementar version y actualizar README
-# -----------------------------
-Write-Host "Incrementando version ($v)..."
-# Usamos -m para personalizar el mensaje del commit que crea npm version
-npm version $v -m "chore(release): version %s"
+# Obtenemos la versión del package.json, que ahora es la fuente de verdad.
 $package = Get-Content package.json | ConvertFrom-Json
 $version = $package.version
 $commit = git rev-parse --short HEAD
-Write-Host "Nueva version: v$version ($commit)"
+Write-Host "Versión actual para el README: v$version (commit $commit)" -ForegroundColor Green
 
 # Actualizamos el README aqui mismo
 Write-Host "Actualizando README.md..."
@@ -58,22 +78,22 @@ $updatedContent = $readmeContent -replace $pattern, $replacement
 # Guardamos el contenido actualizado
 Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8 # Actualizamos el README aqui mismo
 
-# Anadimos el README al ultimo commit (el de la version) para mantener el historial limpio
+# Añadimos el README al último commit (el de la versión) para mantener el historial limpio
 git add README.md
 git commit --amend --no-edit
 
 # -----------------------------
 # 5. Push final a GitHub
 # -----------------------------
-Write-Host "Empujando cambios a origin/$branch..."
 if ($branch -eq "main") {
-    # El tag ya fue creado por `npm version`, solo necesitamos empujarlo
+    Write-Host "Empujando 'main' y los tags de la nueva versión a GitHub..." -ForegroundColor Cyan
     git push origin $branch
     git push origin --tags
-    Write-Host "Push completado en 'main' con tags."
+    Write-Host "¡Release en 'main' completado con éxito!" -ForegroundColor Green
 } else {
+    Write-Host "Empujando cambios de desarrollo a origin/$branch..."
     git push origin $branch
-    Write-Host "Push completado en '$branch' (sin tags)."
+    Write-Host "Push en '$branch' completado."
 }
 
-Write-Host "Proceso finalizado con exito."
+Write-Host "--- Proceso finalizado ---" -ForegroundColor Yellow
