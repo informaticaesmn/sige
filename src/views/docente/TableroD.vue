@@ -2,7 +2,7 @@
    <div class="bg-stone-100 min-h-screen font-sans">
     <!-- Contenido Principal -->
     <div class="container mx-auto px-4 py-6">
-      <h2 class="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Dashboard Bedel</h2>
+      <h2 class="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Dashboard Docente</h2>
       
       <!-- Grid Principal -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -11,8 +11,8 @@
           <div class="bg-white rounded-lg shadow-md p-6 mb-6 card-hover transition-all duration-300">
             <div class="flex flex-col items-center mb-4">
               <img src="/avatar.png" alt="Foto de perfil" class="w-24 h-24 rounded-full border-4 border-primary mb-4">
-              <h2 class="text-xl font-bold text-stone-800">{{ user?.nombre || 'Bedel' }}</h2>
-              <p class="text-stone-600">{{ user?.carrera || 'Rol Bedelía' }}</p>
+              <h2 class="text-xl font-bold text-stone-800">{{ user?.nombre || 'Docente' }}</h2>
+              <p class="text-stone-600">{{ user?.carrera || 'Rol Docente' }}</p>
             </div>
             
             <div class="space-y-3">

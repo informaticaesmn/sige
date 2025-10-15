@@ -1,5 +1,6 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import { routerInstance } from './routerInstance' // Importamos el objeto contenedor
 import { useLayout } from '@/composables/useLayout.js'
 import { useAuth } from '@/composables/useAuth.js'
 
@@ -48,13 +49,27 @@ const routes = [
     children: [
       { path: '', name: 'BedelTablero', component: () => import('@/views/bedel/TableroB.vue') }
     ]
+  },
+
+  // CON LAYOUT (docente)
+  {
+    path: '/docente',
+    component: () => import('@/layouts/DocenteLayout.vue'), // Asumimos que existe o se creará un DocenteLayout.vue
+    meta: { requiresAuth: true, role: 'docente' },
+    children: [
+      { path: '', name: 'DocenteTablero', component: () => import('@/views/docente/TableroD.vue') }
+    ]
   }
 ]
 
-const router = createRouter({
+const createdRouter = createRouter({
   history: createWebHistory(),
   routes
 })
+
+// Asignamos la instancia creada a nuestra referencia exportada.
+// Ahora, cualquier archivo que importe `routerInstance` tendrá acceso al router.
+routerInstance.router = createdRouter;
 
 /**
  * Guardia de Navegación Global
@@ -67,7 +82,7 @@ const router = createRouter({
 const { user, estaCargando, isLoggedIn } = useAuth()
 const { setLayout } = useLayout()
 
-router.beforeEach(async (to, from, next) => {
+createdRouter.beforeEach(async (to, from, next) => {
   console.log(`%c--- Navegando de ${from.path} a ${to.path} ---`, 'color: yellow; font-weight: bold;');
 
   // Esperamos a que onAuthStateChanged termine de ejecutarse
@@ -111,13 +126,24 @@ router.beforeEach(async (to, from, next) => {
   
   // Caso 2: La ruta es pública (ej. /login), pero el usuario ya está logueado
   if (isLoggedIn.value && ['login', 'registro', 'reset-password'].includes(to.name)) {
-    // Redirigir al tablero correspondiente según el primer rol del usuario
-    const primerRol = Array.isArray(user.value?.rol) && user.value.rol.length > 0 ? user.value.rol[0] : 'estudiante';
-    const rol = primerRol.toLowerCase();
+    // Si el usuario está logueado pero aún no se cargaron sus roles (user.value es null o no tiene .rol),
+    // es un estado transitorio. No hacemos nada y esperamos a que el estado se resuelva.
+    const userRoles = user.value?.rol; 
+    if (!userRoles || !Array.isArray(userRoles) || userRoles.length === 0) {
+      // Si el usuario está logueado pero aún no se cargaron sus roles,
+      // es mejor no hacer nada y dejar que la UI muestre un estado de carga.
+      return next();
+    }
+    const rol = userRoles[0].toLowerCase();
     console.log(`↩️ USUARIO YA LOGUEADO. Redirigiendo al tablero de '${rol}'.`);    
+    // ¡Llamamos a setLayout aquí para asegurar el cambio de tema!
+    setLayout(rol);
     if (rol === 'admin') return next({ name: 'AdminTablero' });
     if (rol === 'bedel') return next({ name: 'BedelTablero' });
-    return next({ name: 'EstudianteTablero' });
+    if (rol === 'docente') return next({ name: 'DocenteTablero' });
+    // Por defecto, si el rol es estudiante o cualquier otro no especificado
+    setLayout('estudiante');
+    return next({ name: 'EstudianteTablero' }); // Fallback a estudiante
   }
   
   // Caso 3: Ruta pública y usuario no logueado
@@ -127,4 +153,4 @@ router.beforeEach(async (to, from, next) => {
   return next()
 })
   
-export default router
+export default createdRouter

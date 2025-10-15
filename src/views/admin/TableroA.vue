@@ -2,7 +2,7 @@
    <div class="bg-stone-100 min-h-screen font-sans">
     <!-- Contenido Principal -->
     <div class="container mx-auto px-4 py-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Dashboard Estudiantil</h1>
+      <h1 class="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Dashboard Admin</h1>
       
       <!-- Grid Principal -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -10,31 +10,31 @@
         <div class="lg:col-span-1">
           <div class="bg-white rounded-lg shadow-md p-6 mb-6 card-hover transition-all duration-300">
             <div class="flex flex-col items-center mb-4">
-              <img src="/avatar.png" alt="Foto estudiante" class="w-24 h-24 rounded-full border-4 border-teal-500 mb-4">
-              <h2 class="text-xl font-bold text-stone-800">Juan Perez</h2>
-              <p class="text-stone-600">662- Profesorado de Música</p>
+              <img src="/avatar.png" alt="Foto de perfil" class="w-24 h-24 rounded-full border-4 border-primary mb-4">
+              <h3 class="text-xl font-bold text-stone-800">{{ user?.nombre || 'Admin' }}</h3>
+              <p class="text-stone-600">{{ user?.carrera || 'Rol Administrativo' }}</p>
             </div>
             
             <div class="space-y-3">
               <div class="flex items-center">
-                <envelope-icon class="h-5 w-5 inline-block ml-2 text-teal-600" />
-                <span class="px-2">juanperez@gmail.com</span>
+                <envelope-icon class="h-5 w-5 inline-block ml-2 text-primary" />
+                <span class="px-2">{{ user?.email }}</span>
               </div>
               <div class="flex items-center">
-                <IdentificationIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
-                <span class="px-2">DNI: 40123123</span>
+                <IdentificationIcon class="h-5 w-5 inline-block ml-2 text-primary" />
+                <span class="px-2">DNI: {{ user?.dni || 'No aplica' }}</span>
               </div>
               <div class="flex items-center">
-                <AcademicCapIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
-                <span class="px-2">Legajo: 40123123</span>
+                <AcademicCapIcon class="h-5 w-5 inline-block ml-2 text-primary" />
+                <span class="px-2">Legajo: {{ user?.legajo || 'No aplica' }}</span>
               </div>
               <div class="flex items-center">
-                <PlayIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
-                <span class="px-2">Estado: Activo</span>
+                <PlayIcon class="h-5 w-5 inline-block ml-2 text-primary" />
+                <span class="px-2">Estado: {{ user?.estado || 'Activo' }}</span>
               </div>
             </div>
             
-            <button class="mt-6 w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">
+            <button class="mt-6 w-full py-2 bg-primary text-white rounded-lg hover:bg-teal-700 transition">
               <PencilSquareIcon class="h-5 w-5 inline-block ml-2" /> 
               <span class="px-2">Editar Perfil</span>
             </button>
@@ -43,7 +43,7 @@
           <!-- Acciones-->
           <div class="bg-white rounded-lg shadow-md p-6 card-hover transition-all duration-300">
             <div class="flex items-center mb-4">
-            <WrenchIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <WrenchIcon class="h-5 w-5 inline-block ml-2 text-primary" />
             <span class="text-lg font-bold flex items-center text-stone-800 px-2">Acciones</span></div>
             <button class="mt-4 w-full py-2 bg-stone-100 text-stone-800 rounded-lg hover:bg-stone-200 transition">
               <FingerPrintIcon class="h-5 w-5 inline-block text-stone-400" /> Datos Personales</button>
@@ -59,7 +59,7 @@
           <!-- Planes de Estudio -->
           <div class="bg-white rounded-lg shadow-md p-6 mb-6 card-hover transition-all duration-300">
              <div class="flex items-center mb-4">
-            <ChevronDoubleDownIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <ChevronDoubleDownIcon class="h-5 w-5 inline-block ml-2 text-primary" />
             <span class="text-lg font-bold flex items-center text-stone-800 px-2">Planes de Estudio</span></div>
             
             <div class="overflow-x-auto">
@@ -82,11 +82,11 @@
                     </td>
                     <td class="p-3">
                       <div class="w-full bg-stone-200 rounded-full h-2.5">
-                        <div class="bg-teal-600 h-2.5 rounded-full progress-bar"></div>
+                        <div class="bg-primary h-2.5 rounded-full progress-bar"></div>
                       </div>
                     </td>
                     <td class="p-3">
-                      <button class="text-teal-600 hover:text-teal-800">
+                      <button class="text-primary hover:text-teal-800">
                         <EyeIcon class="h-5 w-5 inline-block" /> Detalle
                       </button>
                     </td>
@@ -99,7 +99,7 @@
           <!-- Materias Aprobadas -->
           <div class="bg-white rounded-lg shadow-md p-6 card-hover transition-all duration-300">
               <div class="flex items-center mb-4">
-            <CheckCircleIcon class="h-5 w-5 inline-block ml-2 text-teal-600" />
+            <CheckCircleIcon class="h-5 w-5 inline-block ml-2 text-primary" />
             <span class="text-lg font-bold flex items-center text-stone-800 px-2">Materias Aprobadas</span></div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,7 +128,10 @@
 </template>
 
 <script setup>
+  import { useAuth } from '@/composables/useAuth.js';
   import { AcademicCapIcon, ArchiveBoxIcon, ChatBubbleLeftEllipsisIcon, CheckCircleIcon, ChevronDoubleDownIcon, EnvelopeIcon, EyeIcon, FingerPrintIcon, IdentificationIcon, ListBulletIcon, PencilSquareIcon, PlayIcon,  WrenchIcon } from '@heroicons/vue/24/outline';
+
+  const { user } = useAuth();
 </script>
 
 <style scoped>

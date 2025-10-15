@@ -8,7 +8,7 @@
         v-for="r in roles"
         :key="r"
         @click="elegir(r)"
-        class="w-full text-left p-3 bg-teal-600 text-white rounded hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
+        class="btn btn-primary w-full"
       >
         {{ labels[r] || r }}
       </button>
@@ -27,6 +27,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { obtenerUsuario } from '@/composables/useUsuarios.js'
+import { useLayout } from '@/composables/useLayout.js'
 
 // reactive
 const roles = ref([])
@@ -34,6 +35,9 @@ const roles = ref([])
 // Router y ruta actual
 const router = useRouter()
 const route = useRoute()
+
+// Layout
+const { setLayout } = useLayout()
 
 // Diccionario para mostrar labels amigables
 const labels = {
@@ -49,7 +53,7 @@ const uid = route.query.uid || null
 onMounted(async () => {
   if (!uid) {
     alert('Usuario no definido')
-    router.push('/login')
+    router.push({ name: 'login' }) // Correcto: navegar por nombre a la ruta raíz
     return
   }
 
@@ -57,24 +61,26 @@ onMounted(async () => {
   const usuario = await obtenerUsuario(uid)
   if (!usuario) {
     alert('Usuario no encontrado')
-    router.push('/login')
+    router.push({ name: 'login' }) // Correcto: navegar por nombre a la ruta raíz
     return
   }
 
   // Cargamos roles en la UI
-  roles.value = usuario.roles
+  roles.value = usuario.rol
 })
 
 /**
  * Elegir rol y redirigir al layout correspondiente
  */
 function elegir(rol) {
-  localStorage.setItem('rolActivo', rol) // guardo rol en el localStorage
-  switch (rol) {
+  const rolEnMinusculas = rol.toLowerCase();
+  setLayout(rolEnMinusculas); // Forzamos el cambio de layout/tema inmediatamente
+  localStorage.setItem('rolActivo', rolEnMinusculas) // guardo rol en el localStorage
+  switch (rolEnMinusculas) {
     case 'estudiante':
       router.push('/estudiante')
       break
-    case 'teacher':
+    case 'docente': // Corregido para que coincida con el rol en la base de datos
       router.push('/docente')
       break
     case 'bedel':

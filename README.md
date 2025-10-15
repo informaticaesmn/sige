@@ -34,9 +34,9 @@ Esta pequeña app. Esta pensada para ir sumando funcionalidades por etapas siend
 - __Primer etapa__: Desarrollo de UI, integración con el sistema de Google Cloud, Firebase y que pueda dar un manejo claro para tener los datos del estudiantado en un repositorio unico y ordenado que sea fuente de datos para cualquier proceso administrativo que se requiera.
     - [x] Diseño de un login
     - [x] Vinculo de login con el servicio de Autenticación de Firebase.
-    - [ ] Vinculo del registro de cada usuario con los datos existentes proporcionados por Bedelia.
-    - [ ] Que el usuario puedo gestionar su propio Registro.
-    - [ ] Que el usuario pueda blanquear/resetear su contraseña de manera autonoma.
+    - [x] Vinculo del registro de cada usuario con los datos existentes proporcionados por Bedelia.
+    - [x] Que el usuario puedo gestionar su propio Registro.
+    - [x] Que el usuario pueda blanquear/resetear su contraseña de manera autonoma.
     - [ ] Armado de un tablero claro con todos sus datos.
     - [ ] Carga de los datos existentes.
 - __Segunda etapa__: cargar los planes de estudio de la institución para que sirvan de guia para armar el paquete de oferta academica que se ofrece por cada ciclo, este proceso es crucial para que esta app resuelva las inscripciones a cursados y empiece a ser repositorio de la trazabilidad de los recoridos academicos de cada estudiante de la institución.
@@ -48,15 +48,3 @@ Esta pequeña app. Esta pensada para ir sumando funcionalidades por etapas siend
 > Hay un archivo con [notas e ideas](NOTAS.md) que se van generando en el equipo de trabajo reunido para pensar en este sistema 
 
 <br><br><br><p align="right"> <i>Genaro Villar   </i></p>
-
-
-
-
-
-
-
-
-
-
-
-

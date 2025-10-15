@@ -128,12 +128,12 @@ async function handleRegister() {
       // Si se necesita una redirección específica post-registro, aquí es el lugar.
       router.push('/estudiante') // O a una página de "Bienvenido"
     } else {
-      if (error?.code === 'auth/weak-password') {
-        errorMessage.value = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.'
-      } else if (error?.message === 'auth/user-not-pre-approved-or-already-registered' || error?.code === 'auth/email-already-in-use') {
-        errorMessage.value = 'Error: su mail no se encuentra entre los usuarios con registro pendiente. Si cree que esto es un error y su mail es el que usa para el acceso al campus, por favor comuníquese con Bedelía.'
+      if (error?.code === 'auth/email-already-in-use') {
+        errorMessage.value = 'El email ya está en uso por otra cuenta. Si olvidaste tu contraseña, puedes restablecerla desde la pantalla de ingreso.'
+      } else if (error?.message === 'auth/user-not-pre-approved-or-already-registered') {
+        errorMessage.value = 'Tu email no está en la lista de usuarios habilitados para registrarse. Contacta a Bedelía.'
       } else {
-        errorMessage.value = 'Ocurrió un error inesperado durante el registro.'
+        errorMessage.value = error?.message || 'Ocurrió un error inesperado durante el registro.'
       }
     }
   } finally {

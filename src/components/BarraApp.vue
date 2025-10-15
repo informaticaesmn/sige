@@ -92,12 +92,15 @@ const closeUserMenu = () => {
 const { user, logoutFirebase } = useAuth()
 const router = useRouter()
 
-// Obtenemos el primer rol del usuario para simplificar la lógica de la UI
-const userRole = computed(() => {
-  if (Array.isArray(user.value?.rol) && user.value.rol.length > 0) {
-    return user.value.rol[0].toLowerCase();
-  }
-  return null;
+// Obtenemos el rol activo desde localStorage para mostrar el menú correcto.
+const rolActivo = ref(localStorage.getItem('rolActivo') || 'estudiante');
+
+// Escuchamos cambios en el storage para mantener la UI sincronizada
+// si el usuario cambia de rol en otra pestaña.
+onMounted(() => {
+  window.addEventListener('storage', () => {
+    rolActivo.value = localStorage.getItem('rolActivo') || 'estudiante';
+  });
 });
 
 const userHasMultipleRoles = computed(() => {
@@ -105,7 +108,7 @@ const userHasMultipleRoles = computed(() => {
 });
 
 const userName = computed(() => {
-  return user.value?.displayName || user.value?.email || 'Usuario';
+  return user.value?.nombre || user.value?.email || 'Usuario';
 });
 
 // --- Lógica de Menú Dinámico ---
@@ -121,9 +124,12 @@ const menuLinks = {
   bedel: [
     { to: '/bedel', text: 'Tablero Bedel', icon: WindowIcon },
   ],
+  docente: [
+    { to: '/docente', text: 'Tablero Docente', icon: WindowIcon },
+  ],
 };
 
-const roleLinks = computed(() => menuLinks[userRole.value] || []);
+const roleLinks = computed(() => menuLinks[rolActivo.value] || []);
 
 function navigate(path, closeMenus = false) {
   if (closeMenus) {

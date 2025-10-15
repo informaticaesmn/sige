@@ -91,15 +91,16 @@ async function handleLogin() {
   if (isLoginDisabled.value) return;
 
   isLoading.value = true;
-  const { exito, error } = await loginFirebase(email.value, password.value);
-  isLoading.value = false;
+  const { exito } = await loginFirebase(email.value, password.value);
 
   if (exito) {
-    // ¡No hacemos nada aquí!
-    // La redirección ahora es manejada 100% por la lógica en useAuth.js
-    // que activa la guardia de navegación del router.
+    // El login fue exitoso. La redirección es manejada por useAuth.js
+    // y el router guard. Limpiamos los intentos de error.
+    loginAttempts.value = 0;
   } else {
-    errorMessage.value = 'El email o la contraseña son incorrectos.';
+    // Si el login falla, el error es manejado dentro de loginFirebase.
+    // Aquí solo gestionamos la lógica de bloqueo por fuerza bruta.
+    errorMessage.value = 'El email o la contraseña son incorrectos. Intenta de nuevo.';
     loginAttempts.value++;
     if (loginAttempts.value >= MAX_ATTEMPTS) {
       isLocked.value = true;
@@ -110,6 +111,7 @@ async function handleLogin() {
       }, LOCKOUT_TIME);
     }
   }
+  isLoading.value = false;
 }
 
 

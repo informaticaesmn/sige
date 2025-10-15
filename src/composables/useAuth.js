@@ -1,12 +1,14 @@
 // src/composables/useAuth.js
 import { ref, computed } from 'vue'
-import router from '@/router' // Importamos el router directamente
-import { auth, functions } from '@/config/firebase'
+import { routerInstance } from '@/router/routerInstance'
+import {
+  auth,
+  functions
+} from '@/config/firebase'
 import { httpsCallable } from 'firebase/functions' // Importar httpsCallable
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, // No estaba, pero debería estar para la función original
   signOut,
   sendPasswordResetEmail
 } from 'firebase/auth'
@@ -53,22 +55,23 @@ export function useAuth() {
         ...perfilFirestore
       }
 
-      // 3. Implementamos la lógica de redirección que propusiste
+      // 3. Implementamos la lógica de redirección clara que te gustaba
       const roles = perfilFirestore?.rol || [];
-      if (roles.length === 1) {
+      if (roles.length > 1) {
+        // Múltiples roles: ir a la página de selección
+        routerInstance.router.push({ name: 'seleccionar-rol', query: { uid: cred.user.uid } });
+      } else if (roles.length === 1) {
+        // Un solo rol: ir directamente a su tablero
         const rol = roles[0].toLowerCase();
-        router.push(`/${rol}`); // Redirige a /estudiante, /admin, etc.
-      } else if (roles.length > 1) {
-        router.push('/seleccionar-rol');
+        routerInstance.router.push(`/${rol}`);
       } else {
-        router.push('/'); // Fallback: si no tiene roles, va al inicio
+        // Sin roles: ir a la página de inicio (login) con un error
+        routerInstance.router.push('/');
       }
-
-      return { exito: true, user: cred.user }
+      return { exito: true };
     } catch (error) {
       console.error('Error en login:', error.code)
-      // Devolvemos el error para que la UI pueda mostrar un mensaje
-      return { exito: false, error }
+      return { exito: false, error };
     }
   }
 
@@ -107,6 +110,9 @@ export function useAuth() {
    */
   async function logoutFirebase() {
     await signOut(auth)
+    // Limpiamos el estado local inmediatamente para evitar bucles de redirección.
+    user.value = null;
+    routerInstance.router.push({ name: 'login' }); // Redirigimos explícitamente al login.
   }
 
   /**
