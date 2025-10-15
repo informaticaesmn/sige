@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'   // ← necesario para el alias
+import { fileURLToPath, URL } from 'node:url' // Importamos los helpers de URL de Node
 
 // tomar hash corto del último commit
 //const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
@@ -13,13 +13,16 @@ const branch = process.env.VERCEL_GIT_COMMIT_REF || 'local'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  css: {
+    postcss: './postcss.config.js',
+  },
   base: '/',  // ← para el dominio raiz de vercel - antes nombre del repositorio '/rac/'
   build: {
     outDir: 'dist' // Directorio de salida para los archivos construidos
     },
   resolve: {
-     alias: {
-      '@': resolve(__dirname, 'src'), // ← crea el alias "@"
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)) // La forma correcta en ES Modules
     },
   },
   define: {

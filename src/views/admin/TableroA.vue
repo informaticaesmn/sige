@@ -34,7 +34,7 @@
               </div>
             </div>
             
-            <button class="mt-6 w-full py-2 bg-primary text-white rounded-lg hover:bg-teal-700 transition">
+            <button class="mt-6 w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
               <PencilSquareIcon class="h-5 w-5 inline-block ml-2" /> 
               <span class="px-2">Editar Perfil</span>
             </button>
@@ -76,7 +76,7 @@
                   <tr class="border-b" >
                     <td class="p-3 font-medium">662 Profesorado de Música</td>
                     <td class="p-3">
-                      <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                      <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-primary-dark">
                         Activo
                       </span>
                     </td>
@@ -86,7 +86,7 @@
                       </div>
                     </td>
                     <td class="p-3">
-                      <button class="text-primary hover:text-teal-800">
+                      <button class="text-primary hover:text-primary-dark">
                         <EyeIcon class="h-5 w-5 inline-block" /> Detalle
                       </button>
                     </td>
@@ -107,7 +107,7 @@
               <div class="bg-stone-100 rounded-lg p-4">
                 <div class="flex justify-between items-start">
                   <h4 class="font-medium text-stone-800">Psicología General</h4>
-                  <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                  <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-primary-dark">
                     Nota: 8
                   </span>
                 </div>

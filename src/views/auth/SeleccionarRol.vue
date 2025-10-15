@@ -42,7 +42,7 @@ const { setLayout } = useLayout()
 // Diccionario para mostrar labels amigables
 const labels = {
   estudiante: 'Estudiante',
-  teacher: 'Docente',
+  docente: 'Docente',
   bedel: 'Bedel',
   admin: 'Administrador'
 }

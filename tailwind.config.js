@@ -2,11 +2,14 @@
 
 // Helper para usar variables CSS con opacidad
 function withOpacity(variableName) {
-  return ({ opacityValue }) => {
-    if (opacityValue !== undefined) {
-      return `rgba(var(${variableName}), ${opacityValue})`;
+  return ({ opacityValue, opacityVariable }) => {
+    // Reemplazamos las comas por espacios para que sea compatible con rgb(R G B / A)
+    const colorValues = `var(${variableName})`.replace(/,/g, ' ');
+
+    if (opacityValue !== undefined) { // para clases como bg-primary/50
+      return `rgb(${colorValues} / ${opacityValue})`;
     }
-    return `rgb(var(${variableName}))`;
+    return `rgb(${colorValues})`;
   };
 }
 

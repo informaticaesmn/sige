@@ -5,7 +5,7 @@
   <!-- Menú Mobile -->
     <button
       @click="toggleMenu"
-      class="md:hidden text-white hover:text-teal-200 transition"
+      class="md:hidden text-white hover:text-primary-light transition"
       aria-label="Menú"
     >
       <Bars3Icon class="h-8 w-8" />
@@ -13,7 +13,7 @@
 
     <!-- Links desktop -->
     <div class="hidden md:flex items-center space-x-1">
-      <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to)" class="hover:bg-teal-600 px-3 py-2 flex items-center rounded transition">
+      <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to)" class="hover:bg-primary px-3 py-2 flex items-center rounded transition">
         <component :is="link.icon" class="h-5 w-5" />
         <span class="px-2">{{ link.text }}</span>
       </button>
@@ -22,7 +22,7 @@
     <!-- Menú móvil desplegable -->
     <transition name="slide">
       <div v-if="menuOpen" class="md:hidden absolute top-full left-0 w-full bg-primary-dark flex flex-col space-y-2 px-4 py-3 shadow-lg z-20">
-        <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to, true)" class="hover:bg-teal-600 px-3 py-2 rounded flex items-center transition text-left">
+        <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to, true)" class="hover:bg-primary px-3 py-2 rounded flex items-center transition text-left">
           <component :is="link.icon" class="h-5 w-5" />
           <span class="px-2">{{ link.text }}</span>
         </button>
@@ -36,12 +36,12 @@
 
     <!-- Menú de Usuario (derecha) -->
     <div class="relative">
-      <button @click="toggleUserMenu" class="flex items-center space-x-2 hover:bg-teal-600 p-1 rounded-md transition">
+      <button @click="toggleUserMenu" class="flex items-center space-x-2 hover:bg-primary p-1 rounded-md transition">
         <span class="hidden md:inline text-sm font-medium">{{ userName }}</span>
         <img
           src="/avatar.png"
           alt="Usuario"
-          class="w-8 h-8 rounded-full object-cover border-2 border-teal-300"
+          class="w-8 h-8 rounded-full object-cover border-2 border-primary-light"
         />
       </button>
 
@@ -51,7 +51,10 @@
           <button @click="navigate('/perfil', true)" class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
             Mi Perfil
           </button>
-          <button v-if="userHasMultipleRoles" @click="navigate('/seleccionar-rol', true)" class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
+          <button 
+            v-if="userHasMultipleRoles" 
+            @click="navigate({ name: 'seleccionar-rol', query: { uid: user.uid } }, true)" 
+            class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
             Cambiar Rol
           </button>
           <button @click="alert('Función no implementada')" class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">

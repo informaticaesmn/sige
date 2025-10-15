@@ -34,7 +34,7 @@
               </div>
             </div>
             
-            <button class="mt-6 w-full py-2 bg-primary text-white rounded-lg hover:bg-teal-700 transition">
+            <button class="mt-6 w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
               <PencilSquareIcon class="h-5 w-5 inline-block ml-2" /> 
               <span class="px-2">Editar Perfil</span>
             </button>
@@ -76,7 +76,7 @@
                   <tr class="border-b" >
                     <td class="p-3 font-medium">662 Profesorado de Música</td>
                     <td class="p-3">
-                      <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-primary-lightg">
+                      <span class="px-2 py-1 rounded-full text-sm bg-green-100 text-primary-dark">
                         Activo
                       </span>
                     </td>

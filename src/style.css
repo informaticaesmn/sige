@@ -3,40 +3,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- DEFINICIÓN DE TEMAS (NIVEL SUPERIOR) ---------- */
+/* Al mover esto fuera de @layer, nos aseguramos de que las variables
+   estén siempre disponibles para las utilidades de Tailwind. */
+.theme-estudiante {
+  --color-primary: 13 148 136;      /* #0d9488 - teal-600 */
+  --color-primary-light: 45 212 191;/* #2dd4bf - teal-400 */
+  --color-primary-dark: 15 118 110; /* #0f766e - teal-700 */
+}
+
+.theme-docente {
+  --color-primary: 37 99 235;       /* #2563eb - blue-600 */
+  --color-primary-light: 59 130 246; /* #3b82f6 - blue-500 */
+  --color-primary-dark: 29 78 216;  /* #1e40af - blue-700 */
+}
+
+.theme-bedel {
+  --color-primary: 147 51 234;     /* #9333ea - purple-600 */
+  --color-primary-light: 168 85 247;/* #a855f7 - purple-500 */
+  --color-primary-dark: 126 34 206;/* #7e22ce - purple-700 */
+}
+
+.theme-admin {
+  --color-primary: 244 63 94;       /* #f43f5e - rose-500 */
+  --color-primary-light: 248 113 113;/* #f87171 - rose-400 */
+  --color-primary-dark: 190 18 60;  /* #be123c - rose-700 */
+}
+
 @layer base {
   body {
     @apply font-sans bg-stone-50 text-stone-800;
-  }
-
-    /* ---------- DEFINICIÓN DE TEMAS (CON COMAS) ---------- */
-  .theme-estudiante {
-    --color-primary: 13, 148, 136;      /* #0d9488 - teal-600 */
-    --color-primary-light: 45, 212, 191;/* #2dd4bf - teal-400 */
-    --color-primary-dark: 15, 118, 110; /* #0f766e - teal-700 */
-  }
-
-  .theme-docente {
-    --color-primary: 37, 99, 235;       /* #2563eb - blue-600 */
-    --color-primary-light: 59, 130, 246; /* #3b82f6 - blue-500 */
-    --color-primary-dark: 29, 78, 216;  /* #1e40af - blue-700 */
-  }
-
-  .theme-bedel {
-    --color-primary: 147, 51, 234;     /* #9333ea - purple-600 */
-    --color-primary-light: 168, 85, 247;/* #a855f7 - purple-500 */
-    --color-primary-dark: 126, 34, 206;/* #purple-700 */
-  }
-
-  .theme-admin {
-    --color-primary: 244, 63, 94;       /* #f43f5e - rose-500 */
-    --color-primary-light: 248, 113, 113;/* #f87171 - rose-400 */
-    --color-primary-dark: 190, 18, 60;  /* #be123c - rose-700 */
-  }
-
-  /* ... puedes añadir un tema por defecto en :root si quieres */
-  :root {
-    /* Tema por defecto (ej. Acceso o Estudiante) */
-    @apply theme-estudiante;
   }
 }
 
