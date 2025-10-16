@@ -25,7 +25,8 @@ const routes = [
     meta: { requiresAuth: true, role: 'estudiante' },
     children: [
       { path: '', name: 'EstudianteTablero', component: () => import('@/views/estudiante/TableroE.vue') },
-      { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/estudiante/InscripcionesE.vue') }
+      { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/estudiante/InscripcionesE.vue') },
+      { path: 'historial', name: 'HAcademico', component: () => import('@/views/estudiante/HAcademico.vue') }
     ]
   },
 
