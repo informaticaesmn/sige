@@ -8,7 +8,7 @@ param (
 # 1. Detección y Sincronización Inicial
 # -----------------------------
 $branch = git rev-parse --abbrev-ref HEAD
-Write-Host "Branch actual: $branch"
+Write-Host "--- Branch actual: $branch ---" -ForegroundColor Yellow
 
 # Si estamos en 'main', el flujo es diferente y más estricto.
 if ($branch -eq "main") {
@@ -51,12 +51,14 @@ if ($branch -eq "main") {
 
     # 3. Incrementar versión en la rama de desarrollo
     Write-Host "Incrementando versión de desarrollo ($v)..."
-    npm version $v -m "feat(release): bump version to %s"
+    npm version $v -m "feat(release): bump version to %s" --no-git-tag-version
+    if ($LASTEXITCODE -ne 0) { Write-Host "Error al ejecutar npm version." -ForegroundColor Red; exit 1 }
 }
 
 # -----------------------------
-# 4. Actualizar README.md (se hace en todas las ramas)
+# 4. Actualizar README.md y crear commit de versión
 # -----------------------------
+
 # Obtenemos la versión del package.json, que ahora es la fuente de verdad.
 $package = Get-Content package.json | ConvertFrom-Json
 $version = $package.version
@@ -68,32 +70,32 @@ Write-Host "Actualizando README.md..."
 $readmePath = "README.md"
 $readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
 
-# Aseguramos que el patrón funcione con saltos de línea
 $pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
 $replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commit)`n<!--/VERSION-->"
-
-# Realizamos el reemplazo
 $updatedContent = $readmeContent -replace $pattern, $replacement
+Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8
 
-# Guardamos el contenido actualizado
-Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8 # Actualizamos el README aqui mismo
+# Creamos un commit unificado para la versión y el README
+git add package.json package-lock.json README.md
+git commit -m "chore(release): version v$version"
 
-# Añadimos el README al último commit (el de la versión) para mantener el historial limpio
-git add README.md
-git commit --amend --no-edit
+# Solo creamos el tag si no estamos en 'main' (en 'main' el tag viene del merge)
+if ($branch -ne "main") {
+    git tag "v$version"
+}
 
 # -----------------------------
 # 5. Push final a GitHub
 # -----------------------------
 if ($branch -eq "main") {
-    Write-Host "Empujando 'main' y los tags de la nueva versión a GitHub..." -ForegroundColor Cyan
+    Write-Host "Empujando 'main' y el tag v$version a GitHub..." -ForegroundColor Cyan
     git push origin $branch
-    git push origin --tags
+    git push origin "v$version" # Empuja solo el tag específico de esta versión
     Write-Host "¡Release en 'main' completado con éxito!" -ForegroundColor Green
 } else {
     Write-Host "Empujando cambios de desarrollo a origin/$branch..."
     git push origin $branch
-    Write-Host "Push en '$branch' completado."
+    Write-Host "Push en '$branch' completado. El tag v$version se subirá durante el release en 'main'."
 }
 
 Write-Host "--- Proceso finalizado ---" -ForegroundColor Yellow

@@ -109,4 +109,26 @@
   .alert-info   { @apply bg-sky-50 text-sky-700 border border-sky-100; }
   .form-label { @apply block text-sm font-medium text-stone-600 mb-1; }
   .form-error { @apply text-sm text-red-600 mt-1; }
+
+  /* ---------- CARD (NUEVO) ---------- */
+  /* Clase base para todas las tarjetas */
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  /* Modificador para tarjetas con efecto hover */
+  .card-interactive {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  /* Encabezado estandarizado para tarjetas */
+  .card-header {
+    @apply flex items-center mb-4 text-lg font-bold text-stone-800;
+  }
+
+  /* Elemento individual dentro de una tarjeta (ej. materia aprobada) */
+  .card-item {
+    @apply bg-stone-100 rounded-lg p-4;
+  }
+
 }
