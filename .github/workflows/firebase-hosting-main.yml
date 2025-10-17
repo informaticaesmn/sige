@@ -41,8 +41,9 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          # Debes agregar aquí TODAS las variables de tu archivo .env como secrets
-          # Ejemplo: VITE_API_KEY=${{ secrets.VITE_API_KEY }}
+          # ¡Este es el paso clave!
+          # Inyectamos los secretos de GitHub como variables de entorno
+          # para que Vite pueda usarlos durante la compilación.
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
           VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
           VITE_PROJECT_ID: ${{ secrets.VITE_PROJECT_ID }}
@@ -54,7 +55,7 @@ jobs:
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' # <--- Nombre estándar para la clave de servicio
+          repoToken: '${{ secrets.GITHUB_TOKEN }}' # Token generado por GitHub para la acción
+          firebaseServiceAccount: '${{ secrets.FIREBASE_DEPLOY_TOKEN }}' # <--- ¡Aquí usamos tu Token Secreto!
           channelId: live # Despliega a la URL principal (el canal 'live')
           projectId: prueba1-esmn
