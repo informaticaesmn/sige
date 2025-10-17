@@ -56,6 +56,6 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}' # Token generado por GitHub para la acción
-          firebaseServiceAccount: '${{ secrets.FIREBASE_DEPLOY_TOKEN }}' # <--- ¡Aquí usamos tu Token Secreto!
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' # <--- Usamos el nombre correcto del secreto
           channelId: live # Despliega a la URL principal (el canal 'live')
           projectId: prueba1-esmn
