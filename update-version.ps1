@@ -23,13 +23,21 @@ if ($branch -eq "main") {
     if ($LASTEXITCODE -ne 0) { Write-Host "Error al sincronizar 'main'." -ForegroundColor Red; exit 1 }
 
     # 2. Traer los cambios de 'dev' a 'main'.
-    Write-Host "Fusionando 'dev' en 'main'..."
+    Write-Host "Fusionando 'dev' en 'main'..." -ForegroundColor Cyan
     git merge dev
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Error durante el merge de 'dev'. Resuelve los conflictos y ejecuta el script de nuevo en 'main'." -ForegroundColor Red
         exit 1
     }
     Write-Host "'dev' fusionado correctamente en 'main'." -ForegroundColor Green
+
+    # 3. Obtener la versión del package.json (que vino de 'dev') y crear el tag.
+    $package = Get-Content package.json | ConvertFrom-Json
+    $version = $package.version
+    Write-Host "Creando tag para la nueva versión: v$version" -ForegroundColor Green
+    git tag "v$version"
+    if ($LASTEXITCODE -ne 0) { Write-Host "Error al crear el tag v$version. Puede que ya exista." -ForegroundColor Red; exit 1 }
+    
 
 } else { # Flujo normal para ramas de desarrollo (ej. 'dev')
     # 1. Sincronizar con el remoto ANTES de empezar
@@ -55,33 +63,27 @@ if ($branch -eq "main") {
     if ($LASTEXITCODE -ne 0) { Write-Host "Error al ejecutar npm version." -ForegroundColor Red; exit 1 }
 }
 
-# -----------------------------
-# 4. Actualizar README.md y crear commit de versión
-# -----------------------------
-
-# Obtenemos la versión del package.json, que ahora es la fuente de verdad.
-$package = Get-Content package.json | ConvertFrom-Json
-$version = $package.version
-$commit = git rev-parse --short HEAD
-Write-Host "Versión actual para el README: v$version (commit $commit)" -ForegroundColor Green
-
-# Actualizamos el README aqui mismo
-Write-Host "Actualizando README.md..."
-$readmePath = "README.md"
-$readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
-
-$pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
-$replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commit)`n<!--/VERSION-->"
-$updatedContent = $readmeContent -replace $pattern, $replacement
-Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8
-
-# Creamos un commit unificado para la versión y el README
-git add package.json package-lock.json README.md
-git commit -m "chore(release): version v$version"
-
-# Solo creamos el tag si no estamos en 'main' (en 'main' el tag viene del merge)
+# El siguiente bloque solo se ejecuta para ramas de desarrollo, no para 'main'.
 if ($branch -ne "main") {
-    git tag "v$version"
+    # -----------------------------
+    # 4. Actualizar README.md y crear commit de versión (SOLO PARA RAMAS DE DESARROLLO)
+    # -----------------------------
+    $package = Get-Content package.json | ConvertFrom-Json
+    $version = $package.version
+    $commit = git rev-parse --short HEAD
+    Write-Host "Creando commit de versión para v$version..." -ForegroundColor Green
+    
+    Write-Host "Actualizando README.md..."
+    $readmePath = "README.md"
+    $readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
+    $pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
+    $replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commit)`n<!--/VERSION-->"
+    $updatedContent = $readmeContent -replace $pattern, $replacement
+    Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8
+    
+    git add package.json package-lock.json README.md
+    # Este commit agrupa los cambios de npm version y la actualización del README.
+    git commit -m "chore(release): version v$version"
 }
 
 # -----------------------------
@@ -89,13 +91,13 @@ if ($branch -ne "main") {
 # -----------------------------
 if ($branch -eq "main") {
     Write-Host "Empujando 'main' y el tag v$version a GitHub..." -ForegroundColor Cyan
-    git push origin $branch
-    git push origin "v$version" # Empuja solo el tag específico de esta versión
+    git push origin main
+    git push origin "v$version" # Empuja el tag que acabamos de crear
     Write-Host "¡Release en 'main' completado con éxito!" -ForegroundColor Green
 } else {
     Write-Host "Empujando cambios de desarrollo a origin/$branch..."
     git push origin $branch
-    Write-Host "Push en '$branch' completado. El tag v$version se subirá durante el release en 'main'."
+    Write-Host "Push en '$branch' completado. El tag de la versión se creará y subirá cuando se haga el release en 'main'."
 }
 
 Write-Host "--- Proceso finalizado ---" -ForegroundColor Yellow

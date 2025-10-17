@@ -2,8 +2,7 @@
   <div class="bg-stone-100 min-h-screen font-sans">
     <!-- Contenido Principal -->
     <div class="container mx-auto px-4 py-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Tablero Estudiante</h1>
-
+      <h1 class="text-2xl font-bold mb-4">Tablero Estudiante</h1>
       <!-- Grid Principal -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
