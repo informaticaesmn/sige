@@ -10,6 +10,12 @@ on:
 
 jobs:
   build_and_deploy:
+    # Añadimos permisos explícitos para la lectura de secretos
+    permissions:
+      contents: read
+      secrets: read
+      id-token: write # Necesario para la autenticación con la cuenta de servicio de Google
+
     runs-on: ubuntu-latest # Usamos un entorno Linux
 
     steps:
