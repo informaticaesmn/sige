@@ -19,6 +19,7 @@ const routes = [
   },
 
   // CON LAYOUT (estudiante)
+  // tengo que agregar las ruta perfil pero para todos los roles
   {
     path: '/estudiante',
     component: () => import('@/layouts/EstudianteLayout.vue'),
