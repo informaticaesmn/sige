@@ -69,21 +69,21 @@ if ($branch -ne "main") {
     # 4. Actualizar README.md y crear commit de versión (SOLO PARA RAMAS DE DESARROLLO)
     # -----------------------------
     $package = Get-Content package.json | ConvertFrom-Json
-    $version = $package.version
-    $commit = git rev-parse --short HEAD
-    Write-Host "Creando commit de versión para v$version..." -ForegroundColor Green
+    $version = $package.version    
+    Write-Host "Actualizando README.md para la versión v$version..." -ForegroundColor Green
     
-    Write-Host "Actualizando README.md..."
     $readmePath = "README.md"
+    # Obtenemos el hash del commit que acaba de crear 'npm version'
+    $commit = git rev-parse --short HEAD
     $readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
     $pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
     $replacement = "<!--VERSION-->`nVersion actual: $branch v$version (commit $commit)`n<!--/VERSION-->"
     $updatedContent = $readmeContent -replace $pattern, $replacement
     Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8
     
-    git add package.json package-lock.json README.md
-    # Este commit agrupa los cambios de npm version y la actualización del README.
-    git commit -m "chore(release): version v$version"
+    # Enmendamos el commit anterior para incluir el README sin cambiar el mensaje.
+    git add README.md
+    git commit --amend --no-edit
 }
 
 # -----------------------------

@@ -78,13 +78,13 @@
   /* Botón principal (UNA SOLA DEFINICIÓN) */
   .btn-primary {
     @apply bg-primary text-white 
-        hover:bg-primary-light 
-        focus:ring-primary-light focus:bg-primary-light;
+           hover:bg-primary-light 
+           focus:ring-1 focus:ring-primary-light focus:bg-primary-light;
   }
 
   /* Botón secundario (UNA SOLA DEFINICIÓN) */
   .btn-secondary {
-    @apply border border-primary text-primary bg-white 
+    @apply border border-primary text-primary bg-white
         hover:bg-primary-light/20 
         focus:ring-primary;
   }
@@ -101,6 +101,12 @@
          hover:text-primary-light hover:underline underline-offset-4
          focus:text-primary focus:underline underline-offset-4 focus:outline-none;
         
+  }
+  /* Botón para la barra de navegación (NUEVO) */
+  .btn-nav {
+    @apply bg-transparent text-white rounded-md px-3 py-2 text-sm font-medium
+           hover:bg-primary transition-colors
+           focus:outline-none focus:ring-2 focus:ring-primary-light;
   }
 
   /* ... el resto de tus componentes ... */
@@ -129,6 +135,19 @@
   /* Elemento individual dentro de una tarjeta (ej. materia aprobada) */
   .card-item {
     @apply bg-stone-100 rounded-lg p-4;
+  }
+
+  /* ---------- DROPDOWN (NUEVO) ---------- */
+  /* Elemento de un menú desplegable */
+  .dropdown-item {
+    @apply block w-full text-left px-4 py-2 text-sm text-stone-800
+           hover:bg-primary hover:text-white transition-colors
+           focus:outline-none focus:bg-primary focus:text-white;
+  }
+
+  /* Variante destructiva para un elemento de dropdown */
+  .dropdown-item-danger {
+    @apply text-red-700 hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white;
   }
 
 }

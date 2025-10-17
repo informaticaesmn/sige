@@ -5,7 +5,7 @@
   <!-- Menú Mobile -->
     <button
       @click="toggleMenu"
-      class="md:hidden text-white hover:text-primary-light transition"
+      class="md:hidden p-2 -ml-2 text-white rounded-md transition-colors hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary-light"
       aria-label="Menú"
     >
       <Bars3Icon class="h-8 w-8" />
@@ -13,7 +13,7 @@
 
     <!-- Links desktop -->
     <div class="hidden md:flex items-center space-x-1">
-      <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to)" class="hover:bg-primary px-3 py-2 flex items-center rounded transition">
+      <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to)" class="btn-nav flex items-center">
         <component :is="link.icon" class="h-5 w-5" />
         <span class="px-2">{{ link.text }}</span>
       </button>
@@ -22,46 +22,46 @@
     <!-- Menú móvil desplegable -->
     <transition name="slide">
       <div v-if="menuOpen" class="md:hidden absolute top-full left-0 w-full bg-primary-dark flex flex-col space-y-2 px-4 py-3 shadow-lg z-20">
-        <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to, true)" class="hover:bg-primary px-3 py-2 rounded flex items-center transition text-left">
+        <button v-for="link in roleLinks" :key="link.to" @click="navigate(link.to, true)" class="btn-nav flex justify-start text-left">
           <component :is="link.icon" class="h-5 w-5" />
           <span class="px-2">{{ link.text }}</span>
         </button>
 
         <!-- Botón de Salir (común a todos) -->
-        <button @click="logout" class="w-full flex text-left hover:bg-red-700 px-3 py-2 rounded transition">
-          <ArrowRightStartOnRectangleIcon class="h-6 w-6" /><span class="px-2">Salir</span>
+        <button @click="logout" class="btn btn-primary !bg-red-600 hover:!bg-red-700 w-full justify-start mt-2">
+          <ArrowRightStartOnRectangleIcon class="h-5 w-5" /><span class="px-2">Salir</span>
         </button>
       </div>
     </transition>
 
     <!-- Menú de Usuario (derecha) -->
     <div class="relative">
-      <button @click="toggleUserMenu" class="flex items-center space-x-2 hover:bg-primary p-1 rounded-md transition">
-        <span class="hidden md:inline text-sm font-medium">{{ userName }}</span>
+      <button @click="toggleUserMenu" class="flex items-center space-x-2 p-1 pr-2 rounded-full transition-colors hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary-light">
+        <span class="inline text-sm font-medium">{{ userName }}</span>
         <img
           src="/avatar.png"
           alt="Usuario"
-          class="w-8 h-8 rounded-full object-cover border-2 border-primary-light"
+          class="w-9 h-9 rounded-full object-cover border-2 border-primary-light"
         />
       </button>
 
       <!-- Dropdown del menú de usuario -->
       <transition name="fade">
         <div v-if="userMenuOpen" v-on-click-outside="closeUserMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-stone-800">
-          <button @click="navigate('/perfil', true)" class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
+          <button @click="navigate('/perfil', true)" class="dropdown-item">
             Mi Perfil
           </button>
           <button 
             v-if="userHasMultipleRoles" 
             @click="navigate({ name: 'seleccionar-rol', query: { uid: user.uid } }, true)" 
-            class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
+            class="dropdown-item">
             Cambiar Rol
           </button>
-          <button @click="alert('Función no implementada')" class="w-full text-left block px-4 py-2 text-sm hover:bg-stone-100">
+          <button @click="alert('Función no implementada')" class="dropdown-item">
             Solicitar Baja
           </button>
           <div class="border-t border-stone-200 my-1"></div>
-          <button @click="logout" class="w-full text-left block px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+          <button @click="logout" class="dropdown-item dropdown-item-danger">
             Salir
           </button>
         </div>

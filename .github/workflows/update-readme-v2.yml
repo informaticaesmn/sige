@@ -43,7 +43,8 @@ jobs:
 
       # Paso clave: Incrementar la versión
       - name: Bump version
-        run: npm version ${{ github.event.inputs.version_type }} -m "chore(release): version %s [skip ci]"
+        run: |
+          npm version ${{ github.event.inputs.version_type }} -m "chore(release): version %s [skip ci]"
 
       # Obtener las nuevas variables
       - name: Get new version info
