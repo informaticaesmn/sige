@@ -65,7 +65,19 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      # 6. Desplegar a Firebase Hosting
+      # 6. Verificar los archivos construidos (opcional, para debug)
+      - name: Verify Built Files
+        run: |
+          echo "=== Buscando API Key en dist/==="
+          find dist/ -type f -exec grep -H 'AIza' {} \; || echo "No se encontró la API Key en los archivos construidos."
+          find dist -name "*.js" -exec grep -l "apiKey" {} \; | head -3 | while read file; do
+            echo "Archivo: $file"
+            grep -o "apiKey:[^,]*" "$file" | head -1
+          done
+          ls -l dist
+          echo "=== Fin Verificación ==="
+
+      # 7. Desplegar a Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
