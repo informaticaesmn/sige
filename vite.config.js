@@ -3,13 +3,23 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url' // Importamos los helpers de URL de Node
 
-// tomar hash corto del último commit
-//const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
-
-//otra opcion para versiones sin git
+//variables sin git para versionado (para Vercel y Firebase Hosting)
 const version = process.env.npm_package_version || '0.0.0';
-const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local' + version;
-const branch = process.env.VERCEL_GIT_COMMIT_REF || 'local'
+
+//const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local' + version;
+//const branch = process.env.VERCEL_GIT_COMMIT_REF || 'local'
+
+// Para GitHub Actions
+const githubCommit = process.env.GITHUB_SHA?.slice(0, 7);
+const githubBranch = process.env.GITHUB_REF_NAME || process.env.GITHUB_REF?.replace('refs/heads/', '');
+
+// Para Vercel
+const vercelCommit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
+const vercelBranch = process.env.VERCEL_GIT_COMMIT_REF;
+
+// Usar GitHub Actions variables si están disponibles, sino Vercel, sino 'local'
+const commit = githubCommit || vercelCommit || 'local-' + version;
+const branch = githubBranch || vercelBranch || 'local';
 
 // https://vite.dev/config/
 export default defineConfig({
