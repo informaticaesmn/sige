@@ -44,9 +44,13 @@ jobs:
       # 5. Construir la aplicación Vue (genera la carpeta 'dist')
       - name: Build Vue App with Debug
         run: |
-          echo "=== Debug: Verificando variables ==="
-          echo "VITE_FIREBASE_API_KEY: ${#VITE_FIREBASE_API_KEY} caracteres"
-          echo "VITE_FIREBASE_PROJECT_ID: $VITE_FIREBASE_PROJECT_ID"
+          echo "=== Debug: Verificando TODAS las variables ==="
+          echo "API_KEY: ${#VITE_FIREBASE_API_KEY} caracteres"
+          echo "AUTH_DOMAIN: ${#VITE_FIREBASE_AUTH_DOMAIN} caracteres"
+          echo "PROJECT_ID: $VITE_FIREBASE_PROJECT_ID"
+          echo "STORAGE_BUCKET: $VITE_FIREBASE_STORAGE_BUCKET"
+          echo "MESSAGING_SENDER_ID: $VITE_FIREBASE_MESSAGING_SENDER_ID"
+          echo "APP_ID: $VITE_FIREBASE_APP_ID"
           echo "=== Fin Debug ==="
           npm run build
         env:
