@@ -107,7 +107,7 @@ onMounted(() => {
 });
 
 const userHasMultipleRoles = computed(() => {
-  return Array.isArray(user.value?.rol) && user.value.rol.length > 1;
+  return Array.isArray(user.value?.roles) && user.value.roles.length > 1;
 });
 
 const userName = computed(() => {

@@ -66,9 +66,21 @@ export async function migrarPerfilARegistroCompleto(email, uid, datosPerfil) {
 export async function obtenerUsuario(uid) {
   const userRef = doc(db, 'usuarios', uid)
   const snap = await getDoc(userRef)
-  return snap.exists() ? snap.data() : null
+  if (!snap.exists()) return null
+  
+  const data = snap.data()
+  
+  // NORMALIZAR: asegurar que siempre usamos 'roles' en minúsculas
+  if (data.rol || data.roles) {
+    const rolesArray = data.roles || data.rol || []
+    // Convertir a minúsculas y eliminar duplicados
+    data.roles = [...new Set(rolesArray.map(r => r.toLowerCase()))]
+    // Eliminar el campo viejo si existe
+    if (data.rol) delete data.rol
+  }
+  
+  return data
 }
-
 /**
  * Actualizar roles de un usuario.
  */

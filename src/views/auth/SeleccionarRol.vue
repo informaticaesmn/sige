@@ -66,31 +66,18 @@ onMounted(async () => {
   }
 
   // Cargamos roles en la UI
-  roles.value = usuario.rol
+  roles.value = usuario.roles || []
 })
 
 /**
  * Elegir rol y redirigir al layout correspondiente
  */
 function elegir(rol) {
-  const rolEnMinusculas = rol.toLowerCase();
-  setLayout(rolEnMinusculas); // Forzamos el cambio de layout/tema inmediatamente
-  localStorage.setItem('rolActivo', rolEnMinusculas) // guardo rol en el localStorage
-  switch (rolEnMinusculas) {
-    case 'estudiante':
-      router.push('/estudiante')
-      break
-    case 'docente': // Corregido para que coincida con el rol en la base de datos
-      router.push('/docente')
-      break
-    case 'bedel':
-      router.push('/bedel')
-      break
-    case 'admin':
-      router.push('/admin')
-      break
-    default:
-      alert('Rol desconocido')
-  }
+  // El rol ya viene en minúsculas desde el composable useUsuarios
+  setLayout(rol); // Forzamos el cambio de layout/tema inmediatamente
+  localStorage.setItem('rolActivo', rol) // guardo rol en el localStorage
+
+  // redirigir directamente - ya no necesito el switch
+  router.push({ path: `/${rol}` })
 }
 </script>
