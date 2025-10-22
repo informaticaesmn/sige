@@ -23,9 +23,9 @@ Esta es una primera implementación de para un pequeño
 **S.I.G.E.**  
 _Sistema Interno de Gestion Educativa para la Escuela Superior de Música de Neuquén_ 
 
-> [Link definito en Firebase Hosting](https://prueba1-esmn.web.app)
+> [Link de Firebase Hosting](https://prueba1-esmn.web.app) para la rama de producción
 
-> [Link de Vercel] para la rama de desarrollo (https://sige-esmn.vercel.app)
+> [Link de Vercel](https://sige-esmn.vercel.app) para la rama de desarrollo 
 
 Desarrollado por personal de la escuela, para suplir la falta de gestion que ofrece el Consejo Provincial de Educación, institucion que debería proveernos de las herramientas de gestion necesaria, para una educación de nivel acorde a los tiempos que corren y con la tecnologia que implica.
 

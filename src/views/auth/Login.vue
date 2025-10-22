@@ -47,7 +47,7 @@
         </button>
         <button
           type="button"
-          @click="() => router.push('/registro')"
+          @click="() => router.push('/terminos')"
           class="btn btn-link"
         >
           ¿No tenés cuenta? Registrate

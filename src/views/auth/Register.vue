@@ -47,20 +47,6 @@
       >
         {{ isLoading ? 'Registrando...' : 'Confirmar registro' }}
       </button>
-      <!-- tenemos que agregar terminos y condiciones y politica de privacidad??? -->
-      <div class="text-center text-xs text-stone-400">
-        <FormCheckbox 
-          id="terms"
-          v-model="acceptTerms"
-          class="inline-block"
-        />
-        <span>Al registrarte, aceptás nuestros </span>
-        <button class="btn-min"
-          type="button"
-          @click="() => router.push('/terminos')"
-        >Términos y Condiciones</button>
-      </div>
-
 
     <button
       type="button"
