@@ -14,6 +14,8 @@ module.exports = {
     "no-restricted-globals": ["error", "name", "length"],
     "prefer-arrow-callback": "error",
     "quotes": ["error", "double", {"allowTemplateLiterals": true}],
+    // Desactiva la regla de estilo de salto de línea (soluciona error CRLF/LF)
+    "linebreak-style": "off",
   },
   overrides: [
     {
