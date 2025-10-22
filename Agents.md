@@ -60,7 +60,7 @@ Este documento define las reglas, patrones y convenciones a seguir en el desarro
   - `docs:`: Cambios en la documentación.
 - **Versionado**:
   - Usa `npm version <patch|minor|major>` para incrementar la versión.
-  - El script `update-version.ps1` y el workflow de GitHub (`update-readme-v2.yml`) son las herramientas preferidas para automatizar el proceso de versionado y actualización del `README.md`.
+  - El script `update-dev` manejo el incremental de versiones de la rama dev y `update-main` maneja el merge de main con la rama dev y actualización de la versión en main, al subir activa la GitHub Action `firebase-hosting-main.yml` que se encarga del deploy a Firebase.
 
 ---
 *Este documento es una guía viva. Si se introduce un nuevo patrón o se mejora uno existente, debe ser actualizado.*

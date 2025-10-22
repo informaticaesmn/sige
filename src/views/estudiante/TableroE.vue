@@ -32,10 +32,8 @@
 </template>
 
 <script setup>
-import { useAuth } from '@/composables/useAuth.js';
+import { useAuth } from '@/composables/auth/useAuth.js';
 
-// Importar los nuevos componentes.
-// Asegúrate de crear estos archivos en la ruta especificada.
 import PerfilCard from '@/components/estudiante/PerfilCard.vue';
 import PlanesEstudioCard from '@/components/estudiante/PlanesEstudioCard.vue';
 import InscripcionesVigentesCard from '@/components/estudiante/InscripcionesVigentesCard.vue';

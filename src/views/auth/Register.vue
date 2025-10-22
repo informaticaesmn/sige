@@ -76,7 +76,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth.js'
+import { useAuth } from '@/composables/auth/useAuth.js'
 import FormInput from '@/components/ui/FormInput.vue'
 import FormCheckbox from '@/components/ui/FormCheckbox.vue'
 

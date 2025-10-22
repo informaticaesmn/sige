@@ -1,4 +1,4 @@
-// src/composables/useAuth.js
+// src/composables/auth/useAuth.js
 import { ref, computed } from 'vue'
 import { routerInstance } from '@/router/routerInstance'
 import {
@@ -12,7 +12,7 @@ import {
   signOut,
   sendPasswordResetEmail
 } from 'firebase/auth'
-import { obtenerUsuario } from './useUsuarios'
+import { obtenerUsuario } from '../usuarios/useUsuarios'
 
 // Estado reactivo
 const user = ref(null)

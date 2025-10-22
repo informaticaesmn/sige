@@ -26,7 +26,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { obtenerUsuario } from '@/composables/useUsuarios.js'
+import { obtenerUsuario } from '@/composables/usuarios/useUsuarios.js'
 import { useLayout } from '@/composables/useLayout.js'
 
 // reactive

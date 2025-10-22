@@ -3,15 +3,12 @@
   <!-- panel derecho -->
   <form @submit.prevent="sendReset" class="w-full max-w-sm">
     <div class="space-y-4">
-    <h2 class="mb-6">Terminos y Condiciones</h2>
+    <h2 class="mb-6">Terminos y Condiciones de uso</h2>
       <!-- texto de los terminos -->    
       <p class="text-sm text-gray-600">
-        Términos y Condiciones de Uso
-
 La presente aplicación es de uso interno y exclusivo de la institución. Actualmente se encuentra en etapa de desarrollo y período de prueba, por lo que su funcionamiento, contenidos y características podrán ser modificados o mejorados de manera continua, conforme se identifiquen oportunidades de optimización o se detecten dificultades.
-
+Mientras se mantenga el estado de prueba en desarrollo, los datos suministrados por esta app, no tienen caracter ni de veracidad ni valor legal.
 El uso de esta herramienta implica la aceptación de estas condiciones y el compromiso de emplearla de manera responsable y conforme a los fines académicos previstos.
-
 Se recuerda que es responsabilidad de cada usuario conocer su plan de estudios y el régimen de correlatividades vigente, con el fin de planificar y gestionar adecuadamente su trayectoria académica dentro de la institución.</p>
       <FormCheckbox
         id="terms"

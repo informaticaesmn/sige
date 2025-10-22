@@ -72,7 +72,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/composables/auth/useAuth'
 import { useRouter } from 'vue-router'
 import { vOnClickOutside } from '@vueuse/components'
 import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/vue/24/outline'
@@ -95,16 +95,18 @@ const closeUserMenu = () => {
 const { user, logoutFirebase } = useAuth()
 const router = useRouter()
 
-// Obtenemos el rol activo desde localStorage para mostrar el menú correcto.
-const rolActivo = ref(localStorage.getItem('rolActivo') || 'estudiante');
-
-// Escuchamos cambios en el storage para mantener la UI sincronizada
-// si el usuario cambia de rol en otra pestaña.
-onMounted(() => {
-  window.addEventListener('storage', () => {
-    rolActivo.value = localStorage.getItem('rolActivo') || 'estudiante';
-  });
+// Hacemos que el rol activo sea una propiedad computada que reaccione a los cambios en el usuario.
+const rolActivo = computed(() => {
+  // Primero, intenta obtener el rol desde localStorage.
+  const rolGuardado = localStorage.getItem('rolActivo');
+  // Si existe y el usuario actual tiene ese rol, lo usamos.
+  if (rolGuardado && user.value?.roles?.includes(rolGuardado)) {
+    return rolGuardado;
+  }
+  // Si no, usamos el primer rol del usuario (para usuarios con un solo rol) o 'estudiante' como fallback.
+  return user.value?.roles?.[0] || 'estudiante';
 });
+
 
 const userHasMultipleRoles = computed(() => {
   return Array.isArray(user.value?.roles) && user.value.roles.length > 1;

@@ -9,6 +9,6 @@
 </template>
 
 <script setup>
-import { useAuth } from '@/composables/useAuth'
+import { useAuth } from '@/composables/auth/useAuth'
 const { estaCargando } = useAuth()
 </script>

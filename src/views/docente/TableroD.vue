@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { useAuth } from '@/composables/useAuth.js';
+import { useAuth } from '@/composables/auth/useAuth.js';
 
 // Importar los nuevos componentes.
 // Asegúrate de crear estos archivos en la ruta especificada.

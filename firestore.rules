@@ -1,10 +1,9 @@
-// rules_version = '2';
+// firestore.rules
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Función helper para verificar roles del usuario que hace la petición
     function esAdmin() {
-      // get() va a buscar el perfil del usuario que está haciendo la llamada
       return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['admin']);
     }
 
@@ -12,36 +11,32 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['bedel']);
     }
 
+    // --- Usuarios ---
     match /usuarios/{userId} {
-
-      // LECTURA (read):
-      // - Puedes leer tu propio perfil.
-      // - Los Bedeles y Admins pueden leer cualquier perfil.
       allow read: if request.auth.uid == userId || esBedel() || esAdmin();
-
-      // CREACIÓN (create):
-      // - Nadie puede crear usuarios directamente, excepto los Admins
-      //   (útil si tienes un panel de admin para dar de alta perfiles).
-      //   La creación de la cuenta de Auth sigue siendo un proceso separado.
       allow create: if esAdmin();
-
-      // ACTUALIZACIÓN (update):
-      // - Un usuario puede actualizar su propio perfil, pero NO sus roles.
-      // - Un Bedel puede actualizar perfiles de Estudiantes, pero NO sus roles.
-      // - Un Admin puede actualizar cualquier perfil, incluyendo los roles.
       allow update: if (request.auth.uid == userId && request.resource.data.roles == resource.data.roles) ||
                      (esBedel() && resource.data.roles.hasAny(['estudiante']) && request.resource.data.roles == resource.data.roles) ||
                      esAdmin();
-
-      // BORRADO (delete):
-      // - Solo los Admins pueden borrar perfiles de usuario.
       allow delete: if esAdmin();
     }
-    
-    // Puedes agregar aquí reglas para otras colecciones, ej: /cursos/{cursoId}
-    // match /cursos/{cursoId} {
-    //   allow read: if request.auth != null; // Cualquiera autenticado puede ver los cursos
-    //   allow write: if esBedel() || esAdmin(); // Solo Bedeles y Admins pueden modificar cursos
-    // }
+
+    // --- Oferta Académica (solo lectura para todos los autenticados) ---
+    match /ofertaAcademica/{ciclo} {
+      allow read: if request.auth != null;
+      allow write: if esAdmin(); // solo vos o bedeles con rol admin
+    }
+
+    // --- Inscripciones de un usuario (subcolección) ---
+    match /usuarios/{userId}/inscripciones2026/{materiaId} {
+      // Solo el propio usuario puede crear/actualizar sus inscripciones
+      allow create, update: if request.auth.uid == userId;
+      // Solo el usuario, bedeles o admin pueden leer
+      allow read: if request.auth.uid == userId || esBedel() || esAdmin();
+      // Solo bedeles o admin pueden confirmar (cambiar estado a "confirmada")
+      allow update: if (esBedel() || esAdmin()) && 
+                    request.resource.data.estado == 'confirmada' &&
+                    request.resource.data.keys().hasOnly(['estado']);
+    }
   }
 }

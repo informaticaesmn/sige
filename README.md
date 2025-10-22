@@ -12,6 +12,8 @@ Version actual: dev v0.6.45
 - GitHub
 - Firebase Auth
 - Firebase Firestore
+- Firebase Functions
+- Firebase Hosting
 - Heroicons
 - Vercel
 
@@ -21,11 +23,9 @@ Esta es una primera implementación de para un pequeño
 **S.I.G.E.**  
 _Sistema Interno de Gestion Educativa para la Escuela Superior de Música de Neuquén_ 
 
-> [Link definito en Firebase Hosting](https://sige-esmn-git-dev-informaticaesmns-projects.vercel.app) aún no funciona ...
+> [Link definito en Firebase Hosting](https://prueba1-esmn.web.app)
 
-> [Link de Vercel](https://sige-esmn.vercel.app)
-
-> Por ahora funcionando en el rama de desarrolo [dev en Vercel](https://sige-esmn-git-dev-informaticaesmns-projects.vercel.app)
+> [Link de Vercel] para la rama de desarrollo (https://sige-esmn.vercel.app)
 
 Desarrollado por personal de la escuela, para suplir la falta de gestion que ofrece el Consejo Provincial de Educación, institucion que debería proveernos de las herramientas de gestion necesaria, para una educación de nivel acorde a los tiempos que corren y con la tecnologia que implica.
 

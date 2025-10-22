@@ -69,7 +69,7 @@ const createdRouter = createRouter({
 
 // GUARDIA GLOBAL DE NAVEGACIÓN
 // Esta es la única guardia que debe existir en la aplicación.
-import { useAuth } from '@/composables/useAuth.js'
+import { useAuth } from '@/composables/auth/useAuth.js'
 import { useLayout } from '@/composables/useLayout.js'
 
 createdRouter.beforeEach(async (to, from, next) => {
