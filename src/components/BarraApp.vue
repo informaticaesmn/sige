@@ -128,6 +128,7 @@ const menuLinks = {
   ],
   bedel: [
     { to: '/bedel', text: 'Tablero Bedel', icon: WindowIcon },
+    { to: '/bedel/inscripciones', text: 'Confirmar Inscripciones', icon: Square3Stack3DIcon }
   ],
   docente: [
     { to: '/docente', text: 'Tablero Docente', icon: WindowIcon },

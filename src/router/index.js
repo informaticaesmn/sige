@@ -47,7 +47,8 @@ const routes = [
     component: () => import('@/layouts/BedelLayout.vue'),
     meta: { requiresAuth: true, role: 'bedel' },
     children: [
-      { path: '', name: 'BedelTablero', component: () => import('@/views/bedel/TableroB.vue') }
+      { path: '', name: 'BedelTablero', component: () => import('@/views/bedel/TableroB.vue') },
+      { path: 'inscripciones', name: 'ConfirmarInscripciones', component: () => import('@/views/bedel/ConfirmarInscripciones.vue') }
     ]
   },
 
