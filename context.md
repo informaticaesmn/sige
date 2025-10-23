@@ -7,7 +7,7 @@ Generar una aplicación web de bajo costo y alta eficiencia que centralice y sim
 *   **Desarrollador Principal**: Genaro Villar (`InformaticaESMN`).
 *   **Equipo de Pruebas (Testers)**:
     *   **Coordinadores Académicos**: Ramón Sarallegui, Facundo Gomez Saibene, Victoria Maclean.
-    *   **Bedeles**: Adriana Falcón, Diego Price.
+    *   **Bedeles**: Adriana Falcón, Diego Price, Ana San Martin.
     *   **Estudiantes**: Majo Ortega (y otros a sumar).
 *   **Usuarios Finales**:
     *   **Estudiantes**: (~800 activos) para consulta de datos, inscripciones, etc.
@@ -22,16 +22,18 @@ Generar una aplicación web de bajo costo y alta eficiencia que centralice y sim
 *   **Frontend**: Vue 3 (con Composition API y `<script setup>`), Vite, TailwindCSS.
 *   **Backend & Base de Datos (BaaS)**: Firebase (Authentication y Firestore).
 *   **Hosting**: Vercel para la rama `dev` (staging) y Firebase Hosting para `main` (producción).
-*   **Control de Versiones**: Git, alojado en GitHub.
-*   **Fuente de Datos Inicial**: Google Sheets, con exportación a JSON mediante Apps Script.
+*   **Control de Versiones**: Git, alojado en GitHub. manejado por dos script:
+      - .update.dev.ps1 para la rama `dev`
+      - .update.main.ps1 para la rama `main`
+*   **Fuente de Datos Inicial**: Google Sheets, con exportación a JSON mediante Apps Script. o CSV con script de Node.js
 
 ### Arquitectura:
 La aplicación sigue una arquitectura moderna basada en componentes y servicios desacoplados (BaaS - Backend as a Service).
 
 1.  **Arquitectura Frontend (Vue 3)**:
     *   **Basada en Componentes**: La UI se construye con componentes reutilizables (`.vue`). Las vistas principales se encuentran en `src/views` y los componentes de UI reusables en `src/components`.
-    *   **Lógica Desacoplada (Composables)**: Toda la lógica de negocio y la interacción con el backend se aísla en funciones "composables" (`src/composables`). Por ejemplo, `useAuth.js` maneja la autenticación y `useUsuarios.js` gestiona los datos de usuarios en Firestore. Esto mantiene los componentes limpios y centrados en la presentación.
-    *   **Enrutamiento y Layouts**: Se utiliza `vue-router` para la navegación. La arquitectura de rutas define layouts dinámicos (`AdminLayout`, `EstudianteLayout`, etc.) que envuelven a las vistas hijas, permitiendo interfaces distintas según el rol del usuario.
+    *   **Lógica Desacoplada (Composables)**: Toda la lógica de negocio y la interacción con el backend se aísla en funciones "composables" (`src/composables`). Por ejemplo, `useAuth.js` maneja la autenticación y `useUsuarios.js` gestiona los datos de usuarios en Firestore.
+    *   **Enrutamiento y Layouts**: Se utiliza `vue-router` para la navegación. La arquitectura de rutas define layouts dinámicos (`AdminLayout`, `EstudianteLayout`, etc.) que envuelven a las vistas hijas, permitiendo interfaces distintas con themes especificos (colores distintos) según el rol del usuario.
     *   **Gestión de Estado**: Se utiliza un enfoque de estado reactivo y descentralizado a través de los `composables`. Por ejemplo, `useAuth` expone un estado reactivo global para el usuario autenticado, evitando la necesidad de una librería de estado más compleja como Pinia por el momento.
 
 2.  **Arquitectura Backend (Firebase)**:
@@ -43,6 +45,8 @@ La aplicación sigue una arquitectura moderna basada en componentes y servicios 
             1.  **Pre-registro**: Los perfiles de los estudiantes se precargan en documentos cuyo ID es el `email` del estudiante.
             2.  **Registro Completo**: Cuando un usuario se registra, se crea un nuevo documento cuyo ID es el `uid` de Firebase Auth, se copian los datos del documento de pre-registro y este último se elimina. Esto se hace de forma atómica usando un `writeBatch` para garantizar la integridad.
         *   **Acceso a Datos**: Todas las lecturas y escrituras a Firestore están centralizadas en los `composables`, nunca directamente desde los componentes.
+        mas detalle de la estructura de datos en [diagrama_v2.md](diagrama_v2.md)
+
 
 ## 🚀 ESTADO ACTUAL
 ### ✅ COMPLETADO:
@@ -51,17 +55,22 @@ La aplicación sigue una arquitectura moderna basada en componentes y servicios 
 *   Mecanismo de importación de datos iniciales desde Google Sheets a Firestore.
 *   Lógica de autenticación (Login/Logout) y estado de usuario reactivo.
 *   Flujo de registro de usuarios con pre-aprobación y migración de datos.
+*   Implementación de la vista "Seleccionar Rol" para usuarios con múltiples perfiles.
 
 ### 🚧 EN DESARROLLO:
-*   Refinamiento de la experiencia de usuario en los formularios de autenticación. Revisar la seguridad y todos los pasos que tienen que ver con el acceso y autenticación.
-*   Implementación de la vista "Seleccionar Rol" para usuarios con múltiples perfiles.
+*   Probar en un grupo mas amplio de la experiencia de usuario en los formularios de autenticación. Revisar la seguridad y todos los pasos que tienen que ver con el acceso y autenticación.
 *   Construcción de los tableros principales para cada rol (Estudiante, Bedel, Admin).
 
 ### 📋 PENDIENTE:
 *   **Funcionalidad Core**:
-    *   Módulo de inscripción a cursadas.
+    *   Terminar de definir estructura de datos para los planes contemplando las correlativas.
+    *   Módulo de inscripción a cursadas para estudiantes y confirmacion por partes del chequeo de correlativas de Bedelia.
     *   Visualización de trayectoria académica (materias aprobadas, estado).
-    *   Gestión de equivalencias.
+    *   Carga de la trayectoria académica con todas los posibles procesos que llevan a la nota final: 
+      - cursar y aprobar sin promocionar (nota menor a 7) -> presentarse a mesas con cararcter de "regular" por haber aprobado el cursado y desaprobar o aprobar.
+      - cursar y promocionar (con eso ya tiene una nota final y materia aprobada)
+      - presentarse a una mesa de examen en caracter de libre
+      - obtener la materia aprobada por equivalencia: tener estudios previos en nuestra institucion, en otro plan o estudios previos en otras instituciones y presenta la documentacion.
 *   **Administración**:
     *   Panel de administración para la gestión de usuarios y roles.
     *   Herramienta para configurar la oferta académica de cada ciclo lectivo.
@@ -80,8 +89,8 @@ La aplicación sigue una arquitectura moderna basada en componentes y servicios 
 3.  **Reporte de Bugs**:
     *   Capturar la pantalla si es un error visual.
     *   Abrir la consola del navegador (F12), ir a la pestaña "Consola" y copiar cualquier mensaje de error en rojo.
-    *   Enviar la información por el canal de comunicación acordado (ej. grupo de WhatsApp, Trello, etc.) describiendo los pasos para reproducir el error.
-
+    *   Enviar la información 
+    
 ## ❓ DUDAS/PREGUNTAS ABIERTAS
 *   **Escalabilidad de Firestore**: ¿Será necesario optimizar las consultas o cambiar el modelo de datos cuando se agreguen las inscripciones y las trayectorias académicas? ¿Cómo impactará en los costos?
 *   **Gestión de Estado Compleja**: Si la aplicación crece, ¿será el enfoque actual con `composables` suficiente o se deberá migrar a una solución como Pinia para gestionar estados más complejos (ej. datos de inscripciones, oferta académica filtrada, etc.)?
