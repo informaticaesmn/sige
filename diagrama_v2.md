@@ -13,8 +13,9 @@ graph TD
     end
 
     subgraph "Definición Académica"
-        PL["planesDeEstudio (collection)"]
+        PL["planesDeEstudio (collection o archivos JSON)"]
         M["materias (collection)"]
+        RC["correlativivas (subcollection)"]
     end
 
     subgraph "Oferta de Cursada (Secuencias)"
@@ -34,6 +35,7 @@ graph TD
     U -- "Info personal" --> P
     U -- "Tiene un" --> RA
     PL -- "Contiene" --> M
+    M -- "Incluye" --> RC
     M -- "Se dicta en" --> C
     U -- "Solicita" --> IC
     C -- "Recibe" --> IC

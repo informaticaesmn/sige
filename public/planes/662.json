@@ -1,0 +1,1268 @@
+{
+  "plan": "662 Rev",
+  "nombre": "Plan 662 Rev",
+  "materias": {
+    "662-1.1": {
+      "nombre": "Audioperceptiva I",
+      "cursada": "anual"
+    },
+    "662-1.2.1": {
+      "nombre": "Instrumento Armónico I Piano ",
+      "cursada": "anual"
+    },
+    "662-1.2.2": {
+      "nombre": "Instrumento Armónico I Guitarra",
+      "cursada": "anual"
+    },
+    "662-1.3.1": {
+      "nombre": "Instrumento Armónico Popular I Piano ",
+      "cursada": "anual"
+    },
+    "662-1.3.2": {
+      "nombre": "Instrumento Armónico Popular I  Guitarra",
+      "cursada": "anual"
+    },
+    "662-1.4": {
+      "nombre": "Canto I",
+      "cursada": "anual"
+    },
+    "662-1.5.1": {
+      "nombre": "Flauta Dulce Y Ensamble",
+      "cursada": "anual"
+    },
+    "662-1.5.2": {
+      "nombre": "Aerófonos Andinos y Ensamble",
+      "cursada": "anual"
+    },
+    "662-1.6": {
+      "nombre": "Taller Instrumento Popular de Percusión y Ensamble",
+      "cursada": "anual"
+    },
+    "662-1.7": {
+      "nombre": "Expresión Corporal",
+      "cursada": "anual"
+    },
+    "662-1.8": {
+      "nombre": "Informática y Nuevos Medios I",
+      "cursada": "anual"
+    },
+    "662-1.9": {
+      "nombre": "Didáctica General",
+      "cursada": "anual"
+    },
+    "662-1.10": {
+      "nombre": "Taller de Lectura, Escritura y Oralidad",
+      "cursada": "anual"
+    },
+    "662-1.11": {
+      "nombre": "Taller de Práctica Institucional y Construcción de la Identidad Profesional",
+      "cursada": "anual"
+    },
+    "662-1.12": {
+      "nombre": "Psicología General",
+      "cursada": "1C"
+    },
+    "662-1.13": {
+      "nombre": "Pedagogía General",
+      "cursada": "1C"
+    },
+    "662-1.14": {
+      "nombre": "Sujeto del Aprendizaje I",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.12"
+          ]
+        }
+      }
+    },
+    "662-1.15": {
+      "nombre": "Historia Argentina Contemporánea",
+      "cursada": "2C"
+    },
+    "662-2.1": {
+      "nombre": "Audioperceptiva II",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.2.1",
+                "662-1.2.2"
+              ]
+            },
+            "662-1.4"
+          ]
+        }
+      }
+    },
+    "662-2.2": {
+      "nombre": "Elementos de Análisis Musical I",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.2.1",
+                "662-1.2.2"
+              ]
+            },
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "662-2.3.1": {
+      "nombre": "Instrumento Armónico II (Piano)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            "662-1.2.1"
+          ]
+        }
+      }
+    },
+    "662-2.3.2": {
+      "nombre": "Instrumento Armónico II (Guitarra)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            "662-1.2.2"
+          ]
+        }
+      }
+    },
+    "662-2.4.1": {
+      "nombre": "Instrumento Armónico Popular II (Piano)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.3.1"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-2.4.2": {
+      "nombre": "Instrumento Armónico Popular II (Guitarra)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.3.2"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-2.5": {
+      "nombre": "Canto II",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.4"
+          ]
+        }
+      }
+    },
+    "662-2.6": {
+      "nombre": "Coro",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            "662-1.4"
+          ]
+        }
+      }
+    },
+    "662-2.7": {
+      "nombre": "Historia de la Música I",
+      "cursada": "anual",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-2.8": {
+      "nombre": "Informática y Nuevos Medios II",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.8"
+          ]
+        }
+      }
+    },
+    "662-2.9": {
+      "nombre": "Expresión Teatral",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.7"
+          ]
+        }
+      }
+    },
+    "662-2.10": {
+      "nombre": "Taller de Práctica Docente y Construcción de la Identidad Profesional I",
+      "cursada": "anual",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-1.1",
+            "662-1.11",
+            "662-1.12"
+          ]
+        }
+      }
+    },
+    "662-2.11": {
+      "nombre": "Sujeto del Aprendizaje II",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.14"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-2.12": {
+      "nombre": "Didáctica de la Música para Nivel Inicial",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.4",
+            "662-1.7",
+            "662-1.9",
+            "662-1.14"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6",
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-2.13": {
+      "nombre": "Historia Social de la Educación",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.15"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-2.14": {
+      "nombre": "Didáctica de la Música para Nivel Primario",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            {
+              "or": [
+                "662-1.5.1",
+                "662-1.5.2"
+              ]
+            },
+            "662-2.12"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-3.1": {
+      "nombre": "Elementos de Análisis Musical II",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.2"
+          ]
+        }
+      }
+    },
+    "662-3.2.1": {
+      "nombre": "Instrumento Armónico III (Piano )",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.1",
+            "662-2.3.1"
+          ]
+        }
+      }
+    },
+    "662-3.2.2": {
+      "nombre": "Instrumento Armónico III ( Guitarra)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.1",
+            "662-2.3.2"
+          ]
+        }
+      }
+    },
+    "662-3.3": {
+      "nombre": "Danzas Folklóricas",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.9"
+          ]
+        }
+      }
+    },
+    "662-3.4.1": {
+      "nombre": "Instrumento Popular Complementario I (Piano)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.4.2": {
+      "nombre": "Instrumento Popular Complementario I (Guitarra)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.4.3": {
+      "nombre": "Instrumento Popular Complementario I (Flauta Dulce)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.4.4": {
+      "nombre": "Instrumento Popular Complementario I (Aerófonos Andinos)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.4.5": {
+      "nombre": "Instrumento Popular Complementario I (Percusión)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.5": {
+      "nombre": "Canto III",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            },
+            "662-2.5"
+          ]
+        }
+      }
+    },
+    "662-3.6.1": {
+      "nombre": "Instrumento de Rock/Jazz (Guitarra Eléctrica)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.6.2": {
+      "nombre": "Instrumento de Rock/Jazz (Bajo Eléctrico)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.6.3": {
+      "nombre": "Instrumento de Rock/Jazz (Batería)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.6.4": {
+      "nombre": "Instrumento de Rock/Jazz (Saxo)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.6.5": {
+      "nombre": "Instrumento de Rock/Jazz (Trompeta)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.1",
+            {
+              "or": [
+                "662-1.3.1",
+                "662-1.3.2"
+              ]
+            }
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.7": {
+      "nombre": "Dirección Coral",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            {
+              "or": [
+                "662-1.2.1",
+                "662-1.2.2"
+              ]
+            },
+            "662-1.4",
+            "662-1.7",
+            "662-1.9",
+            "662-2.1",
+            "662-2.2",
+            "662-2.6"
+          ]
+        }
+      }
+    },
+    "662-3.8": {
+      "nombre": "Historia de la Musica II",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.2",
+            "662-2.7"
+          ]
+        }
+      }
+    },
+    "662-3.9": {
+      "nombre": "Taller de Practica Docente y Construccion de la Identidad  Profesional  II",
+      "cursada": "anual",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-1.1",
+            "662-1.2.1",
+            "662-1.2.2",
+            "662-1.3.1",
+            "662-1.3.2",
+            "662-1.4",
+            "662-1.5.1",
+            "662-1.5.2",
+            "662-1.6",
+            "662-1.7",
+            "662-1.8",
+            "662-1.9",
+            "662-1.10",
+            "662-1.11",
+            "662-1.12",
+            "662-1.13",
+            "662-1.14",
+            "662-1.15",
+            "662-2.1",
+            "662-2.14"
+          ]
+        }
+      }
+    },
+    "662-3.10": {
+      "nombre": "Instituciones Educativas",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.13"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.11"
+          ]
+        }
+      }
+    },
+    "662-3.11": {
+      "nombre": "Didáctica de la Música para Nivel Medio",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.8",
+            "662-2.11",
+            "662-2.14"
+          ]
+        }
+      }
+    },
+    "662-3.12": {
+      "nombre": "Praxis y Elemenentos Técnicos en la Música Popular I (Latinoamericana)",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            {
+              "or": [
+                "662-1.5.1",
+                "662-1.5.2"
+              ]
+            },
+            "662-2.1",
+            "662-2.2",
+            {
+              "or": [
+                "662-2.4.1",
+                "662-2.4.2"
+              ]
+            },
+            "662-2.5"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.6"
+          ]
+        }
+      }
+    },
+    "662-3.13": {
+      "nombre": "Sociología de la Educación",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.13"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-3.14": {
+      "nombre": "Ensamble con Orientación Popular I (Latinoamericana)",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.12"
+          ]
+        }
+      }
+    },
+    "662-3.15": {
+      "nombre": "Filosofía de la Educación",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.13"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-1.1"
+          ]
+        }
+      }
+    },
+    "662-4.2": {
+      "nombre": "Técnicas de Improvisación",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-1.8",
+            "662-2.1",
+            "662-2.2",
+            "662-2.5",
+            "662-2.6",
+            "662-2.14"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            {
+              "or": [
+                "662-1.5.1",
+                "662-1.5.2"
+              ]
+            },
+            "662-1.6",
+            "665-2.3",
+            {
+              "or": [
+                "662-2.4.1",
+                "662-2.4.2"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "662-4.3": {
+      "nombre": "Elementos de Análisis Musical III",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.1",
+            "662-3.12"
+          ]
+        }
+      }
+    },
+    "662-4.4.1": {
+      "nombre": "Instrumento Popular Complementario II (Piano)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.4.1"
+          ]
+        }
+      }
+    },
+    "662-4.4.2": {
+      "nombre": "Instrumento Popular Complementario II (Guitarra)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.4.2"
+          ]
+        }
+      }
+    },
+    "662-4.4.3": {
+      "nombre": "Instrumento Popular Complementario II (Flauta Dulce)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.4.3"
+          ]
+        }
+      }
+    },
+    "662-4.4.4": {
+      "nombre": "Instrumento Popular Complementario II (Aerófonos Andinos)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.4.4"
+          ]
+        }
+      }
+    },
+    "662-4.4.5": {
+      "nombre": "Instrumento Popular Complementario II (Percusión)",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.4.5"
+          ]
+        }
+      }
+    },
+    "662-4.5": {
+      "nombre": "Metodologia de la Investigacion con Fines Educativos y Artísticos",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.1"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-3.9"
+          ]
+        }
+      }
+    },
+    "662-4.6": {
+      "nombre": "Historia del Arte",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.8"
+          ]
+        }
+      }
+    },
+    "662-4.7": {
+      "nombre": "Residencia en Nivel Inicial",
+      "cursada": "1C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.8": {
+      "nombre": "Taller de la práctica Vocal Instrumental y de Recursos Musicales para Nivel Inicial y primario",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-2.1",
+            "662-2.2",
+            {
+              "or": [
+                "662-2.3.1",
+                "662-2.3.2"
+              ]
+            },
+            {
+              "or": [
+                "662-2.4.1",
+                "662-2.4.2"
+              ]
+            },
+            "662-2.5",
+            "662-2.6",
+            "662-2.14"
+          ]
+        }
+      }
+    },
+    "662-4.9": {
+      "nombre": "Residencia en Nivel Primario",
+      "cursada": "1C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.10": {
+      "nombre": "Praxis y Elementos Técnicos en la Música Popular II (Tango/Rock)",
+      "cursada": "1C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.12"
+          ]
+        }
+      }
+    },
+    "662-4.11": {
+      "nombre": "Estéticas Contemporáneas",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            {
+              "or": [
+                "662-2.3.1",
+                "662-2.3.2"
+              ]
+            },
+            "662-3.8",
+            "662-4.6"
+          ]
+        }
+      }
+    },
+    "662-4.12": {
+      "nombre": "Residencia en Nivel Medio",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.13.1": {
+      "nombre": "Seminario optativo: Educación Musical en Escuelas de Arte",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.13.2": {
+      "nombre": "Seminario optativo: Educación Especial y la Diversidad",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.13.3": {
+      "nombre": "Seminario optativo: Educación Musical en Maternal",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.14": {
+      "nombre": "Ensamble con Orientación Popular II (Tango/Rock)",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            {
+              "or": [
+                "662-3.6.1",
+                "662-3.6.2",
+                "662-3.6.3",
+                "662-3.6.4",
+                "662-3.6.5"
+              ]
+            },
+            "662-3.14",
+            "662-4.1"
+          ]
+        }
+      }
+    },
+    "662-4.15": {
+      "nombre": "Taller de la Práctica Vocal e Instrumental y de Recursos Musicales para Nivel Medio",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "662-3.11"
+          ]
+        },
+        "aprobar": {
+          "and": [
+            "662-4.8"
+          ]
+        }
+      }
+    },
+    "662-4.16.1": {
+      "nombre": "Seminario Optativo: Práctica de la Dirección Coral (en ambitos no formales)",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    },
+    "662-4.16.2": {
+      "nombre": "Seminario Optativo: Conducción de Conjuntos Instrumentales Dirección Coral (en ámbitos no formales)",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "662-3.1",
+            "662-3.2.1",
+            "662-3.2.2",
+            "662-3.3",
+            "662-3.4.1",
+            "662-3.4.2",
+            "662-3.4.3",
+            "662-3.4.4",
+            "662-3.4.5",
+            "662-3.5",
+            "662-3.6.1",
+            "662-3.6.2",
+            "662-3.6.3",
+            "662-3.6.4",
+            "662-3.6.5",
+            "662-3.7",
+            "662-3.8",
+            "662-3.9",
+            "662-3.10",
+            "662-3.11",
+            "662-3.12",
+            "662-3.13",
+            "662-3.14",
+            "662-3.15"
+          ]
+        }
+      }
+    }
+  }
+}

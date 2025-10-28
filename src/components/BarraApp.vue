@@ -36,7 +36,7 @@
 
     <!-- Menú de Usuario (derecha) -->
     <div class="relative">
-      <button @click="toggleUserMenu" class="flex items-center space-x-2 p-1 pr-2 rounded-full transition-colors hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary-light">
+      <button @click="toggleUserMenu" class="flex items-center space-x-2 p-1 pr-2 rounded-md transition-colors hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary-light">
         <span class="inline text-sm font-medium">{{ userName }}</span>
         <img
           src="/avatar.png"
@@ -57,6 +57,9 @@
             class="dropdown-item">
             Cambiar Rol
           </button>
+          <button @click="showTerminos = true" class="dropdown-item">
+            Términos y Condiciones
+          </button>
           <button @click="alert('Función no implementada')" class="dropdown-item">
             Solicitar Baja
           </button>
@@ -67,6 +70,28 @@
         </div>
       </transition>
     </div>
+    
+    <!-- Modal para mostrar los términos -->
+    <transition name="fade">
+      <div v-if="showTerminos" class="fixed inset-0 bg-stone-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-stone-400 text-stone-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-bold">Términos y Condiciones de Uso</h2>
+              <button @click="showTerminos = false" class="text-stone-500 hover:text-stone-700">
+                <XMarkIcon class="h-6 w-6" />
+              </button>
+            </div>
+            <TerminosContenido />
+            <div class="mt-6 flex justify-end">
+              <button @click="showTerminos = false" class="btn btn-primary">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </nav>
 </template>
 
@@ -75,9 +100,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/auth/useAuth'
 import { useRouter } from 'vue-router'
 import { vOnClickOutside } from '@vueuse/components'
-import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import TerminosContenido from '@/components/legal/TerminosContenido.vue'
 
 const menuOpen = ref(false)
+const showTerminos = ref(false)
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -140,7 +167,7 @@ const roleLinks = computed(() => menuLinks[rolActivo.value] || []);
 function navigate(path, closeMenus = false) {
   if (closeMenus) {
     menuOpen.value = false;
-    userMenuOpen.value = false;
+    userMenuOpen.value = false
   }
   router.push(path);
 }

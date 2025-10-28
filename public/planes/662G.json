@@ -1,0 +1,821 @@
+[
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.1",
+"PCod": "62G.1.1",
+"Materia": "GUITARRA I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.2",
+"PCod": "62G.1.2",
+"Materia": "ELEMENTOS DEL ANALISIS MUSICAL I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.3",
+"PCod": "62G.1.3",
+"Materia": "MUSICA DE CAMARA I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.4",
+"PCod": "62G.1.4",
+"Materia": "EDUCACION VOCAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.5",
+"PCod": "62G.1.5",
+"Materia": "EXPRESION CORPORAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.6",
+"PCod": "62G.1.6",
+"Materia": "INFORMATICA Y NUEVOS MEDIOS I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.7",
+"PCod": "62G.1.7",
+"Materia": "DIDACTICA GENERAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.8",
+"PCod": "62G.1.8",
+"Materia": "TALLER DE LECTURA, ESCRITURA Y ORALIDAD",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "1.9",
+"PCod": "62G.1.9",
+"Materia": "TALLER DE PRACTICA INSTITUCIONAL Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "1° CUAT.",
+"Plan": "62G",
+"Cod": "1.1",
+"PCod": "62G.1.1",
+"Materia": "PSICOLOGIA GENERAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "1° CUAT.",
+"Plan": "62G",
+"Cod": "1.11",
+"PCod": "62G.1.11",
+"Materia": "PEDAGOGIA GENERAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "1.12",
+"PCod": "62G.1.12",
+"Materia": "SUJETO DEL APRENDIZAJE I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"PSICOLOGIA GENERAL"
+],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "1.13",
+"PCod": "62G.1.13",
+"Materia": "HISTORIA ARGENTINA CONTEMPORANEA",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "1.14",
+"PCod": "62G.1.14",
+"Materia": "ACUSTICA Y ORGANOLOGIA",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.1",
+"PCod": "62G.2.1",
+"Materia": "GUITARRA II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"GUITARRA I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.2",
+"PCod": "62G.2.2",
+"Materia": "ELEMENTOS DEL ANALISIS MUSICAL II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I"
+],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.3",
+"PCod": "62G.2.3",
+"Materia": "MUSICA DE CAMARA II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"GUITARRA I -ELEMENTOS DEL AN. MUSICAL I- MUSICA DE CAMARA I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.4",
+"PCod": "62G.2.4",
+"Materia": "CANTO I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"EDUCACION VOCAL"
+],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.5",
+"PCod": "62G.2.5",
+"Materia": "CORO",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"EDUCACION VOCAL"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.6",
+"PCod": "62G.2.6",
+"Materia": "HISTORIA DE LA MUSICA I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD"
+],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.7",
+"PCod": "62G.2.7",
+"Materia": "INFORMATICA Y NUEVOS MEDIOS II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"INFORMATICA Y NUEVOS MEDIOS I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.8",
+"PCod": "62G.2.8",
+"Materia": "EXPRESION TEATRAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"EXPRESION CORPORAL"
+],
+"CodA": [],
+"Aprobadas": []
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.9",
+"PCod": "62G.2.9",
+"Materia": "INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO I (PIANO)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.1",
+"PCod": "62G.2.1",
+"Materia": "INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO I (GUITARRA)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "2.11",
+"PCod": "62G.2.11",
+"Materia": "TALLER DE PRACTICA DOCENTE Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"SUJETO DEL APRENDIZAJE I"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE PRACTICA INSTITUCIONAL Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL"
+]
+},
+{
+"Cursada": "1° CUAT",
+"Plan": "62G",
+"Cod": "2.12",
+"PCod": "62G.2.12",
+"Materia": "SUJETO DEL APRENDIZAJE II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"SUJETO DEL APRENDIZAJE I"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD"
+]
+},
+{
+"Cursada": "1° CUAT",
+"Plan": "62G",
+"Cod": "2.13",
+"PCod": "62G.2.13",
+"Materia": "DIDACTICA DE LA MUSICA PARA NIVEL INICIAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"EXPRESION CORPORAL-DIDACTICA GENERAL-SUJETO DEL APRENDIZAJE I"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD-TALLER DE PRACTICA INSTITUCIONAL Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL."
+]
+},
+{
+"Cursada": "2° CUAT",
+"Plan": "62G",
+"Cod": "2.14",
+"PCod": "62G.2.14",
+"Materia": "HISTORIA SOCIAL DE LA EDUCACION",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"HISTORIA ARGENTINA CONTEMPORANEA"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD"
+]
+},
+{
+"Cursada": "2 CUAT",
+"Plan": "62G",
+"Cod": "2.15",
+"PCod": "62G.2.15",
+"Materia": "DIDACTICA DE LA MUSICA PARA NIVEL PRIMARIO",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"DIDACTICA DE LA MUSICA PARA NIVEL INICIAL"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.1",
+"PCod": "62G.3.1",
+"Materia": "GUITARRA III",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I-MUSICA DE CAMARA I - EXPRESION CORPORAL - GUITARRA II -INS. ARMONICO POPULAR CMPL. (PIANO O GUITARRA)"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.2",
+"PCod": "62G.3.2",
+"Materia": "ELEMENTOS DEL ANALISIS MUSICAL III",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL II"
+],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I-MUSICA DE CAMARA I - GUITARRA I-II-INS. ARMONICO POPULAR CMPL. (PIANO O GUITARRA)"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.3",
+"PCod": "62G.3.3",
+"Materia": "MUSICA DE CAMARA III",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL II -MUSICA DE CAMARA II"
+],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I- MUSICA DE CAMARA I- FLAUTA II- INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO (PIANO O GUITARRA)"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.4",
+"PCod": "62G.3.4",
+"Materia": "DIDACTICA ESPECIALIZADA",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"MUSICA DE CAMARA I-EXPRESION CORPORAL-GUITARRA II-DIDACTICA DE LA MUSICA PARA NIVEL PRIMARIO"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.5",
+"PCod": "62G.3.5",
+"Materia": "HISTORIA DE LA MUSICA II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"HISTORIA DE LA MUSICA I"
+],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.6",
+"PCod": "62G.3.6",
+"Materia": "TALLER DE PRACTICA DOCENTE Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"DIDACTICA DE LA MUSICA PARA NIVEL PRIMARIO"
+],
+"CodA": [],
+"Aprobadas": [
+"PRIMER AÑO APROBADO- TALLER DE PRACTICA DOCENTE Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.7",
+"PCod": "62G.3.7",
+"Materia": "INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO II (PIANO O GUITARRA)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO I (PIANO O GUITARRRA)"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.8",
+"PCod": "62G.3.8",
+"Materia": "CANTO II",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"CANTO I"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.9",
+"PCod": "62G.3.9",
+"Materia": "DIRECCION CORAL I",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I- EXPRESION COPRPORAL-CANTO I- CORO"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.1",
+"PCod": "62G.3.1",
+"Materia": "INSTITUCIONES EDUCATIVAS",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE PRACTICA DOCENTE Y CONSTRUCCION DE LA IDENTIDAD PROFESIONAL I - HISTORIA SOCIAL DE LA EDUCACION"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.11",
+"PCod": "62G.3.11",
+"Materia": "DIDACTICA DE LA MUSICA PARA NIVEL MEDIO",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"INFORMATICA Y NUEVOS MEDIOS I- SUJETO DEL APRENDIZAJE II- DIDACTICA DE LA MUSICA PARA NIVEL PRIMARIO"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "3.12",
+"PCod": "62G.3.12",
+"Materia": "PRAXIS Y ELEMENTOS TECNICOS EN LA MUSICA POPULAR I (LATINOAMERICANA)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL I- GUITARRA II- CANTO I- INSTRUMENTO ARMONICO POPULAR (PIANO O GUITARRA)"
+]
+},
+{
+"Cursada": "2° CUAT",
+"Plan": "62G",
+"Cod": "3.13",
+"PCod": "62G.3.13",
+"Materia": "SOCIOLOGIA DE LA EDUCACION",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"PEDAGOGIA GENERAL"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "3.14",
+"PCod": "62G.3.14",
+"Materia": "ENSAMBLE CON ORIENTACION POPULAR I (LATINOAMERICANA)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"PRAXIS Y ELEMENTOS TECNICOS EN LA MUSICA POPULAR I (LATINOAMERICANA)"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "3.15",
+"PCod": "62G.3.15",
+"Materia": "TECNICAS Y RECURSOS CONTEMPORANEOS",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"FLAUTA TRAVERSA I- ELEMENTOS DEL ANALISIS MUSICAL I- ACUSTICA Y ORGANOLOGIA"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.1",
+"PCod": "62G.4.1",
+"Materia": "GUITARRA IV",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL II - MUSICA DE CAMARA II-EXPRESION TEATRAL"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.2",
+"PCod": "62G.4.2",
+"Materia": "MUSICA DE CAMARA IV",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"MUSICA DE CAMARA III"
+],
+"CodA": [],
+"Aprobadas": [
+"ELEMENTOS DEL ANALISIS MUSICAL III- GUITARRA III"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.3",
+"PCod": "62G.4.3",
+"Materia": "TALLER DE PRODUCCION Y ORGANIZACION DE EVENTOS ARTISTICOS",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"INFORMATICA Y NUEVOS MEDIOS II"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.4",
+"PCod": "62G.4.4",
+"Materia": "TECNICAS DE IMPROVISACION MUSICAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"CANTO II- TECNICAS Y RECURSOS CONTEMPORANEOS"
+],
+"CodA": [],
+"Aprobadas": [
+"INFORMATICA Y NUEVOS MEDIOS I- ELEMENTOS DE ANALISIS MUSICAL II-CANTO I -CORO-INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO I (GUIT O PIANO)-GUITARRA III"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.5",
+"PCod": "62G.4.5",
+"Materia": "RESIDENCIA EN LA ESCUELA DE MUSICA",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TERCER AÑO APROBADO"
+]
+},
+{
+"Cursada": "ANUAL",
+"Plan": "62G",
+"Cod": "4.6",
+"PCod": "62G.4.6",
+"Materia": "METODOLOGIA DE LA INVESTIGACION CON FINES EDUCATIVOS Y ARTISTICOS",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [
+"INTITUCIONES EDUCATIVAS"
+],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE PRACTICA DOCENTE Y CONSTRUCCION DE LA IDENTIDAD PREOFESIONAL II"
+]
+},
+{
+"Cursada": "1° CUAT",
+"Plan": "62G",
+"Cod": "4.7",
+"PCod": "62G.4.7",
+"Materia": "FILOSOFIA DE LA EDUCACION",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TALLER DE LECTURA",
+"ESCRITURA Y ORALIDAD-PEDAGOGIA GENERAL"
+]
+},
+{
+"Cursada": "1° CUAT",
+"Plan": "62G",
+"Cod": "4.8",
+"PCod": "62G.4.8",
+"Materia": "RESIDENCIA EN NIVEL INICIAL, PRIMARIO Y MEDIO",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TERCER AÑO APROBADO"
+]
+},
+{
+"Cursada": "1° CUAT",
+"Plan": "62G",
+"Cod": "4.9",
+"PCod": "62G.4.9",
+"Materia": "PRAXIS Y ELEMENTOS TECNICOS EN LA MUSICA POPULAR II (TANGO-ROCK)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"PRAXIS Y ELEMENTOS TECNICOS EN LA MUSICA POPULAR I (LATINOAMERICANA)"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "4.1",
+"PCod": "62G.4.1",
+"Materia": "PRACTICA ORQUESTAL",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"GUITARRA III-ELEMENTOS DE ANALISIS MUSICAL III- MUSICA DE CAMARA III-DIRECCION CORAL I"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "4.11",
+"PCod": "62G.4.11",
+"Materia": "ESTETICAS CONTEMPORANEAS",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"GUITARRA II- INSTRUMENTO ARMONICO POPULAR COMPLEMENTARIO I (GUIT O PIANO)- HISTORIA DE LA MUSICA II"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "4.12",
+"PCod": "62G.4.12",
+"Materia": "ENSAMBLE CON ORIENTACION POPULAR II (TANGO-ROCK)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"ENSAMBLE CON ORIENTACION POPULAR I (LATINOAMERICANA)"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "4.13",
+"PCod": "62G.4.13",
+"Materia": "SEMINARIO TALLER: PRACTICA DE LA DIRECCION CORAL ( EN AMBITOS NO FORMALES)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TERCER AÑO APROBADO"
+]
+},
+{
+"Cursada": "2°CUAT",
+"Plan": "62G",
+"Cod": "4.14",
+"PCod": "62G.4.14",
+"Materia": "SEMINARIO TALLER: CONDUCCION DE CONJUNTOS INSTRUMENTALES (EN AMBITOS NO FORMALES)",
+"NombreCorto": null,
+"CodC": [],
+"Cursadas": [],
+"CodA": [],
+"Aprobadas": [
+"TRCER AÑO APROBADO"
+]
+}
+]
