@@ -4,6 +4,12 @@ import { routerInstance } from './routerInstance.js' // importar el objeto route
 
 // Definimos las rutas
 const routes = [
+  // Ruta pública para planes de estudio
+  { 
+    path: '/planes-estudio', 
+    name: 'PlanesEstudioPublico', 
+    component: () => import('@/views/auth/PlanesEstudioPublico.vue') 
+  },
 
   // SIN LAYOUT (autenticación)
   {
@@ -117,10 +123,18 @@ createdRouter.beforeEach(async (to, from, next) => {
   if (!isLoggedIn.value) {
     // Definimos aquí las rutas públicas de acceso para que el layout se aplique correctamente.
     const isAccesoRoute = ['login', 'registro', 'reset-password', 'terminos', 'seleccionar-rol'].includes(to.name)
+    
+    // Verificar si es la ruta pública de planes de estudio
+    const isPlanesEstudioPublico = to.name === 'PlanesEstudioPublico'
 
     // Si la ruta es de acceso, aplicamos el layout 'acceso' y permitimos el paso.
     if (isAccesoRoute) {
       setLayout('acceso') // <-- ¡AQUÍ ESTÁ LA MAGIA!
+      return next()
+    }
+    
+    // Si es la ruta pública de planes de estudio, permitir el acceso
+    if (isPlanesEstudioPublico) {
       return next()
     }
 
