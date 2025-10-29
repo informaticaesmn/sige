@@ -1,7 +1,8 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import { routerInstance } from './routerInstance' // Importamos el objeto contenedor
+import { routerInstance } from './routerInstance.js' // importar el objeto router
 
+// Definimos las rutas
 const routes = [
 
   // SIN LAYOUT (autenticación)
@@ -27,7 +28,8 @@ const routes = [
     children: [
       { path: '', name: 'EstudianteTablero', component: () => import('@/views/estudiante/TableroE.vue') },
       { path: 'inscripciones', name: 'EstudianteInscripciones', component: () => import('@/views/estudiante/InscripcionesE.vue') },
-      { path: 'historial', name: 'HAcademico', component: () => import('@/views/estudiante/HAcademico.vue') }
+      { path: 'historial', name: 'HAcademico', component: () => import('@/views/estudiante/HAcademico.vue') },
+      { path: 'planes', name: 'PlanesEstudio', component: () => import('@/views/estudiante/PlanesEstudioView.vue') }
     ]
   },
 
