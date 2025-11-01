@@ -1,6 +1,6 @@
 ﻿# SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.7.3
+Version actual: dev v0.7.4
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
@@ -56,6 +56,7 @@ Armar el paquete de oferta academica que se ofrece por cada ciclo, este proceso 
 > Hay un archivo con [notas e ideas](NOTAS.md) que se van generando en el equipo de trabajo reunido para pensar en este sistema 
 
 <br><br><br><p align="right"> <i>Genaro Villar   </i></p>
+
 
 
 
