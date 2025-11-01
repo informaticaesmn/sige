@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-medium mb-6">Planes de Estudio</h1>
       
       <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-700"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-700" role="status" aria-label="Cargando"></div>
       </div>
       
       <div v-else>
@@ -18,6 +18,7 @@
             v-model="planId"
             @change="cambiarPlan"
             class="block w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            aria-label="Seleccionar plan de estudio"
           >
             <option 
               v-for="plan in planesDisponibles" 
@@ -31,8 +32,8 @@
 
         <div v-if="planSeleccionado">
           <!-- Vista de detalle de materia (modal) -->
-          <div v-if="materiaSeleccionada" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div v-if="materiaSeleccionada" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="detalle-materia-title" aria-describedby="detalle-materia-content">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="document">
               <DetalleMateria 
                 :materia="materiaSeleccionada" 
                 :plan="planSeleccionado"
@@ -57,18 +58,14 @@
               />
             </div>
 
-            <!-- Columna derecha: detalle de materia -->
+            <!-- Columna derecha: detalle de materia (ELIMINADA) -->
             <div class="lg:col-span-1">
-              <DetalleMateria 
-                :materia="materiaSeleccionada" 
-                :plan="planSeleccionado"
-                @cerrar="materiaSeleccionada = null"
-              />
+              <!-- Esta columna se elimina porque duplica la funcionalidad del modal -->
             </div>
           </div>
         </div>
         
-        <div v-else-if="error" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+        <div v-else-if="error" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center" role="alert">
           <h3 class="text-lg font-medium text-yellow-800 mb-2">Plan aún en proceso de carga</h3>
           <p class="text-yellow-700">
             El plan de estudios seleccionado aún no está disponible. Por favor, inténtelo más tarde.

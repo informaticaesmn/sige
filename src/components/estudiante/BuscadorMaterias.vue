@@ -10,9 +10,10 @@
           placeholder="Buscar por nombre, código o nombre corto..."
           class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           @input="realizarBusqueda"
+          aria-label="Buscar materias por nombre, código o nombre corto"
         >
         <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-400" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
           </svg>
         </div>
@@ -39,7 +40,11 @@
             v-for="materia in resultados" 
             :key="materia.codigo"
             @click="$emit('seleccionar', materia)"
-            class="hover:bg-stone-50 cursor-pointer"
+            @keydown.enter="$emit('seleccionar', materia)"
+            @keydown.space.prevent="$emit('seleccionar', materia)"
+            class="hover:bg-stone-50 cursor-pointer focus:outline-none focus:bg-stone-100 focus:ring-2 focus:ring-blue-500"
+            tabindex="0"
+            :aria-label="`Ver detalles de ${materia.nombre}`"
           >
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-stone-900">
               {{ materia.codigo }}
@@ -55,7 +60,7 @@
       </table>
     </div>
 
-    <div v-else-if="busqueda.length > 2" class="text-center py-4 text-stone-500">
+    <div v-else-if="busqueda.length > 2" class="text-center py-4 text-stone-500" role="status">
       <p>No se encontraron materias que coincidan con la búsqueda</p>
     </div>
   </div>

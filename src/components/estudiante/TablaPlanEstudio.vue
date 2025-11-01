@@ -30,7 +30,11 @@
             v-for="materia in materias" 
             :key="materia.codigo"
             @click="seleccionarMateria(materia)"
-            class="hover:bg-stone-50 cursor-pointer"
+            @keydown.enter="seleccionarMateria(materia)"
+            @keydown.space.prevent="seleccionarMateria(materia)"
+            class="hover:bg-stone-50 cursor-pointer focus:outline-none focus:bg-stone-100 focus:ring-2 focus:ring-blue-500"
+            tabindex="0"
+            :aria-label="`Ver detalles de ${materia.nombre}`"
           >
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-stone-900">
               {{ materia.codigo }}

@@ -1,20 +1,31 @@
 <template>
-  <div class="card">
+  <div class="card" ref="modalContainer" tabindex="-1">
     <div class="flex justify-between items-start mb-4">
-      <h3 class="text-lg font-semibold text-stone-800">
+      <h3 id="detalle-materia-title" class="text-lg font-semibold text-stone-800">
         Detalle de Materia
       </h3>
-      <button 
-        @click="$emit('cerrar')"
-        class="text-stone-500 hover:text-stone-700"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
-      </button>
+      <div class="flex space-x-2">
+        <button 
+          v-if="materia"
+          @click="copiarAlPortapapeles"
+          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          :aria-label="copiado ? 'Copiado al portapapeles' : 'Copiar detalles al portapapeles'"
+        >
+          <ClipboardIcon v-if="!copiado" class="h-5 w-5" aria-hidden="true" />
+          <CheckCircleIcon v-else class="h-5 w-5 text-green-500" aria-hidden="true" />
+        </button>
+        <button 
+          ref="closeButton"
+          @click="$emit('cerrar')"
+          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          aria-label="Cerrar detalles de materia"
+        >
+          <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
     </div>
 
-    <div v-if="materia" class="space-y-4">
+    <div v-if="materia" id="detalle-materia-content" class="space-y-4">
       <div>
         <h4 class="text-xl font-medium text-stone-900">{{ materia.nombre }}</h4>
         <p class="text-stone-600">{{ materia.codigo }}</p>
@@ -70,8 +81,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import CorrelativasList from './CorrelativasList.vue'
+import { XMarkIcon, ClipboardIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   materia: {
@@ -84,7 +96,11 @@ const props = defineProps({
   }
 })
 
-defineEmits(['cerrar'])
+const emit = defineEmits(['cerrar'])
+const modalContainer = ref(null)
+const closeButton = ref(null)
+const copiado = ref(false)
+let timeoutId = null
 
 // Computed para verificar si hay correlativas
 const tieneCorrelativas = computed(() => {
@@ -162,10 +178,126 @@ const procesarCorrelativasParaVista = (correlativa) => {
 
   return procesarCondicion(correlativa)
 }
+
+const copiarAlPortapapeles = async () => {
+  if (!props.materia) return
+  
+  try {
+    let contenido = ''
+    contenido += `DETALLE DE MATERIA\n`
+    contenido += `==================\n\n`
+    contenido += `Nombre: ${props.materia.nombre}\n`
+    contenido += `Código: ${props.materia.codigo}\n`
+    contenido += `Nombre corto: ${props.materia.nombre_c}\n`
+    contenido += `Período de cursada: ${props.materia.cursada}\n`
+    
+    if (props.materia.equivale_a) {
+      contenido += `Equivalencia: ${props.materia.equivale_a}\n`
+    }
+    
+    if (tieneCorrelativas.value) {
+      contenido += `\nCORRELATIVAS\n`
+      contenido += `============\n`
+      
+      if (props.materia.correlativas.cursar) {
+        contenido += `\nPara cursar:\n`
+        contenido += formatearCorrelativas(props.materia.correlativas.cursar)
+      }
+      
+      if (props.materia.correlativas.aprobar) {
+        contenido += `\nPara aprobar:\n`
+        contenido += formatearCorrelativas(props.materia.correlativas.aprobar)
+      }
+    }
+    
+    await navigator.clipboard.writeText(contenido)
+    copiado.value = true
+    
+    // Restablecer el ícono después de 2 segundos
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      copiado.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Error al copiar al portapapeles:', err)
+  }
+}
+
+const formatearCorrelativas = (correlativa, nivel = 0) => {
+  const prefijo = '  '.repeat(nivel)
+  let resultado = ''
+  
+  if (typeof correlativa === 'string') {
+    const materia = props.plan?.materias[correlativa]
+    const nombre = materia ? `${materia.nombre_c || materia.nombre}` : `Materia ${correlativa}`
+    resultado += `${prefijo}• ${correlativa} - ${nombre}\n`
+  } else if (correlativa && typeof correlativa === 'object') {
+    if (correlativa.and) {
+      resultado += `${prefijo}Todas las siguientes materias:\n`
+      correlativa.and.forEach(item => {
+        resultado += formatearCorrelativas(item, nivel + 1)
+      })
+    } else if (correlativa.or) {
+      resultado += `${prefijo}Cualquiera de las siguientes materias:\n`
+      correlativa.or.forEach(item => {
+        resultado += formatearCorrelativas(item, nivel + 1)
+      })
+    } else if (correlativa.anio_completo) {
+      resultado += `${prefijo}• Todas las materias del año ${correlativa.anio_completo}\n`
+    }
+  }
+  
+  return resultado
+}
+
+const handleKeyDown = (event) => {
+  if (event.key === 'Escape') {
+    emit('cerrar')
+  }
+}
+
+const trapFocus = (event) => {
+  if (event.key === 'Tab' && modalContainer.value) {
+    const focusableElements = modalContainer.value.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+    
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault()
+      lastElement.focus()
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault()
+      firstElement.focus()
+    }
+  }
+}
+
+onMounted(() => {
+  // Enfocar el contenedor del modal cuando se monta
+  if (modalContainer.value) {
+    modalContainer.value.focus()
+  }
+  
+  // Agregar listeners para manejar el enfoque dentro del modal
+  document.addEventListener('keydown', handleKeyDown)
+  document.addEventListener('keydown', trapFocus)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('keydown', trapFocus)
+  
+  if (timeoutId) {
+    clearTimeout(timeoutId)
+  }
+})
 </script>
 
 <style scoped>
 .card {
-  @apply bg-white rounded-lg shadow p-6;
+  @apply bg-white rounded-lg shadow p-6 focus:outline-none;
 }
 </style>

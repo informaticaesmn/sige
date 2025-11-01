@@ -85,7 +85,7 @@
   /* Botón secundario (UNA SOLA DEFINICIÓN) */
   .btn-secondary {
     @apply border border-primary text-primary bg-white
-        hover:bg-primary-light/20 
+        hover:bg-primary-light/20 hover:text-primary
         focus:ring-primary;
   }
   /* Botón link (UNA SOLA DEFINICIÓN) */

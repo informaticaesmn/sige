@@ -53,6 +53,10 @@
           ¿No tenés cuenta? Registrate
         </button>
       </div>
+      <button 
+        type="button" 
+        @click="() => router.push('/planes-estudio')" 
+        class="btn btn-secundary w-full my-4">ver planes de estudio</button>
     </div>
   </form>
 </template>
