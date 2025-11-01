@@ -1,6 +1,6 @@
 {
   "plan": "662",
-  "nombre": "Profesorado de Música",
+  "nombre": "Plan 662 - Profesorado de Música",
   "materias": {
     "662-1.1": {
       "nombre": "Audioperceptiva I",
@@ -59,7 +59,7 @@
     },
     "662-1.9": {
       "nombre": "Didáctica General",
-      "nombre_c": "Didictica Gral",
+      "nombre_c": "Didactica Gral",
       "cursada": "anual"
     },
     "662-1.10": {
@@ -308,7 +308,7 @@
       }
     },
     "662-3.2.1": {
-      "nombre": "Instrumento Armónico III (Piano )",
+      "nombre": "Instrumento Armónico III (Piano)",
       "nombre_c": "Inst Arm III Piano",
       "cursada": "anual",
       "correlativas": {
@@ -321,7 +321,7 @@
       }
     },
     "662-3.2.2": {
-      "nombre": "Instrumento Armónico III ( Guitarra)",
+      "nombre": "Instrumento Armónico III (Guitarra)",
       "nombre_c": "Inst Arm III Guitarra",
       "cursada": "anual",
       "correlativas": {
@@ -574,7 +574,7 @@
       }
     },
     "662-3.8": {
-      "nombre": "Historia de la Musica II",
+      "nombre": "Historia de la Música II",
       "nombre_c": "Historia Musica II",
       "cursada": "anual",
       "correlativas": {
@@ -587,7 +587,7 @@
       }
     },
     "662-3.9": {
-      "nombre": "Taller de Practica Docente y Construccion de la Identidad  Profesional  II",
+      "nombre": "Taller de Práctica Docente y Construcción de la Identidad Profesional II",
       "nombre_c": "Taller Practica II",
       "cursada": "anual",
       "correlativas": {
@@ -653,7 +653,7 @@
       }
     },
     "662-3.12": {
-      "nombre": "Praxis y Elemenentos Técnicos en la Música Popular I (Latinoamericana)",
+      "nombre": "Praxis y Elementos Técnicos en la Música Popular I (Latinoamericana)",
       "nombre_c": "Praxis I",
       "cursada": "2C",
       "correlativas": {
@@ -799,7 +799,7 @@
       }
     },
     "662-4.5": {
-      "nombre": "Metodologia de la Investigacion con Fines Educativos y Artísticos",
+      "nombre": "Metodología de la Investigación con Fines Educativos y Artísticos",
       "nombre_c": "Metodologia",
       "cursada": "anual",
       "correlativas": {

@@ -6,11 +6,11 @@
     - ___main___ vinculado al hosting de Firebase ***Listo***
     - ___dev___ vinculado a un proyecto Vercel    ***Listo***
     - tendria que crear un tercer branch para la publicacion de paginas estaticas, via Github Pages?
-- armar una vista para los nuevos inscriptos. Pregrado * (formulario de carga de preinscripcion) **descartado para 2026**
+- armar una vista para los nuevos inscriptos. Pregrado * (formulario de carga de preinscripcion) `descartado para 2026`
 
 ## cosas a tener en cuenta
-- cambiar todos los usuarios a DNI ver de implementarlo Diciembre 2025 o Febrero 2026
-- seguir trabajando en las inscripciones a instrumento.
+- cambiar `todos los usuarios a DNI` ver de implementarlo Diciembre 2025 o Febrero 2026
+- seguir trabajando en las `inscripciones a instrumento`.
 
 ## ideotas
  Tengo problemas para definir la estructura de la base de datos. con respecto a los planes de estudio y materias por varias razones:
@@ -38,3 +38,4 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 
 - ir pensando que la vista Docente sea para ver sus secuencias y llevar la asistencia ( y la carga de notas?)
 
+**Decisión Final sobre Estructura de Oferta (Oct 2025)**: Se optó por un modelo híbrido. Los planes de estudio viven en archivos JSON estáticos. La oferta académica de cada año se carga a una colección `ofertaAcademica_YYYY`, que contiene documentos por `materia` con una subcolección de `secuencias`. Se usa una colección `periodosInscripcion` para gestionar las fechas de apertura y cierre, vinculada a cada secuencia mediante un `periodoId`. Esto evita duplicar datos y facilita la gestión.

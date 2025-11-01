@@ -12,6 +12,7 @@
     "@heroicons/vue": "^2.2.0",
     "@vueuse/components": "^13.9.0",
     "csv-parse": "^6.1.0",
+    "csv-parser": "^3.2.0",
     "dotenv": "^17.2.2",
     "firebase": "^12.2.1",
     "vue": "^3.4.27",
@@ -20,7 +21,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",
     "autoprefixer": "^10.4.19",
-    "firebase-admin": "^12.1.0",
+    "firebase-admin": "^12.7.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "vite": "^5.3.1"
