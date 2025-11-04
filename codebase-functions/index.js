@@ -15,7 +15,8 @@ const db = admin.firestore();
 const auth = admin.auth();
 
 // Configuración global para las funciones
-setGlobalOptions({region: "southamerica-west1", maxInstances: 10});
+// Cambiamos a southamerica-east1 para que coincida con la configuración del cliente
+setGlobalOptions({region: "southamerica-east1", maxInstances: 10});
 
 /**
  * Registra un nuevo usuario si su email

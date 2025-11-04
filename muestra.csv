@@ -1,6 +1,6 @@
 dni,nombre,apellido,email,rol,plan,materias
-55444333,Estudiante,DE PRUEBA,deprueba@esmn.com.ar,"[""Estudiante""]",666-Profesorado en Composición,"[{""nombre"":""Historia de la Música I"",""nota"":8},{""nombre"":""Armonía I"",""nota"":7}]"
-28314610,Facundo Martin,GOMEZ SAIBENE,facugomezsaibene@gmail.com,"[""Estudiante"",""Docente""]",708-Tecnicatura en Sonido,"[]"
-37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""Estudiante""]",708-Tecnicatura en Sonido,"[{""nombre"":""Sonido I"",""nota"":9}]"
-30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""Docente""]",662-Profesorado de Música,"[{""nombre"":""Didáctica"",""nota"":10}]"
-25335533,Genaro,VILLAR,genarovillar@gmail.com,"[""Estudiante"",""Docente""]",662-Profesorado de Música,"[{""nombre"":""Contrapunto I"",""nota"":6},{""nombre"":""Piano Complementario"",""nota"":7}]"
+55444333,estudiante,DE PRUEBA,deprueba@esmn.com.ar,"[""estudiante"",""bedel""]",666-Profesorado en Composición,"[{""nombre"":""Historia de la Música I"",""nota"":8},{""nombre"":""Armonía I"",""nota"":7}]"
+28314610,Facundo Martin,GOMEZ SAIBENE,facugomezsaibene@gmail.com,"[""estudiante"",""docente""]",708-Tecnicatura en Sonido,"[]"
+37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante"",""bedel""]",708-Tecnicatura en Sonido,"[{""nombre"":""Sonido I"",""nota"":9}]"
+30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente"",""bedel""]",662-Profesorado de Música,"[{""nombre"":""Didáctica"",""nota"":10}]"
+25335533,Genaro,VILLAR,genarovillar@gmail.com,"[""estudiante"",""docente"",""]",662-Profesorado de Música,"[{""nombre"":""Contrapunto I"",""nota"":6},{""nombre"":""Piano Complementario"",""nota"":7}]"
