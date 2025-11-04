@@ -29,7 +29,7 @@ import path from 'path';
 import csv from 'csv-parser';
 
 // --- CONFIGURACIÓN ---
-const TARGET_COLLECTION = 'ofertaAcademica_2026';
+const TARGET_COLLECTION = 'ofertaAcademica_prueba2025';
 const SERVICE_ACCOUNT_KEY_PATH = './sige-admin-key.json';
 const CSV_FILE_PATH = './Inscripciones Terciario - Mat.csv';
 const PLANS_DIR_PATH = './public/planes';

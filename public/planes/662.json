@@ -54,7 +54,7 @@
     },
     "662-1.8": {
       "nombre": "Informática y Nuevos Medios I",
-      "nombre_c": "Informatica NM I",
+      "nombre_c": "Informatica I",
       "cursada": "anual"
     },
     "662-1.9": {
@@ -213,7 +213,7 @@
     },
     "662-2.8": {
       "nombre": "Informática y Nuevos Medios II",
-      "nombre_c": "Informatica NM II",
+      "nombre_c": "Informatica II",
       "cursada": "anual",
       "correlativas": {
         "cursar": "662-1.8"
