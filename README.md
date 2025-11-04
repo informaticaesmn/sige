@@ -1,6 +1,6 @@
-# SIGE - ESMN
+﻿# SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.7.5
+Version actual: dev v0.7.6
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
