@@ -1,15 +1,52 @@
 # Importar Usuarios## Planes
 
-Para los estudiantes, se puede especificar el código del plan:
-- `662` para Profesorado de Música
-- `666` para Profesorado en Composición
-- `708` para Tecnicatura en Sonido
-- `662G` para variantes especiales
+Los estudiantes pueden tener uno o más planes. Se pueden especificar los códigos de plan de las siguientes maneras:
 
-El script formateará automáticamente estos códigos a nombres completos:
-- `662` → `662-Profesorado de Música`
-- `708` → `708-Tecnicatura en Sonido`
-- etc.
+### Formato JSON (recomendado):
+```csv
+"[""662"",""PREGRADO""]"
+```
+
+### Formato separado por comas:
+```csv
+"662,PREGRADO"
+```
+
+### Planes disponibles
+
+| Código | Nombre completo |
+|--------|-----------------|
+| 662 | 662 Profesorado de Música |
+| 662A | 662A Profesorado de Música con orientación en Arpa |
+| 662B | 662B Profesorado de Música con orientación en Canto |
+| 662C | 662C Profesorado de Música con orientación en Clarinete |
+| 662D | 662D Profesorado de Música con orientación en Composición |
+| 662F | 662F Profesorado de Música con orientación en Dirección Coral |
+| 662G | 662G Profesorado de Música con orientación en Guitarra |
+| 662H | 662H Profesorado de Música con orientación en Fagot |
+| 662J | 662J Profesorado de Música con orientación en Piano |
+| 662K | 662K Profesorado de Música con orientación en Oboe |
+| 662L | 662L Profesorado de Música con orientación en Instrumento de Cuerda |
+| 662M | 662M Profesorado de Música con orientación en Instrumento de Percusión |
+| 662N | 662N Profesorado de Música con orientación en Instrumento de Viento Metal |
+| 662P | 662P Profesorado de Música con orientación en Instrumento de Viento Madera |
+| 662Q | 662Q Profesorado de Música con orientación en Tuba |
+| 662R | 662R Profesorado de Música con orientación en Trombón |
+| 662S | 662S Profesorado de Música con orientación en Trompeta |
+| 662T | 662T Profesorado de Música con orientación en Violín |
+| 662U | 662U Profesorado de Música con orientación en Viola |
+| 662V | 662V Profesorado de Música con orientación en Violoncello |
+| 663 | 663 Profesorado de Música con orientación en Dirección Coral |
+| 664 | 664 Profesorado de Música con orientación en Canto Lírico |
+| 665 | 665 Profesorado de Música con orientación en Dirección Orquestal |
+| 666 | 666 Profesorado de Música con orientación en Composición |
+| 389 | 389 Cantante |
+| 390 | 390 Compositor |
+| 391 | 391 Director Coral |
+| 392 | 392 Director Orquestal |
+| 393 | 393 Instrumentista |
+| 708 | 708 Técnico Superior en Sonido |
+| PREGRADO | PREGRADO Programa Propedéutico
 
 ## Descripción
 
@@ -24,6 +61,23 @@ Este documento explica cómo importar usuarios al sistema SIGE desde un archivo 
    npm install
    ```
 
+## Exportación desde Google Sheets
+
+Para exportar correctamente los datos desde Google Sheets a CSV:
+
+1. **Para campos array (roles, plan)**:
+   - Usa comillas dobles para envolver todo el contenido del campo
+   - Escapa las comillas dobles internas duplicándolas
+   - Ejemplo: `"[\"estudiante\",\"docente\"]"`
+
+2. **Formato recomendado**:
+   - Usa el formato JSON para arrays: `"[\"valor1\",\"valor2\"]"`
+   - Esto evita problemas de interpretación
+
+3. **Alternativa más simple**:
+   - Puedes usar valores separados por comas sin comillas: `valor1,valor2`
+   - El script lo interpretará correctamente
+
 ## Formato del archivo CSV
 
 El archivo CSV debe tener las siguientes columnas:
@@ -34,15 +88,15 @@ El archivo CSV debe tener las siguientes columnas:
 | nombre    | Nombre/s del usuario                  | Sí        |
 | apellido  | Apellido/s del usuario                | Sí        |
 | email     | Correo electrónico institucional      | Sí        |
-| roles     | Roles del usuario (formato JSON)      | Sí        |
-| plan      | Código del plan de estudio (solo para estudiantes)| Condicional |
+| roles     | Roles del usuario (formato JSON array)| Sí        |
+| plan      | Código(s) del plan de estudio (solo para estudiantes)| Condicional |
 
 ### Ejemplo de contenido:
 
 ```csv
 dni,nombre,apellido,email,roles,plan
-37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante""]",708
-30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente""]",662
+37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante""]","[""708""]"
+30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente""]","[""662"",""PREGRADO""]"
 12345678,Bedel,DE PRUEBA,bedel@esmn.com.ar,"[""bedel""]",
 ```
 
@@ -60,11 +114,12 @@ El script aplica las siguientes reglas de validación:
 
 1. **Todos los usuarios deben tener**: DNI, nombre, apellido y email
 2. **Los emails deben tener formato válido**
-3. **Solo los usuarios con rol "estudiante" deben tener un plan asignado**
-4. **Los usuarios sin rol "estudiante" no deberían tener plan (se mostrará advertencia)**
+3. **Solo los usuarios con rol "estudiante" deben tener al menos un plan asignado**
+4. **Los usuarios sin rol "estudiante" no deberían tener planes (se mostrará advertencia)**
 5. **Los roles deben ser válidos** (estudiante, docente, bedel, admin)
 6. **Los roles se normalizan automáticamente a minúsculas**
-7. **Los códigos de plan se convierten automáticamente a nombres completos según la lista predefinida**
+7. **Los códigos de plan se convierten automáticamente a nombres completos**
+8. **Los estudiantes pueden tener múltiples planes**
 
 ## Ejecución
 
@@ -90,4 +145,5 @@ Una vez importados los usuarios:
 - La fecha de importación se registra automáticamente
 - Si hay errores en la validación, el script se detendrá y mostrará los detalles
 - El campo campus ha sido eliminado del formato de importación
+- Los estudiantes pueden tener múltiples planes almacenados en un array
 - Los códigos de plan se convierten automáticamente a nombres completos según la lista predefinida

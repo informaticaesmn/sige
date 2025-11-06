@@ -17,7 +17,23 @@ let errores = 0
 // Mapeo de códigos de plan a nombres completos
 const nombresDePlanes = {
   '662': '662 Profesorado de Música',
-  '662G': '662G Profesorado de Música con orientación en Instrumento (letra)',
+  '662A': '662A Profesorado de Música con orientación en Arpa',
+  '662B': '662B Profesorado de Música con orientación en Canto',
+  '662C': '662C Profesorado de Música con orientación en Clarinete',
+  '662D': '662D Profesorado de Música con orientación en Composición',
+  '662E': '662E Profesorado de Música con orientación en Contrabajo',
+  '662F': '662F Profesorado de Música con orientación en Dirección Coral',
+  '662G': '662G Profesorado de Música con orientación en Guitarra',
+  '662H': '662H Profesorado de Música con orientación en Fagot',
+  '662I': '662I Profesorado de Música con orientación en Percusión',
+  '662J': '662J Profesorado de Música con orientación en Piano',
+  '662K': '662K Profesorado de Música con orientación en Oboe',
+  '662L': '662L Profesorado de Música con orientación en Instrumento de Cuerda',
+  '662M': '662M Profesorado de Música con orientación en Instrumento de Percusión',
+  '662N': '662N Profesorado de Música con orientación en Instrumento de Viento Metal',
+  '662O': '662R Profesorado de Música con orientación en Clarinete',
+  '662P': '662P Profesorado de Música con orientación en Instrumento de Viento Madera',
+  '662Q': '662Q Profesorado de Música con orientación en Tuba',
   '663': '663 Profesorado de Música con orientación en Dirección Coral',
   '664': '664 Profesorado de Música con orientación en Canto Lírico',
   '665': '665 Profesorado de Música con orientación en Dirección Orquestal',
@@ -27,7 +43,38 @@ const nombresDePlanes = {
   '391': '391 Director Coral',
   '392': '392 Director Orquestal',
   '393': '393 Instrumentista',
-  '708': '708 Técnico Superior en Sonido'
+  '708': '708 Técnico Superior en Sonido',
+  'PREGRADO': 'PREGRADO Programa Propedéutico'
+}
+
+// Función para parsear campos que pueden ser arrays
+function parsearArray(valor) {
+  if (!valor || valor.trim() === '') {
+    return []
+  }
+  
+  // Si ya es un array, devolverlo
+  if (Array.isArray(valor)) {
+    return valor
+  }
+  
+  const valorTrim = valor.trim()
+  
+  // Intentar parsear como JSON array
+  try {
+    const parsed = JSON.parse(valorTrim)
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
+    return [parsed]
+  } catch (e) {
+    // Si no se puede parsear como JSON, tratar como string separado por comas
+    if (valorTrim.includes(',')) {
+      return valorTrim.split(',').map(item => item.trim())
+    }
+    // Si es un solo valor, devolverlo como array de un elemento
+    return [valorTrim]
+  }
 }
 
 // Función para validar los datos del usuario
@@ -58,21 +105,7 @@ function validarUsuario(usuario) {
   }
   
   // Parsear roles
-  let roles = []
-  try {
-    // Intentar parsear roles como array JSON
-    roles = JSON.parse(usuario.roles)
-  } catch {
-    // Si no se puede parsear, usar como string simple
-    if (usuario.roles && usuario.roles.trim() !== '') {
-      roles = [usuario.roles.trim()]
-    }
-  }
-  
-  // Validar que los roles sean un array
-  if (!Array.isArray(roles)) {
-    roles = [roles]
-  }
+  let roles = parsearArray(usuario.roles)
   
   // Normalizar roles a minúsculas
   roles = roles.map(r => typeof r === 'string' ? r.toLowerCase() : String(r).toLowerCase())
@@ -84,27 +117,35 @@ function validarUsuario(usuario) {
     errores.push(`Roles inválidos: ${rolesInvalidos.join(', ')}`)
   }
   
+  // Parsear planes
+  let planes = parsearArray(usuario.plan)
+  
   // Validar plan según roles
   const esEstudiante = roles.includes('estudiante')
-  if (esEstudiante && (!usuario.plan || usuario.plan.trim() === '')) {
-    errores.push('Los estudiantes deben tener un plan asignado')
+  if (esEstudiante && (!planes || planes.length === 0)) {
+    errores.push('Los estudiantes deben tener al menos un plan asignado')
   }
   
-  if (!esEstudiante && usuario.plan && usuario.plan.trim() !== '') {
-    console.warn(`Advertencia: El usuario ${usuario.email} no es estudiante pero tiene un plan asignado`)
+  if (!esEstudiante && planes && planes.length > 0) {
+    console.warn(`Advertencia: El usuario ${usuario.email} no es estudiante pero tiene planes asignados`)
   }
   
-  // Validar que el código de plan sea válido si se proporciona
-  if (usuario.plan && usuario.plan.trim() !== '') {
-    const planCodigo = usuario.plan.trim()
-    if (!nombresDePlanes[planCodigo]) {
-      console.warn(`Advertencia: El código de plan "${planCodigo}" no está en la lista de planes conocidos`)
+  // Validar que los códigos de plan sean válidos si se proporcionan
+  if (planes && planes.length > 0) {
+    for (const planCodigo of planes) {
+      if (planCodigo && planCodigo.trim() !== '') {
+        const codigo = planCodigo.trim()
+        if (!nombresDePlanes[codigo]) {
+          console.warn(`Advertencia: El código de plan "${codigo}" no está en la lista de planes conocidos`)
+        }
+      }
     }
   }
   
   return {
     errores,
     roles,
+    planes,
     esValido: errores.length === 0
   }
 }
@@ -122,16 +163,17 @@ for (const row of records) {
       continue
     }
     
-    // Formatear el plan con el nombre completo
-    let planFormateado = ''
-    if (row.plan && row.plan.trim() !== '') {
-      const planCodigo = row.plan.trim()
-      planFormateado = nombresDePlanes[planCodigo] || `${planCodigo} Profesorado de Música`
-      
-      // Excepciones especiales
-      if (planCodigo === '708') {
-        planFormateado = '708 Técnico Superior en Sonido'
-      }
+    // Formatear los planes con los nombres completos
+    let planesFormateados = []
+    if (validacion.planes && validacion.planes.length > 0) {
+      planesFormateados = validacion.planes.map(planCodigo => {
+        if (!planCodigo || planCodigo.trim() === '') {
+          return ''
+        }
+        
+        const codigo = planCodigo.trim()
+        return nombresDePlanes[codigo] || `${codigo} Profesorado de Música`
+      }).filter(plan => plan !== '') // Filtrar planes vacíos
     }
     
     // Crear documento de usuario
@@ -141,14 +183,14 @@ for (const row of records) {
       apellido: row.apellido.trim(),
       email: row.email.trim().toLowerCase(),
       roles: validacion.roles, // Roles ya validados y normalizados
-      plan: planFormateado, // Plan con nombre completo
+      planes: planesFormateados, // Planes formateados como array
       estado: 'pendiente_registro', // Estado inicial para registro
       fechaImport: new Date().toISOString(),
       creadoEl: new Date().toISOString()
     })
     
     contador++
-    console.log(`✅ Usuario ${row.email} importado correctamente`)
+    console.log(`✅ Usuario ${row.email} importado correctamente con ${planesFormateados.length} plan(es)`)
     
   } catch (error) {
     console.error(`❌ Error al importar usuario ${row.email}:`, error.message)
