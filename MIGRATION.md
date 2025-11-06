@@ -55,21 +55,17 @@ Se actualizaron las configuraciones en los siguientes archivos:
 
 ## Datos de Acceso al Nuevo Proyecto
 
-```
-apiKey: "AIzaSyCTbIaaKSq-jT4bdTRMaW783qi7cW0GS0g"
-authDomain: "sige-esmn.firebaseapp.com"
-projectId: "sige-esmn"
-storageBucket: "sige-esmn.appspot.com"
-messagingSenderId: "475513552201"
-appId: "1:475513552201:web:340cedb7379f546aa4ae98"
-measurementId: "G-VTNFE6QK0G"
-```
+Para acceder al nuevo proyecto, se utilizan las variables de entorno típicas de Firebase:
+- `VITE_FIREBASE_API_KEY` - API Key del proyecto (clave pública)
+- `VITE_FIREBASE_AUTH_DOMAIN` - Dominio de autenticación
+- `VITE_FIREBASE_PROJECT_ID` - ID del proyecto
+- `VITE_FIREBASE_STORAGE_BUCKET` - Bucket de almacenamiento
+- `VITE_FIREBASE_MESSAGING_SENDER_ID` - ID del remitente de mensajes
+- `VITE_FIREBASE_APP_ID` - ID de la aplicación
+- `VITE_FIREBASE_MEASUREMENT_ID` - ID de medición (opcional, para Analytics)
 
 ## Referencia
 
 - Última versión con el proyecto anterior: `v1.0-firebase-viejo` (tag de Git)
 - Primera versión con el nuevo proyecto: a partir de v0.7.5
-
-## Contacto
-
-Para cualquier duda sobre esta migración, contactar al equipo de desarrollo.
+- Repositorio original: [https://github.com/informaticaesmn/sige](https://github.com/informaticaesmn/sige)
