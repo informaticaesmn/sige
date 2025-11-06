@@ -108,25 +108,15 @@ const {
 } = usePlanesEstudio()
 
 const planId = ref('662')
+const planesData = ref([])
 
 // Planes disponibles públicamente
 const planesDisponibles = computed(() => {
-  // Lista de planes disponibles públicamente
-  return [
-    { codigo: '662', nombre: ' 662 Profesorado de Música' },
-    { codigo: '662Letra', nombre: '662L Profesorado de Música con orientacion en Instrumento (letra)' },
-    { codigo: '663', nombre: '663 Profesorado de Música con orientación en Direccion Coral' },
-    { codigo: '664', nombre: '664 Profesorado de Música con orientación en Canto Lirico' },
-    { codigo: '665', nombre: '665 Profesorado de Música con orientación en Direccion Orquestal' },
-    { codigo: '666', nombre: '666 Profesorado de Música con orientación en Composición' },
-    { codigo: '389', nombre: '389 Cantante' },
-    { codigo: '390', nombre: '390 Compositor' },
-    { codigo: '391', nombre: '391 Director Coral' },
-    { codigo: '392', nombre: '392 Director Orquestal' },
-    { codigo: '393', nombre: '393 Instrumentista' },
-    { codigo: '708', nombre: '708 Tecnico Superior en Sonido' }
-    // Se pueden añadir más planes aquí cuando estén disponibles
-  ]
+  // Convertir el objeto de planes en un array de {codigo, nombre}
+  return Object.entries(planesData.value).map(([codigo, nombre]) => ({
+    codigo,
+    nombre
+  }))
 })
 
 const cambiarPlan = async () => {
@@ -165,8 +155,45 @@ const volverAlInicio = () => {
   router.push('/')
 }
 
+// Cargar la lista de planes disponibles
+const cargarPlanesDisponibles = async () => {
+  try {
+    const response = await fetch('/planes/planes.json')
+    const data = await response.json()
+    planesData.value = data.planes || {}
+    
+    // Establecer el primer plan como predeterminado si no hay uno en la URL
+    if (!route.query.plan && planesData.value) {
+      const primerPlan = Object.keys(planesData.value)[0]
+      if (primerPlan) {
+        planId.value = primerPlan
+      }
+    }
+  } catch (err) {
+    console.error('Error al cargar la lista de planes:', err)
+    // Fallback a la lista hardcodeada en caso de error
+    planesData.value = {
+      '662': '662 Profesorado de Música',
+      '662G': '662G Profesorado de Música con orientación en Guitarra',
+      '663': '663 Profesorado de Música con orientación en Dirección Coral',
+      '664': '664 Profesorado de Música con orientación en Canto Lírico',
+      '665': '665 Profesorado de Música con orientación en Dirección Orquestal',
+      '666': '666 Profesorado de Música con orientación en Composición',
+      '389': '389 Cantante',
+      '390': '390 Compositor',
+      '391': '391 Director Coral',
+      '392': '392 Director Orquestal',
+      '393': '393 Instrumentista',
+      '708': '708 Técnico Superior en Sonido'
+    }
+  }
+}
+
 onMounted(async () => {
   try {
+    // Cargar la lista de planes disponibles
+    await cargarPlanesDisponibles()
+    
     // Verificar si hay un plan especificado en la URL
     const planFromQuery = route.query.plan
     

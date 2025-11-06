@@ -9,7 +9,7 @@
         class="border border-stone-200 rounded-lg p-4 hover:bg-stone-50 transition-colors flex justify-between items-center"
       >
         <div>
-          <p class="font-sm text-stone-600"> {{ plan.codigo }} - {{ plan.nombre }}</p>
+          <p class="font-sm text-stone-600">{{ plan.nombre }}</p>
         </div>
         <router-link 
           :to="{ name: 'PlanesEstudio', query: { plan: plan.codigo } }"
@@ -47,21 +47,43 @@ const planesArray = computed(() => {
     return []
   }
   
-  // Si es un string, lo convertimos a array
+  // Si es un string, verificar si es un nombre de plan completo o un código
   if (typeof props.planes === 'string') {
-    return [{
-      codigo: props.planes,
-      nombre: `Plan ${props.planes}`
-    }]
+    // Verificar si parece un nombre de plan completo (contiene espacio y letras/números)
+    if (props.planes.includes(' ')) {
+      // Es un nombre completo, extraer el código
+      const codigo = props.planes.split(' ')[0]
+      return [{
+        codigo: codigo,
+        nombre: props.planes
+      }]
+    } else {
+      // Es solo un código
+      return [{
+        codigo: props.planes,
+        nombre: `Plan ${props.planes}`
+      }]
+    }
   }
   
-  // Si es un array de strings
+  // Si es un array
   if (Array.isArray(props.planes)) {
     return props.planes.map(plan => {
       if (typeof plan === 'string') {
-        return {
-          codigo: plan,
-          nombre: `Plan ${plan}`
+        // Verificar si es un nombre completo o solo código
+        if (plan.includes(' ')) {
+          // Es un nombre completo
+          const codigo = plan.split(' ')[0]
+          return {
+            codigo: codigo,
+            nombre: plan
+          }
+        } else {
+          // Es solo un código
+          return {
+            codigo: plan,
+            nombre: `Plan ${plan}`
+          }
         }
       }
       // Si ya es un objeto con las propiedades correctas

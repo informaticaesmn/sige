@@ -1,0 +1,10 @@
+dni,nombre,apellido,email,roles,plan
+37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante""]","[""708"",""662""]"
+30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente""]","[""662"",""666""]"
+28314610,Facundo Martin,GOMEZ SAIBENE,facugomezsaibene@gmail.com,"[""estudiante"",""docente""]","[""708"",""662""]"
+55444333,Estudiante,DE PRUEBA,deprueba@esmn.com.ar,"[""estudiante"",""bedel""]","[""666""]"
+12345678,Bedel,DE PRUEBA,bedel@esmn.com.ar,"[""Bedel""]",
+98765432,Administrador,DEL SISTEMA,admin@esmn.com.ar,"[""admin""]",
+11223344,Docente,DE MÚSICA,docente@esmn.com.ar,"[""docente""]",
+24109557,Adriana Edith,FALCON,adrianabusina@gmail.com,"[""bedel"",""docente"",""estudiante""]","[""708"",""662""]"
+34811424,Ramón Agustín,SARALEGUI,saraleguiramonagustin@gmail.com,"[""docente"",""estudiante"",""bedel""]","[""662G"",""664"",""666""]"
