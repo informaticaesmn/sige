@@ -1,6 +1,6 @@
 ﻿# SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.7.8
+Version actual: dev v0.7.9
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
@@ -53,5 +53,6 @@ Esta pequeña app está pensada para ir sumando funcionalidades por etapas siend
 - __Segunda etapa__: Teniendo cargados los planes de estudio y el listado de usuarios activos la idea es ni bien se pueda, publicar y convocar al estudiantado a registrarse a la nueva app con la idea de realizar una prueba de inscripcion con los datos de la inscripcion 2025 que sirva de presentacion de la app y de tutorial interactivo de como se realizaran las inscripciones a partir de febrero 2026. 
 Armar el paquete de oferta academica que se ofrece por cada ciclo, este proceso es crucial para que esta app resuelva las inscripciones a cursados y empiece a ser repositorio de la trazabilidad de los recoridos academicos de cada estudiante de la institución.
     - [ ] Armar el vinculo entre la propuesta academica y una UI para presentarla a cada usuario para poder realizar las inscripciones
+
 
 
