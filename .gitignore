@@ -31,3 +31,6 @@ secrets
 .env.staging
 .vercel
 .firebaseConfig.local
+
+# claves y credenciales
+service-account-key.json

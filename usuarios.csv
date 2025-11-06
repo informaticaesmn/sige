@@ -1,7 +1,6 @@
 dni,nombre,apellido,email,roles,plan
 37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante""]","[""708"",""662""]"
 30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente""]","[""662"",""666""]"
-25335533,Genaro,VILLAR,genarovillar@gmail.com,"[""estudiante"",""docente"",""Bedel"",""admin""]","[""662"",""662G"",""708""]"
 28314610,Facundo Martin,GOMEZ SAIBENE,facugomezsaibene@gmail.com,"[""estudiante"",""docente""]","[""708"",""662""]"
 55444333,Estudiante,DE PRUEBA,deprueba@esmn.com.ar,"[""estudiante"",""bedel""]","[""666""]"
 12345678,Bedel,DE PRUEBA,bedel@esmn.com.ar,"[""Bedel""]",

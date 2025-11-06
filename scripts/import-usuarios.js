@@ -1,10 +1,15 @@
 import 'dotenv/config'
-import { collection, addDoc } from 'firebase/firestore'
 import { readFileSync } from 'fs'
 import { parse } from 'csv-parse/sync'
 
 // ✅ Reutilizamos tu firebaseNode.js
 import { db } from './firebaseNode.js'
+
+// Verificar que la base de datos esté correctamente inicializada
+if (!db) {
+  console.error('❌ No se pudo inicializar la conexión a Firestore')
+  process.exit(1)
+}
 
 // Leer el archivo CSV
 const csv = readFileSync('./usuarios.csv', 'utf8')
@@ -31,9 +36,14 @@ const nombresDePlanes = {
   '662L': '662L Profesorado de Música con orientación en Instrumento de Cuerda',
   '662M': '662M Profesorado de Música con orientación en Instrumento de Percusión',
   '662N': '662N Profesorado de Música con orientación en Instrumento de Viento Metal',
-  '662O': '662R Profesorado de Música con orientación en Clarinete',
+  '662O': '662O Profesorado de Música con orientación en Clarinete',
   '662P': '662P Profesorado de Música con orientación en Instrumento de Viento Madera',
   '662Q': '662Q Profesorado de Música con orientación en Tuba',
+  '662R': '662R Profesorado de Música con orientación en Trombón',
+  '662S': '662S Profesorado de Música con orientación en Trompeta',
+  '662T': '662T Profesorado de Música con orientación en Violín',
+  '662U': '662U Profesorado de Música con orientación en Viola',
+  '662V': '662V Profesorado de Música con orientación en Violoncello',
   '663': '663 Profesorado de Música con orientación en Dirección Coral',
   '664': '664 Profesorado de Música con orientación en Canto Lírico',
   '665': '665 Profesorado de Música con orientación en Dirección Orquestal',
@@ -176,12 +186,15 @@ for (const row of records) {
       }).filter(plan => plan !== '') // Filtrar planes vacíos
     }
     
-    // Crear documento de usuario
-    await addDoc(collection(db, 'usuarios'), {
+    // Crear documento de usuario con el email como ID
+    const email = row.email.trim().toLowerCase()
+    
+    // Usar el email como ID del documento
+    await db.collection('usuarios').doc(email).set({
       dni: row.dni.trim(),
       nombre: row.nombre.trim(),
       apellido: row.apellido.trim(),
-      email: row.email.trim().toLowerCase(),
+      email: email,
       roles: validacion.roles, // Roles ya validados y normalizados
       planes: planesFormateados, // Planes formateados como array
       estado: 'pendiente_registro', // Estado inicial para registro
@@ -194,6 +207,9 @@ for (const row of records) {
     
   } catch (error) {
     console.error(`❌ Error al importar usuario ${row.email}:`, error.message)
+    if (error.code === 'permission-denied') {
+      console.error('   Esto indica un problema de permisos. Verifica que las credenciales tengan acceso de escritura a Firestore.')
+    }
     errores++
   }
 }
