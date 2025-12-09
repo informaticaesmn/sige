@@ -10,9 +10,19 @@
           @click="copiarAlPortapapeles"
           class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
           :aria-label="copiado ? 'Copiado al portapapeles' : 'Copiar detalles al portapapeles'"
+          title="Copiar detalles al portapapeles"
         >
           <ClipboardIcon v-if="!copiado" class="h-5 w-5" aria-hidden="true" />
           <CheckCircleIcon v-else class="h-5 w-5 text-green-500" aria-hidden="true" />
+        </button>
+        <button
+          v-if="materia"
+          @click="imprimirDetalle"
+          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          aria-label="Imprimir detalles de materia"
+          title="Imprimir detalles de materia"
+        >
+          <PrinterIcon class="h-5 w-5" aria-hidden="true" />
         </button>
         <button 
           ref="closeButton"
@@ -83,7 +93,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import CorrelativasList from './CorrelativasList.vue'
-import { XMarkIcon, ClipboardIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, ClipboardIcon, CheckCircleIcon, PrinterIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   materia: {
@@ -248,6 +258,10 @@ const formatearCorrelativas = (correlativa, nivel = 0) => {
   }
   
   return resultado
+}
+
+const imprimirDetalle = () => {
+  window.print()
 }
 
 const handleKeyDown = (event) => {
