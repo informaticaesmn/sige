@@ -261,6 +261,7 @@ const formatearCorrelativas = (correlativa, nivel = 0) => {
 }
 
 const imprimirDetalle = () => {
+  // Abrir diálogo de impresión
   window.print()
 }
 

@@ -151,3 +151,47 @@
   }
 
 }
+
+/* ESTILOS PARA IMPRESIÓN */
+@media print {
+  /* Ocultar elementos innecesarios en la impresión */
+  button, .no-print {
+    display: none !important;
+  }
+  
+  /* Estilos generales para la impresión */
+  body {
+    background: white;
+    font-size: 12pt;
+  }
+  
+  /* Eliminar decoraciones innecesarias */
+  .card, .shadow, .rounded-lg, .rounded-md {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Asegurar visibilidad de todo el contenido */
+  * {
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Evitar saltos de página dentro de elementos importantes */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Evitar que elementos clave se dividan entre páginas */
+  .card, .bg-stone-50, .card-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Ajustar márgenes para impresión */
+  @page {
+    margin: 1cm;
+  }
+}
