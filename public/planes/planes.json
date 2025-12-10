@@ -1,35 +1,144 @@
 {
-  "planes": {
-    "662": "662 Profesorado de Música",
-    "662A": "662A Profesorado de Música con orientación en Arpa",
-    "662B": "662B Profesorado de Música con orientación en Canto",
-    "662C": "662C Profesorado de Música con orientación en Clarinete",
-    "662D": "662D Profesorado de Música con orientación en Composición",
-    "662F": "662F Profesorado de Música con orientación en Dirección Coral",
-    "662G": "662G Profesorado de Música con orientación en Guitarra",
-    "662H": "662H Profesorado de Música con orientación en Fagot",
-    "662J": "662J Profesorado de Música con orientación en Piano",
-    "662K": "662K Profesorado de Música con orientación en Oboe",
-    "662L": "662L Profesorado de Música con orientación en Instrumento de Cuerda",
-    "662M": "662M Profesorado de Música con orientación en Instrumento de Percusión",
-    "662N": "662N Profesorado de Música con orientación en Instrumento de Viento Metal",
-    "662P": "662P Profesorado de Música con orientación en Instrumento de Viento Madera",
-    "662Q": "662Q Profesorado de Música con orientación en Tuba",
-    "662R": "662R Profesorado de Música con orientación en Trombón",
-    "662S": "662S Profesorado de Música con orientación en Trompeta",
-    "662T": "662T Profesorado de Música con orientación en Violín",
-    "662U": "662U Profesorado de Música con orientación en Viola",
-    "662V": "662V Profesorado de Música con orientación en Violoncello",
-    "663": "663 Profesorado de Música con orientación en Dirección Coral",
-    "664": "664 Profesorado de Música con orientación en Canto Lírico",
-    "665": "665 Profesorado de Música con orientación en Dirección Orquestal",
-    "666": "666 Profesorado de Música con orientación en Composición",
-    "389": "389 Cantante",
-    "390": "390 Compositor",
-    "391": "391 Director Coral",
-    "392": "392 Director Orquestal",
-    "393": "393 Instrumentista",
-    "708": "708 Técnico Superior en Sonido",
-    "PREGRADO": "PREGRADO Programa Propedéutico"
-  }
+  "planes": [
+    {
+      "codigo": "662",
+      "nombre": "662 Profesorado de Música"
+    },
+    {
+      "codigo": "662A",
+      "nombre": "662A Profesorado de Música con orientación en Arpa"
+    },
+    {
+      "codigo": "662B",
+      "nombre": "662B Profesorado de Música con orientación en Clarinete"
+    },
+    {
+      "codigo": "662C",
+      "nombre": "662C Profesorado de Música con orientación en Corno"
+    },
+    {
+      "codigo": "662D",
+      "nombre": "662D Profesorado de Música con orientación en Fagot"
+    },
+    {
+      "codigo": "662E",
+      "nombre": "662E Profesorado de Música con orientación en Flauta Dulce"
+    },
+    {
+      "codigo": "662F",
+      "nombre": "662F Profesorado de Música con orientación en Flauta Traversa"
+    },
+    {
+      "codigo": "662G",
+      "nombre": "662G Profesorado de Música con orientación en Guitarra"
+    },
+    {
+      "codigo": "662H",
+      "nombre": "662H Profesorado de Música con orientación en Oboe"
+    },
+    {
+      "codigo": "662I",
+      "nombre": "662I Profesorado de Música con orientación en Percusión Académica"
+    },
+    {
+      "codigo": "662J",
+      "nombre": "662J Profesorado de Música con orientación en Piano"
+    },
+    {
+      "codigo": "662K",
+      "nombre": "662K Profesorado de Música con orientación en Trombón"
+    },
+    {
+      "codigo": "662L",
+      "nombre": "662L Profesorado de Música con orientación en Trompeta"
+    },
+    {
+      "codigo": "662M",
+      "nombre": "662M Profesorado de Música con orientación en Instrumento de Viola"
+    },
+    {
+      "codigo": "662N",
+      "nombre": "662N Profesorado de Música con orientación en Instrumento de Violín"
+    },
+    {
+      "codigo": "662Ñ",
+      "nombre": "662Ñ Profesorado de Música con orientación en Instrumento de Violonchelo"
+    },
+    {
+      "codigo": "662O",
+      "nombre": "662O Profesorado de Música con orientación en Instrumento de Contrabajo"
+    },
+    {
+      "codigo": "662P",
+      "nombre": "662P Profesorado de Música con orientación en Instrumento de Saxo"
+    },
+    {
+      "codigo": "662Q",
+      "nombre": "662Q Profesorado de Música con orientación en Tuba"
+    },
+    {
+      "codigo": "662R",
+      "nombre": "662R Profesorado de Música con orientación en Guitarra Eléctrica"
+    },
+    {
+      "codigo": "662S",
+      "nombre": "662S Profesorado de Música con orientación en Bajo"
+    },
+    {
+      "codigo": "662T",
+      "nombre": "662T Profesorado de Música con orientación en Bateria"
+    },
+    {
+      "codigo": "662U",
+      "nombre": "662U Profesorado de Música con orientación en Canto Popular"
+    },
+    {
+      "codigo": "662V",
+      "nombre": "662V Profesorado de Música con orientación en Guitarra Popular"
+    },
+    {
+      "codigo": "662W",
+      "nombre": "662W Profesorado de Música con orientación en Piano Popular"
+    },
+    {
+      "codigo": "663",
+      "nombre": "663 Profesorado de Música con orientación en Dirección Coral"
+    },
+    {
+      "codigo": "664",
+      "nombre": "664 Profesorado de Música con orientación en Canto Lírico"
+    },
+    {
+      "codigo": "665",
+      "nombre": "665 Profesorado de Música con orientación en Dirección Orquestal"
+    },
+    {
+      "codigo": "666",
+      "nombre": "666 Profesorado de Música con orientación en Composición"
+    },
+    {
+      "codigo": "389",
+      "nombre": "389 Cantante"
+    },
+    {
+      "codigo": "390",
+      "nombre": "390 Compositor"
+    },
+    {
+      "codigo": "391",
+      "nombre": "391 Director Coral"
+    },
+    {
+      "codigo": "392",
+      "nombre": "392 Director Orquestal"
+    },
+    {
+      "codigo": "393",
+      "nombre": "393 Instrumentista"
+    },
+    {
+      "codigo": "708",
+      "nombre": "708 Técnico Superior en Sonido"
+    }
+  ]
 }
