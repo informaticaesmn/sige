@@ -152,46 +152,102 @@
 
 }
 
-/* ESTILOS PARA IMPRESIÓN */
+/* Clases reutilizables para componentes */
+
+/* Botón de icono - usado para acciones individuales como copiar, imprimir, cerrar */
+.btn-icon {
+  @apply text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1;
+}
+
+/* Estilos para el contenido de detalles de materia */
+.detalle-materia-content {
+  @apply space-y-4;
+}
+
+.detalle-materia-correlativas {
+  @apply mt-4;
+}
+
+.detalle-materia-equivalencia {
+  @apply mt-4;
+}
+
+
+/* ============== ESTILOS DE IMPRESIÓN ============== */
 @media print {
-  /* Ocultar elementos innecesarios en la impresión */
-  button, .no-print {
-    display: none !important;
+  /*
+    Cuando el body tiene la clase 'is-printing', ocultamos todo con 'visibility'.
+    Esto es más robusto que 'display: none' para este caso de uso.
+  */
+  body.is-printing * {
+    visibility: hidden;
+  }
+
+  /*
+    Luego, hacemos visible solo el elemento que queremos imprimir y sus hijos.
+  */
+  body.is-printing .print-isolate,
+  body.is-printing .print-isolate * {
+    visibility: visible;
   }
   
-  /* Estilos generales para la impresión */
-  body {
-    background: white;
+  /*
+    El elemento a imprimir se posiciona al inicio de la página y se le permite
+    crecer verticalmente según su contenido, evitando páginas en blanco.
+  */
+  body.is-printing .print-isolate {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto !important; /* Clave: previene páginas extra */
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Clases de utilidad que siempre deben funcionar en impresión */
+  .no-print {
+    display: none !important;
+  }
+
+  .print-content {
+    padding: 1.5cm;
+    background: white !important;
+    color: black !important;
     font-size: 12pt;
   }
   
-  /* Eliminar decoraciones innecesarias */
-  .card, .shadow, .rounded-lg, .rounded-md {
-    box-shadow: none !important;
-    border-radius: 0 !important;
-  }
-  
-  /* Asegurar visibilidad de todo el contenido */
-  * {
-    overflow: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-  
-  /* Evitar saltos de página dentro de elementos importantes */
-  h1, h2, h3, h4, h5, h6 {
-    page-break-after: avoid;
-    break-after: avoid;
-  }
-  
-  /* Evitar que elementos clave se dividan entre páginas */
-  .card, .bg-stone-50, .card-item {
-    page-break-inside: avoid;
+  .print-avoid-break {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 1.5cm;
+    right: 1.5cm;
+    width: auto;
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 5px;
   }
   
-  /* Ajustar márgenes para impresión */
-  @page {
-    margin: 1cm;
+  a {
+    text-decoration: none;
+    color: inherit;
   }
+
+  .bg-stone-50 {
+    background: white !important;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 1.5cm; /* Márgenes de página para impresión */
 }

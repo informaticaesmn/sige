@@ -1,14 +1,14 @@
 <template>
-  <div class="card" ref="modalContainer" tabindex="-1">
+  <div class="card detalle-materia-card" ref="modalContainer" tabindex="-1">
     <div class="flex justify-between items-start mb-4">
       <h3 id="detalle-materia-title" class="text-lg font-semibold text-stone-800">
         Detalle de Materia
       </h3>
-      <div class="flex space-x-2">
+      <div class="flex space-x-2 no-print">
         <button 
           v-if="materia"
           @click="copiarAlPortapapeles"
-          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          class="btn-icon"
           :aria-label="copiado ? 'Copiado al portapapeles' : 'Copiar detalles al portapapeles'"
           title="Copiar detalles al portapapeles"
         >
@@ -18,7 +18,7 @@
         <button
           v-if="materia"
           @click="imprimirDetalle"
-          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          class="btn-icon"
           aria-label="Imprimir detalles de materia"
           title="Imprimir detalles de materia"
         >
@@ -27,7 +27,7 @@
         <button 
           ref="closeButton"
           @click="$emit('cerrar')"
-          class="text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
+          class="btn-icon"
           aria-label="Cerrar detalles de materia"
         >
           <XMarkIcon class="h-5 w-5" aria-hidden="true" />
@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div v-if="materia" id="detalle-materia-content" class="space-y-4">
+    <div v-if="materia" id="detalle-materia-content" ref="contentToPrint" class="detalle-materia-content">
       <div>
         <h4 class="text-xl font-medium text-stone-900">{{ materia.nombre }}</h4>
         <p class="text-stone-600">{{ materia.codigo }}</p>
@@ -53,9 +53,9 @@
         </div>
       </div>
 
-      <div v-if="tieneCorrelativas">
+      <div v-if="tieneCorrelativas" class="detalle-materia-correlativas">
         <h5 class="font-medium text-stone-700 mb-2">Correlativas</h5>
-        <div class="bg-stone-50 p-4 rounded-lg space-y-3">
+        <div class="bg-stone-50 p-4 rounded-lg">
           <div v-if="materia.correlativas.cursar">
             <h6 class="font-medium text-stone-700 mb-1">Para cursar</h6>
             <div class="ml-2">
@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <div v-if="materia.equivale_a">
+      <div v-if="materia.equivale_a" class="detalle-materia-equivalencia">
         <h5 class="font-medium text-stone-700">Equivalencia</h5>
         <p class="text-stone-600">
           Esta materia es equivalente a: {{ materia.equivale_a }}
@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <div v-else class="text-center py-8 text-stone-500">
+    <div v-else class="text-center py-8 text-stone-500 no-print">
       <p>Seleccione una materia para ver sus detalles</p>
     </div>
   </div>
@@ -94,6 +94,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import CorrelativasList from './CorrelativasList.vue'
 import { XMarkIcon, ClipboardIcon, CheckCircleIcon, PrinterIcon } from '@heroicons/vue/24/outline'
+import { onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   materia: {
@@ -261,9 +262,86 @@ const formatearCorrelativas = (correlativa, nivel = 0) => {
 }
 
 const imprimirDetalle = () => {
-  // Abrir diálogo de impresión
-  window.print()
-}
+  const contentToPrint = modalContainer.value;
+  if (!contentToPrint) return;
+
+  // 1. Crear iframe
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'absolute';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = 'none';
+  
+  // 2. Adjuntar iframe al body
+  document.body.appendChild(iframe);
+  
+  const iframeDoc = iframe.contentWindow.document;
+
+  // 3. Clonar contenido y eliminar elementos no deseados
+  const clonedContent = contentToPrint.cloneNode(true);
+  clonedContent.querySelectorAll('.no-print').forEach(el => el.remove());
+
+  // 4. Copiar estilos del documento principal al iframe
+  const headContent = document.head.innerHTML;
+  
+  // 5. Crear contenido del footer
+  const fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const planNombre = props.plan ? props.plan.nombre : 'Plan no especificado';
+  const footerHtml = `
+    <div class="print-footer">
+      <span>${fecha}</span>
+      <span>&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      <span>Plan: ${planNombre}</span>
+      <span>&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      <span>SIGE - ESMN</span>
+    </div>
+  `;
+
+  // 6. Escribir el documento en el iframe
+  iframeDoc.open();
+  iframeDoc.write(`
+    <html>
+      <head>
+        <title>Detalle de Materia - SIGE</title>
+        ${headContent}
+        <style>
+          /* Estilos para que el contenido principal no se solape con el footer fijo */
+          @media print {
+            body {
+              padding-bottom: 50px; /* Espacio para el footer */
+            }
+            .card, .detalle-materia-card {
+              border: none;
+              box-shadow: none;
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${clonedContent.outerHTML}
+        ${footerHtml}
+      </body>
+    </html>
+  `);
+  iframeDoc.close();
+
+  // 7. Usar un pequeño timeout para asegurar que el contenido se renderice antes de imprimir
+  setTimeout(() => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (error) {
+      console.error('Error al imprimir:', error);
+    } finally {
+      // Usar otro timeout para dar tiempo a que se cierre el diálogo de impresión
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 500);
+    }
+  }, 50); // 50ms de espera antes de imprimir
+};
+
 
 const handleKeyDown = (event) => {
   if (event.key === 'Escape') {
@@ -314,5 +392,23 @@ onUnmounted(() => {
 <style scoped>
 .card {
   @apply bg-white rounded-lg shadow p-6 focus:outline-none;
+}
+
+/* Los estilos de impresión fueron movidos a style.css */
+/* Se mantienen los estilos específicos del componente que no son de impresión */
+.detalle-materia-card {
+  @apply bg-white rounded-lg shadow p-6 focus:outline-none;
+}
+
+.detalle-materia-content {
+  @apply space-y-4;
+}
+
+.detalle-materia-correlativas {
+  @apply space-y-3;
+}
+
+.btn-icon {
+  @apply text-stone-500 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1;
 }
 </style>
