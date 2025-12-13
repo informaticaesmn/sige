@@ -101,6 +101,10 @@
       "nombre": "662W Profesorado de Música con orientación en Piano Popular"
     },
     {
+      "codigo": "662X",
+      "nombre": "662X Profesorado de Música con orientación en Produccion Musica"
+    },
+    {
       "codigo": "663",
       "nombre": "663 Profesorado de Música con orientación en Dirección Coral"
     },
@@ -115,6 +119,14 @@
     {
       "codigo": "666",
       "nombre": "666 Profesorado de Música con orientación en Composición"
+    },
+    {
+      "codigo": "708",
+      "nombre": "708 Técnico Superior en Sonido"
+    },
+    {
+      "codigo": "709",
+      "nombre": "709 Técnico Superior en Produccion Musica"
     },
     {
       "codigo": "389",
@@ -135,10 +147,6 @@
     {
       "codigo": "393",
       "nombre": "393 Instrumentista"
-    },
-    {
-      "codigo": "708",
-      "nombre": "708 Técnico Superior en Sonido"
     }
   ]
 }
