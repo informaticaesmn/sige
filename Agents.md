@@ -62,6 +62,67 @@ Este documento define las reglas, patrones y convenciones a seguir en el desarro
   - Usa `npm version <patch|minor|major>` para incrementar la versión.
   - El script `update-dev` manejo el incremental de versiones de la rama dev y `update-main` maneja el merge de main con la rama dev y actualización de la versión en main, al subir activa la GitHub Action `firebase-hosting-main.yml` que se encarga del deploy a Firebase.
 
+## 7. Estructura de Composables
+
+Los composables siguen el patrón `useXxx.js` y están organizados en subdirectorios temáticos bajo `src/composables/`:
+
+- **`auth/useAuth.js`**: Autenticación (login, logout, registro, reset). Es el **único** composable que debe manejar la lógica de Firebase Auth. Expone un estado reactivo global `user` (singleton a nivel de módulo).
+- **`usuarios/useUsuarios.js`**: Operaciones CRUD sobre la colección `usuarios` en Firestore. Maneja la migración de documentos `email → uid` y la normalización de roles.
+- **`inscripciones/useOfertaAcademica.js`**: Lectura de la oferta académica (colección `ofertaAcademica`).
+- **`inscripciones/useInscripciones.js`**: Creación y lectura de inscripciones (subcolección de `usuarios`).
+- **`academico/usePlanesEstudio.js`**: Carga y procesamiento de planes de estudio desde archivos JSON estáticos en `/public/planes/`.
+
+### 7.1. Estado Singleton en Composables
+
+Los composables que manejan estado global (`useAuth`, `useLayout`) definen sus `ref()` y `computed()` a nivel de módulo, no dentro de la función factory. Esto garantiza que todas las instancias compartidas del composable usen el **mismo estado reactivo**. Al llamar `checkAuthState()` al nivel del módulo, el estado de auth se inicializa una sola vez.
+
+### 7.2. Firestore Lite vs Firestore
+
+El archivo `src/config/firebase.js` inicializa Firestore con `getFirestore` desde `'firebase/firestore/lite'`. **Todos** los composables deben importar funciones desde `'firebase/firestore/lite'` para mantener consistencia y evitar incluir código de listeners en tiempo real innecesarios.
+
+## 8. Sistema de Theming y Layouts
+
+### 8.1. Layouts dinámicos
+
+La aplicación usa 5 layouts diferentes, uno por rol:
+- `AccesoLayout.vue` — Login, registro, reset, términos
+- `EstudianteLayout.vue`, `AdminLayout.vue`, `BedelLayout.vue`, `DocenteLayout.vue` — Cada uno envuelve `BarraApp` + `<router-view>` + `FooterApp`
+
+### 8.2. Temas por rol
+
+El theming se maneja con clases CSS en `style.css`:
+- `.theme-estudiante` (teal), `.theme-docente` (blue), `.theme-bedel` (purple), `.theme-admin` (rose)
+- El composable `useLayout.js` mantiene `currentTheme` y `currentLayout` como refs a nivel de módulo y aplica quita/añade clases en `document.body` mediante `watchEffect`.
+- El **router guard** (`src/router/index.js`, línea 118) llama `setLayout(requiredRole)` para cambiar el layout según la ruta navegada.
+
+### 8.3. Roles múltiples
+
+Un usuario puede tener múltiples roles (ej. "estudiante" + "bedel"). El flujo es:
+1. Tras login, si `userRoles.length > 1`, se redirige a `SeleccionarRol.vue`
+2. `SeleccionarRol.vue` guarda el rol activo en `localStorage.setItem('rolActivo', rol)`
+3. `BarraApp.vue` lee `localStorage.rolActivo` y filtra el menú según ese rol (con fallback al primer rol)
+4. La guardia de navegación usa `meta.role` para validar el acceso a rutas específicas
+
+## 9. Firebase Functions (Cloud Functions v2)
+
+- Las funciones se definen en `codebase-functions/index.js` (Codebase: `codebase-functions`)
+- Región: `southamerica-east1`
+- Función principal: `registrarUsuario` (HTTPS Callable) — verifica pre-aprobación, crea usuario en Auth, migra documento Firestore `email → uid` usando `writeBatch`, devuelve el perfil completo
+- El cliente llama funciones con `httpsCallable(functions, 'nombreFuncion')` desde `@/config/firebase.js`
+
+## 10. Testing
+
+- **Framework propuesto**: Vitest + Vue Test Utils (instalable como devDependency, compatible con Vite)
+- **Estrategia**: Testear los composables (con mock de Firebase), la guardia de navegación (con mock de router y auth state), y los componentes UI críticos (formularios, cards)
+- **CI**: GitHub Actions que ejecuta tests en cada push a `dev`/`main`. Actualmente no existe infraestructura de testing — es un item pendiente crítico.
+
+## 11. Reglas de Firestore
+
+- Las reglas en `firestore.rules` usan funciones helper (`esAdmin()`, `esBedel()`) que realizan una lectura extra a Firestore por solicitud
+- **Importante**: Las colecciones que usan nombres dinámicos (ej. `inscripciones${ciclo}`) deben usar wildcards `{coleccionId}` en las reglas, no names estáticos
+- **Importante**: Evita usar `alert()` o `console.log()` genéricos en componentes — usa el patrón `{ exito, error }` de los composables y muestra feedback en la UI
+
+
 ---
 *Este documento es una guía viva. Si se introduce un nuevo patrón o se mejora uno existente, debe ser actualizado.*
 
