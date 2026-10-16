@@ -1,6 +1,6 @@
 ﻿# SIGE - ESMN
 <!--VERSION-->
-Version actual: dev v0.7.17
+Version actual: dev v0.7.18
 <!--/VERSION-->
 
 ### Estamos utilizando para este desarrollo: 
@@ -85,6 +85,7 @@ Actualmente **no existe infraestructura de testing**. Se propone instalar **Vite
 - Componentes UI (`FormInput`, `FormCheckbox`)
 
 Ver el plan detallado en [context.md#plan-de-trabajo](context.md).
+
 
 
 
