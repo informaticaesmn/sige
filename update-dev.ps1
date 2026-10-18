@@ -56,6 +56,15 @@ if (-not $Force -and -not $hasLocalChanges -and $unpushedChanges -eq 0) {
     exit 0
 }
 
+# --- 3c. Verificar tests unitarios ANTES de incrementar versión ---
+Write-Host "Ejecutando tests unitarios rápidos (npm run test:unit)..."
+npm run test:unit
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: Los tests unitarios fallaron. Arreglalo antes de versionar." -ForegroundColor Red
+    exit 1
+}
+Write-Host "Tests unitarios OK." -ForegroundColor Green
+
 # --- 4. Verificar build ANTES de incrementar versión ---
 if (-not $SkipBuild) {
     Write-Host "Verificando build (npm run build)..."
