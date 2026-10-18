@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { createMockUser, createMockFirestoreUser, mockUseAuth, mockUseLayout, mockLocalStorage } from '../../mocks/firebaseMocks.js'
+import { createMockUser, createMockFirestoreUser, mockUseAuth, mockUseLayout, mockLocalStorage } from '../mocks/firebaseMocks.js'
 
 // Mock de useAuth
 vi.mock('@/composables/auth/useAuth.js', () => ({

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createMockUser, createMockFirestoreUser, mockAuth, resetAllFirebaseMocks } from '../../mocks/firebaseMocks.js'
+import { createMockUser, createMockFirestoreUser, mockAuth, resetAllFirebaseMocks } from '../mocks/firebaseMocks.js'
 
 // Mock de Firebase Auth
 vi.mock('firebase/auth', () => ({
@@ -33,7 +33,7 @@ vi.mock('@/router/routerInstance.js', () => ({
 }))
 
 // Mock de useUsuarios
-vi.mock('../usuarios/useUsuarios.js', () => ({
+vi.mock('@composables/usuarios/useUsuarios.js', () => ({
   obtenerUsuario: vi.fn(),
 }))
 
@@ -74,7 +74,7 @@ describe('useAuth', () => {
       })
 
       // Mock de obtenerUsuario
-      const { obtenerUsuario } = await import('../usuarios/useUsuarios.js')
+      const { obtenerUsuario } = await import('@/composables/usuarios/useUsuarios.js')
       obtenerUsuario.mockResolvedValue(mockFirestoreUser)
 
       // Act - Importar useAuth después de configurar los mocks
@@ -125,7 +125,7 @@ describe('useAuth', () => {
         return () => {}
       })
 
-      const { obtenerUsuario } = await import('../usuarios/useUsuarios.js')
+     const { obtenerUsuario } = await import('@/composables/usuarios/useUsuarios.js')
       obtenerUsuario.mockResolvedValue(mockFirestoreUser)
 
       // Act
@@ -149,7 +149,7 @@ describe('useAuth', () => {
         user: mockUser,
       })
 
-      const { obtenerUsuario } = await import('../usuarios/useUsuarios.js')
+     const { obtenerUsuario } = await import('@/composables/usuarios/useUsuarios.js')
       obtenerUsuario.mockResolvedValue(mockFirestoreUser)
 
       // Act
@@ -258,7 +258,7 @@ describe('useAuth', () => {
         user: mockUser,
       })
 
-      const { obtenerUsuario } = await import('../usuarios/useUsuarios.js')
+      const { obtenerUsuario } = await import('@/composables/usuarios/useUsuarios.js')
       obtenerUsuario.mockResolvedValue(mockFirestoreUser)
 
       // Act

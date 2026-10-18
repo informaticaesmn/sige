@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createMockUser, createMockFirestoreUser, mockFirestore, resetAllFirebaseMocks } from '../../mocks/firebaseMocks.js'
+import { createMockUser, createMockFirestoreUser, mockFirestore, resetAllFirebaseMocks } from '../mocks/firebaseMocks.js'
 
 // Mock de Firebase Firestore Lite
 vi.mock('firebase/firestore/lite', () => ({
