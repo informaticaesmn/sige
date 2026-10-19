@@ -77,42 +77,21 @@ jobs:
           ls -l dist
           echo "=== Fin Verificación ==="
 
-      # 7. Desplegar a Firebase Hosting
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}' # Token generado por GitHub para la acción
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' # <--- Usamos el nombre correcto del secreto
-          channelId: live # Despliega a la URL principal (el canal 'live')
-          # Debe ser el proyecto real, igual que en .firebaserc. Antes decía
-          # 'prueba1-esmn' (proyecto viejo): el release se deployaba ahí.
-          projectId: sige-esmn
-
-      # 8. Desplegar las reglas de Firestore
+      # 7. Desplegar las reglas de Firestore
       # El deploy de hosting NO publica las reglas: sin este paso `firestore.rules` queda
       # desincronizado del código (así se coló el bug de inscripciones, ver docs/contexto.md #3).
-      # `continue-on-error` a propósito: si las reglas fallan (ej. la cuenta de servicio no
-      # tiene rol para deployar reglas), el hosting ya quedó publicado y el error sale como
-      # anotación `::error` visible en el run, con las últimas líneas del CLI.
+      # `continue-on-error` a propósito: si las reglas fallan (ej. a la cuenta de servicio le
+      # falta el rol de Rules Admin), el hosting igual se publica y el error del CLI queda como
+      # anotación `::error` en el run.
       - name: Deploy Firestore Rules
         continue-on-error: true
-        run: |
-          SA="$RUNNER_TEMP/firebase-sa.json"
-          printf '%s' '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > "$SA"
+        run: bash .github/scripts/deploy-firebase.sh firestore:rules
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
 
-          # Diagnóstico: confirma que el secreto es un JSON de service account usable
-          SA_JSON="$SA" node -e "const k=require(process.env.SA_JSON); console.log('  project_id:', k.project_id, '| client_email:', k.client_email, '| private_key:', k.private_key ? 'presente' : 'FALTA')" || echo "  (no se pudo leer el JSON del secreto)"
-
-          set +e
-          OUT=$(GOOGLE_APPLICATION_CREDENTIALS="$SA" npx firebase deploy --only firestore:rules --project sige-esmn --non-interactive 2>&1)
-          CODE=$?
-          set -e
-          echo "$OUT"
-
-          if [ "$CODE" -ne 0 ]; then
-            MSG=$(echo "$OUT" | grep -iE "error|denied|permission|failed|cannot" | tail -n 3 | tr '\n' ' ' | tr -d '\r')
-            echo "::error title=Deploy de reglas de Firestore fallo::${MSG:-ver el log del paso}"
-          else
-            echo "::notice title=Reglas de Firestore deployadas::firestore.rules publicado en sige-esmn"
-          fi
-          exit "$CODE"
+      # 8. Desplegar a Firebase Hosting (con la CLI local: la acción de terceros usaba
+      # `npx firebase-tools` y fallaba con "npx ... exit code 2" contra la versión del repo).
+      - name: Deploy to Firebase Hosting
+        run: bash .github/scripts/deploy-firebase.sh hosting
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}

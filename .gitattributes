@@ -1,0 +1,3 @@
+# Los scripts de shell corren en Linux (GitHub Actions): forzamos LF para que el
+# intérprete no se rompa con un \r al final de cada línea (core.autocrlf=true en Windows).
+*.sh text eol=lf
