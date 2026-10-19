@@ -7,7 +7,7 @@ Nace para tener los datos del estudiantado en un repositorio único y ordenado, 
 procesos administrativos como inscripciones a cursados, mesas de examen y trazabilidad de la trayectoria académica.
 
 - Producción (Firebase Hosting): <https://sige-esmn.web.app>
-- Desarrollo (Vercel): <https://sige-esmn.git.dev-informaticaesmns-projects.vercel.app>
+- Desarrollo (Vercel): <https://sige-esmn.vercel.app/>
 
 ## Stack
 
@@ -55,18 +55,15 @@ Hosting **y de las reglas de `firestore.rules`** (paso `Deploy Firestore Rules`)
 | Layouts dinámicos + theming por rol | ✅ Implementado |
 | Guardia de navegación con protección por `meta.role` | ✅ Implementado |
 | Planes de estudio (JSON en `public/planes/`) + correlativas | ✅ Vistas funcionales |
-| Oferta académica e inscripciones | 🚧 En desarrollo (los scripts de importación ya existen) |
+| Oferta académica e inscripciones | 🚧 En desarrollo (carga de oferta in-app desde CSV, rol `coordinacion`) |
 | Tableros por rol | 🚧 Estudiante parcial; Bedel/Docente/Admin son placeholders |
-| Testing | ✅ 39 tests unitarios en 4 archivos |
+| Testing | ✅ 59 tests unitarios en 6 archivos |
 | Historial académico (`trayectoriaAcademica`) | ❌ No implementado |
 
 **Problemas abiertos**: el detalle y la prioridad están en [docs/contexto.md](docs/contexto.md#-problemas-identificados-pendientes).
-Los dos que hoy bloquean el flujo principal:
-
-- `firestore.rules` tiene la colección de inscripciones **hardcodeada** (`inscripciones2026`) mientras el código arma el
-  nombre dinámicamente (`inscripciones20261`): las inscripciones se deniegan por permisos. Los dos `allow update` se
-  combinan con OR, así que un estudiante puede cambiar su propio `estado` a `confirmada`.
-- `src/views/DashboardE.vue` es código muerto con imports rotos (no está referenciado en el router).
+Hoy **no hay bloqueantes del flujo principal**: el de `firestore.rules` (colección de inscripciones hardcodeada +
+auto-confirmación por el OR de los `allow update`) se resolvió y deployó el 19/10/2026 con un wildcard de segmento
+`{subcoleccion}` + `matches()`.
 
 ## Documentación
 
@@ -77,7 +74,7 @@ Los dos que hoy bloquean el flujo principal:
 | [docs/notas.md](docs/notas.md) | Notas de diseño, ideas y roadmap |
 | [docs/modelo-datos.md](docs/modelo-datos.md) | Diagrama de Firestore y propuesta de modelo de datos |
 | [docs/importar-usuarios.md](docs/importar-usuarios.md) | Importación de usuarios desde CSV (`scripts/import-usuarios.js`) |
-| [docs/importar-oferta.md](docs/importar-oferta.md) | Formatos CSV de planes/materias y oferta académica (`scripts/importar-oferta.js`) |
+| [docs/importar-oferta.md](docs/importar-oferta.md) | Formato CSV de la oferta académica (carga in-app, rol `coordinacion`) |
 | [docs/migracion-firebase.md](docs/migracion-firebase.md) | Historial de la migración de proyecto Firebase (noviembre 2025) |
 | [docs/testing-setup.md](docs/testing-setup.md) | Referencia de instalación de Vitest + emuladores |
 

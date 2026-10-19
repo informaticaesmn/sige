@@ -8,7 +8,10 @@ Archivos de datos que consumen los scripts de importación.
 | Archivo | Lo consume | Formato documentado en |
 | --- | --- | --- |
 | `data/usuarios.csv` | `scripts/import-usuarios.js` | [docs/importar-usuarios.md](../docs/importar-usuarios.md) |
-| `data/oferta-terciario.csv` | `scripts/importar-oferta.js` | [docs/importar-oferta.md](../docs/importar-oferta.md) |
 
-Los nombres de archivo están fijados en el código (`readFileSync` / `CSV_FILE_PATH`),
-así que si los renombrás hay que actualizar el script correspondiente.
+Los nombres de archivo están fijados en el código (`readFileSync`), así que si renombrás `usuarios.csv`
+hay que actualizar el script correspondiente.
+
+La **oferta académica** ya no se carga con un script: se sube el CSV **desde la app**
+(rol `coordinacion`, `CargaMasiva.vue`). Su formato está en [docs/importar-oferta.md](../docs/importar-oferta.md),
+pero el archivo no vive en `data/`.

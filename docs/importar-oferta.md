@@ -2,10 +2,11 @@
 
 Este documento define el formato necesario para los archivos CSV que se usarán para poblar las colecciones de Firestore.
 
-> **Estado (Oct 2026):** implementado en `scripts/importar-oferta.js`. Ojo con dos desfasajes conocidos:
-> la sección 4 describe colecciones (`planesDeEstudio`, `materias`) que hoy no existen (los planes son los JSON de
-> `public/planes/`), y el script apunta a la colección `ofertaAcademica_prueba2025` mientras la app lee
-> `ofertaAcademica/{ciclo}` (ver [contexto.md](contexto.md#-problemas-identificados-pendientes)).
+> **Estado (Oct 2026):** la oferta se carga **únicamente desde la app** (rol `coordinacion`):
+> `src/views/coordinacion/CargaMasiva.vue` + `useCargaOferta.js` escriben `ofertaAcademica/{ciclo}` con el
+> modelo real (`etapas → materias → comisiones`, ver sección 2) dentro de un `writeBatch`. El viejo script
+> `scripts/importar-oferta.js` **se eliminó** (apuntaba a otra colección y duplicaba la lógica).
+> Los planes y materias viven en los JSON de `public/planes/` (la sección 1 quedó obsoleta).
 > Para la importación de usuarios, ver [importar-usuarios.md](importar-usuarios.md).
 
 ## Importante: Formatos de archivo
@@ -14,41 +15,17 @@ Este documento define el formato necesario para los archivos CSV que se usarán 
 - **JSON**: Es el formato nativo de almacenamiento en la aplicación y en Firestore
 - El proceso de importación convierte automáticamente los CSV a JSON
 
-## 1. Carga Inicial: Planes de Estudio y Materias
+## 1. Planes de Estudio y Materias (obsoleto: hoy son JSON)
 
-Este es el primer y más importante paso. La información de este archivo llenará las colecciones `planesDeEstudio` y `materias`.
-
-**Nombre del archivo:** `planes-y-materias.csv`
-
-### Columnas Requeridas
-
-| Nombre de Columna | Descripción |
-|---|---|
-| `plan_codigo` | **Texto.** El código único para el plan de estudio. Ej: `TAP2018`, `FOBA-NMP2023`. |
-| `plan_nombre` | **Texto.** El nombre completo del plan de estudio. Ej: "Tecnicatura Superior en Arreglos Musicales 2018". |
-| `plan_resolucion`| **Texto.** El número de resolución oficial del plan. Ej: "RES-1234/18". |
-| `materia_codigo` | **Texto.** El código único y oficial de la materia. Ej: `AUD01`, `INS2`. |
-| `materia_nombre` | **Texto.** El nombre completo de la materia. Ej: "Audioperceptiva I". |
-| `materia_anio` | **Número.** El año o nivel al que pertenece la materia dentro del plan. Ej: `1`, `2`, `3`. |
-| `materia_correlativas_codigos` | **Texto.** Una lista de `materia_codigo` (de la misma columna) separados por comas, indicando las materias que se deben tener aprobadas para cursar esta. Dejar en blanco si no tiene. Ej: `AUD01,INS1`. |
-| `equivale_a` | **Texto.** Código de la materia equivalente en otro plan. Ej: `662-1.1`. Dejar en blanco si no tiene equivalencia. |
-
-### Ejemplo de Contenido
-
-```csv
-plan_codigo,plan_nombre,plan_resolucion,materia_codigo,materia_nombre,materia_anio,materia_correlativas_codigos,equivale_a
-FOBA-NMP2023,Formación Básica para Músicos Populares 2023,RES-567/23,AUD01,Audioperceptiva I,1,,662-1.1
-FOBA-NMP2023,Formación Básica para Músicos Populares 2023,RES-567/23,INS01,Instrumento Armónico I,1,,662-1.2.1
-FOBA-NMP2023,Formación Básica para Músicos Populares 2023,RES-567/23,AUD02,Audioperceptiva II,2,AUD01,662-1.3
-TAP2018,Tecnicatura en Arreglos Populares,RES-987/18,ARR01,Arreglos I,1,,662-3.4
-TAP2018,Tecnicatura en Arreglos Populares,RES-987/18,ARR02,Arreglos II,2,ARR01,662-3.5
-```
+Las colecciones `planesDeEstudio` y `materias` **nunca se implementaron**. Los planes y sus materias viven en
+archivos JSON estáticos en `public/planes/` (`planes.json` con el catálogo y un archivo por plan, ej. `662.json`),
+que son la fuente de verdad para la app y se consumen sin lecturas a Firestore. No hay CSV intermedio.
 
 ---
 
 ## 2. Carga de Oferta Académica (Secuencias)
 
-Este archivo se usará para cargar la oferta de un ciclo lectivo específico, una vez que los planes y materias ya existan en la base de datos.
+Este archivo carga la oferta de un ciclo lectivo. Las materias referenciadas se resuelven por código contra los planes en `public/planes/`.
 
 **Nombre del archivo:** `oferta_academica.csv`
 
@@ -75,6 +52,19 @@ ciclo_lectivo,materia_codigo,secuencia_codigo,cupo,horario,aula,docente_nombre,p
 2026-1,ARR02,1224,15,"Mar 12:30 a 13:50","Aula PB 18","Suarez, M.",2025-11-08,2025-11-14
 ```
 
+### Columnas opcionales (carga in-app)
+
+La carga desde la app (`useCargaOferta.js`) acepta además estas columnas opcionales:
+
+| Columna | Descripción |
+|---|---|
+| `materia_nombre` | Nombre de la materia. Si falta, se usa el código (`materia_codigo`). |
+| `tipo` | Tipo de cursada (ej. `colectiva`, `individual`). Default: `colectiva`. |
+| `etapa_nombre` | Nombre de la etapa de inscripción. Default: `Inscripciones`. |
+| `etapa_descripcion` | Descripción de la etapa. |
+
+Las filas se agrupan automáticamente en **etapas** por `etapa_nombre` + rango `periodo_inicio`/`periodo_fin`, y en **materias** por `materia_codigo`. `periodo_inicio` y `periodo_fin` son **obligatorios** (la vista del estudiante los usa para saber si la etapa está vigente).
+
 ---
 
 ## 3. Fuente de Verdad: Relación de Planes
@@ -89,13 +79,12 @@ La relación oficial entre códigos de planes y sus nombres completos se encuent
 
 ```json
 {
-  "planes": {
-    "662": "662 Profesorado de Música",
-    "662G": "662G Profesorado de Música con orientación en Guitarra",
-    "708": "708 Técnico Superior en Sonido",
-    "PREGRADO": "PREGRADO Programa Propedéutico"
+  "planes": [
+    { "codigo": "662", "nombre": "662 Profesorado de Música" },
+    { "codigo": "662G", "nombre": "662G Profesorado de Música con orientación en Guitarra" },
+    { "codigo": "708", "nombre": "708 Técnico Superior en Sonido" }
     // ... más planes
-  }
+  ]
 }
 ```
 
@@ -113,7 +102,7 @@ Cada documento representa a un usuario del sistema con su información personal 
   nombre: "Maria José",
   apellido: "ORTEGA",
   email: "majo_959@hotmail.com",
-  roles: ["estudiante"], // Puede incluir: "estudiante", "docente", "bedel", "admin"
+  roles: ["estudiante"], // Puede incluir: "estudiante", "docente", "bedel", "coordinacion", "admin"
   planes: [
     "662 Profesorado de Música",
     "PREGRADO Programa Propedéutico"
@@ -134,9 +123,9 @@ Cada documento representa a un usuario del sistema con su información personal 
 
 Los usuarios pueden cambiar entre estados, incluyendo de `egresado` a `activo` si comienzan un nuevo plan.
 
-### Colección `planes`
+### Archivo `public/planes/{plan}.json`
 
-Cada documento representa un plan de estudio completo con todas sus materias.
+Cada archivo representa un plan de estudio completo con todas sus materias (no es una colección de Firestore).
 
 ```javascript
 {
@@ -155,28 +144,33 @@ Cada documento representa un plan de estudio completo con todas sus materias.
 }
 ```
 
-### Colección `ofertaAcademica_2026`
+### Colección `ofertaAcademica/{ciclo}`
 
-Cada documento representa una materia en la oferta académica con sus secuencias.
+Un **documento único por ciclo** con toda la oferta. Ver el detalle de etapas/materias/comisiones en la sección 2.
 
 ```javascript
-// Documento: 662-1.1 (ID del documento)
+// Documento: 2026-1 (ID del documento = ciclo)
 {
-  materiaId: "662-1.1",
-  nombre: "Audioperceptiva I",
-  nombre_c: "Audio I",
-  cursada: "anual",
-  planId: "662"
-}
-
-// Subcolección `secuencias`:
-// Documento: 0465 (ID del documento)
-{
-  id: "0465",
-  horario: "Lun 16:30 a 18:30",
-  aula: "Aula PB 01",
-  docente: "Ceballos, O.",
-  periodoId: "feb-2026-colectivas"
+  nombreCiclo: "Ciclo 2026-1",
+  actualizadoEn: "2026-01-15T10:00:00.000Z",
+  etapas: [
+    {
+      nombre: "Inscripciones",
+      descripcion: "",
+      desde: "2026-02-01T00:00:00.000Z", // Timestamp
+      hasta: "2026-02-07T23:59:59.999Z", // Timestamp
+      materias: [
+        {
+          id: "AUD01",
+          nombre: "Audioperceptiva I",
+          tipo: "colectiva",
+          comisiones: [
+            { id: "0465", cupo: 20, horario: "Lun 16:30 a 18:30", aula: "Aula PB 01", docente: "Ceballos, O." }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -191,12 +185,12 @@ El detalle y los ejemplos están en [importar-usuarios.md](importar-usuarios.md#
 
 ## 6. Proceso de Importación
 
-1. Los bedeles crean los datos en Google Sheets usando los formatos CSV definidos
+1. El equipo (coordinación/bedelía) crea los datos en Google Sheets usando los formatos CSV definidos
 2. Se exportan los archivos CSV
-3. Un script de importación convierte los CSV a JSON y los carga en Firestore
+3. Se cargan **desde la app** (rol `coordinacion`, `CargaMasiva.vue`, sujeto a las reglas de Firestore)
 4. La aplicación accede a los datos directamente desde Firestore y los archivos JSON en `public/planes/`
 
 Este proceso permite:
-- Trabajar con herramientas familiares para los bedeles (Google Sheets)
+- Trabajar con herramientas familiares para el equipo (Google Sheets)
 - Mantener una estructura de datos óptima para la aplicación
 - Separar claramente la edición de datos de la estructura interna

@@ -42,6 +42,8 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 
 **Decisión Final sobre Estructura de Oferta (Oct 2025)**: Se optó por un modelo híbrido. Los planes de estudio viven en archivos JSON estáticos. La oferta académica de cada año se carga a una colección `ofertaAcademica_YYYY`, que contiene documentos por `materia` con una subcolección de `secuencias`. Se usa una colección `periodosInscripcion` para gestionar las fechas de apertura y cierre, vinculada a cada secuencia mediante un `periodoId`. Esto evita duplicar datos y facilita la gestión.
 
+> ⚠️ **Superado (Oct 2026):** la oferta ya no se modela como documento por materia en `ofertaAcademica_YYYY`. El modelo vigente es un **documento único por ciclo** en `ofertaAcademica/{ciclo}` (`etapas → materias → comisiones`), cargado desde la app por el rol `coordinacion` (`useCargaOferta.js`). Ver [contexto.md](contexto.md) e [importar-oferta.md](importar-oferta.md).
+
 
 
 ## Revisión de código — pendientes (Oct 2026)
@@ -63,11 +65,6 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 - Convención de error sin definir: `useInscripciones` lanza en "usuario no autenticado" en lugar de devolver `{ exito:false, error }` (viola AGENTS §5).
 - `.env` local escribe `VITE_FIREBASE_STORAGE_BUCKET="sige-esmn.firebasestore.app"` (le falta la `a`): el valor correcto es `sige-esmn.firebasestorage.app`, que es el que tiene el secreto del CI. Como la app no usa Firebase Storage, hoy no rompe nada, pero es una bomba de tiempo.
 - ✅ (19/10/2026) Los CSV con datos personales se sacaron del repo (ahora en `data/`, ignorado por git) y el workflow de deploy a Firebase Hosting ya apunta a `sige-esmn` (antes `prueba1-esmn`).
-
-<!--
-[PROMPT_SUGGESTION]¿Cómo puedo mejorar la guardia de navegación en `src/router/index.js` para que maneje la carga inicial del estado de autenticación y también verifique los roles de usuario para proteger las rutas?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Basado en el `useLayout.js`, ¿podrías mostrarme cómo integrar el cambio de layout y tema con el router de Vue para que cambie automáticamente según la ruta a la que se navega?[/PROMPT_SUGGESTION]
--->
 
 
 ---
@@ -225,33 +222,35 @@ sige/
 │   │   ├── useLayout.js        # Theme + layout singleton (body class switching)
 │   │   ├── auth/useAuth.js     # Auth singleton: login, logout, register, reset, checkAuthState
 │   │   ├── usuarios/useUsuarios.js  # CRUD usuarios + migración email→uid + normalización roles
+│   │   ├── usuarios/useImportarUsuarios.js  # Carga masiva de usuarios desde CSV (rol coordinacion)
 │   │   ├── inscripciones/
 │   │   │   ├── useOfertaAcademica.js  # Carga ofertaAcademica/{ciclo}
+│   │   │   ├── useCargaOferta.js      # Carga masiva de oferta desde CSV (rol coordinacion)
 │   │   │   └── useInscripciones.js    # Crea/lee inscripciones subcolección
 │   │   └── academico/usePlanesEstudio.js  # Carga JSON local + procesa correlativas
 │   ├── config/firebase.js      # Inicializa Auth, Firestore Lite, Functions, Analytics
 │   ├── router/
 │   │   ├── index.js            # Rutas + guardia beforeEach + routerInstance assignment
 │   │   └── routerInstance.js   # Singleton para evitar circular deps
-│   ├── layouts/                # AccesoLayout, EstudianteLayout, AdminLayout, BedelLayout, DocenteLayout
+│   ├── layouts/                # AccesoLayout, EstudianteLayout, AdminLayout, BedelLayout, DocenteLayout, CoordinacionLayout
 │   └── views/
 │       ├── auth/               # Login, Register, ResetPassword, SeleccionarRol, Terminos, PlanesEstudioPublico
 │       ├── estudiante/         # TableroE, InscripcionesE, HAcademico, OtrasFunciones, PlanesEstudioView
 │       ├── admin/              # TableroA
 │       ├── bedel/              # TableroB, ConfirmarInscripciones
 │       ├── docente/            # TableroD
-│       └── DashboardE.vue      # ⚠️ DEAD CODE — imports rotos
+│       └── coordinacion/       # TableroC, CargaMasiva
 ├── codebase-functions/         # Cloud Functions v2 (registrarUsuario)
 ├── firebase.json, firestore.rules, firestore.indexes.json
 ├── vite.config.js, tailwind.config.js, postcss.config.js
 ├── update-dev.ps1, update-main.ps1  # Scripts de versionado + deploy
-└── package.json (v0.7.16)
+└── package.json (v0.7.26)
 ```
 
 ### Guía de Testing Manual
 
 #### Cómo probar la app:
-1.  **Acceder al Entorno de Pruebas**: Navegar a la URL de Vercel (rama `dev`): https://sige-esmn-git-dev-informaticaesmns-projects.vercel.app
+1.  **Acceder al Entorno de Pruebas**: Navegar a la URL de Vercel (rama `dev`): https://sige-esmn.vercel.app/
 2.  **Casos de Prueba Sugeridos**:
     *   **Registro Exitoso**: Intentar registrarse con un email que SÍ esté en la lista de pre-aprobados. El sistema debería permitir el registro y redirigir al tablero correspondiente.
     *   **Registro Fallido (No Aprobado)**: Intentar registrarse con un email que NO esté en la lista. Se debe mostrar un mensaje de error claro indicando que debe contactar a Bedelía.
@@ -266,11 +265,11 @@ sige/
 
 | Categoría | Estado |
 |-----------|--------|
-| Compilación (`vite build`) | ⚠️ Posiblemente rota por `InscripcionesE.vue` |
-| Tests | ❌ No existe infraestructura |
+| Compilación (`vite build`) | ✅ Funcional |
+| Tests | ✅ Funcional |
 | Lint | ❌ No configurado |
-| CI/CD | ⚠️ Deploys automáticos, pero sin tests |
-| Seguridad Firestore | ⚠️ Reglas hardcodeadas (colisión con nombres dinámicos) |
+| CI/CD | ⚠️ Deploys automáticos (`main` → Firebase Hosting + reglas); el workflow corre tests, pero el deploy aún no depende de ellos |
+| Seguridad Firestore | ✅ Wildcard dinámico + reglas de roles desplegadas (19/10/2026) |
 | Componentes UI críticos | ✅ Completados |
 | Auth flow | ✅ Funcional (login, registro, reset, selección de rol) |
 | Theming/Layout | ✅ Integrado con router guard |
@@ -322,10 +321,10 @@ sige/
 
 #### Fase 1: Corrección de errores críticos 🔴
 
-1. **Unificar `InscripcionesE.vue`** — Reemplazar con un único `<template>` usando la lógica del segundo bloque (composables `useOfertaAcademica` + `useInscripciones`), eliminando código muerto.
-2. **Eliminar `DashboardE.vue`** — Dead code no referenciado. Migrar login/logout a `useAuth.js` si se reutiliza.
-3. **Normalizar imports Firestore** — Cambiar `'firebase/firestore'` → `'firebase/firestore/lite'` en `useOfertaAcademica.js` e `useInscripciones.js`.
-4. **Corregir `firestore.rules`** — Reemplazar `inscripciones2026` con wildcard `{inscripcionesCollectionId}`. Resolver conflicto de `allow update`.
+1. ✅ **Unificar `InscripcionesE.vue`** — Reemplazar con un único `<template>` usando la lógica del segundo bloque (composables `useOfertaAcademica` + `useInscripciones`), eliminando código muerto.
+2. ✅ **Eliminar `DashboardE.vue`** — hecho (Oct 2026): dead code no referenciado, eliminado.
+3. ✅ **Normalizar imports Firestore** — Cambiar `'firebase/firestore'` → `'firebase/firestore/lite'` en `useOfertaAcademica.js` e `useInscripciones.js`.
+4. ✅ **Corregir `firestore.rules`** — Reemplazar `inscripciones2026` con wildcard `{inscripcionesCollectionId}`. Resolver conflicto de `allow update`.
 
 #### Fase 2: Mejoras de calidad de código 🟡
 

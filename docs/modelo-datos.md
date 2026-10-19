@@ -26,8 +26,9 @@ graph TD
     end
 
     subgraph "Catálogo de Oferta"
-        OA[ofertaAcademica_YYYY]
-        S(secuencias)
+        OA["ofertaAcademica/{ciclo}"]
+        M(materias)
+        S(comisiones)
     end
     
     subgraph "Usuarios"
@@ -53,7 +54,8 @@ graph TD
     Script -- "Puebla" --> OA
 
     %% Relaciones Estructurales
-    OA -- "Contiene Materia con" --> S
+    OA -- "Contiene" --> M
+    M -- "Ofrece" --> S
     S -- "Vinculada a" --> PI
     U -- "1. Info personal" --> P
     U -- "2. Tiene un (subcolección)" --> RA
@@ -77,9 +79,9 @@ graph TD
 
 Este diagrama muestra el flujo completo de datos y la arquitectura de la base de datos:
 
-1.  **Flujo de Importación:** A la izquierda, las fuentes de datos (`planes/*.json` y `oferta.csv`) son leídas por el `Script de Importación`, que se encarga de analizar, combinar y poblar la colección `ofertaAcademica_YYYY`.
+1.  **Flujo de Importación:** la oferta se carga desde un CSV **dentro de la app** (rol `coordinacion`, `useCargaOferta.js`), que agrupa las filas y escribe el documento `ofertaAcademica/{ciclo}`. Los planes y las materias viven en `public/planes/*.json`.
 
-2.  **Estructura de la Oferta:** El script crea la oferta académica para un año. Cada `Materia` es un documento dentro de `ofertaAcademica_YYYY`, y cada una contiene una subcolección de `secuencias` (las comisiones o cursos específicos).
+2.  **Estructura de la Oferta:** `ofertaAcademica/{ciclo}` es un **documento único** por ciclo con `etapas`, y cada etapa contiene `materias`; cada materia tiene sus `comisiones` (las secuencias/cursos específicos). Ver [importar-oferta.md](importar-oferta.md).
 
 3.  **Relación con Períodos:** Cada `secuencia` está vinculada a un documento en la colección `periodosInscripcion`, lo que permite gestionar de forma centralizada las fechas de apertura y cierre de las inscripciones.
 
@@ -111,14 +113,10 @@ Este diagrama muestra el flujo completo de datos y la arquitectura de la base de
 - **Propósito**: Define las ventanas de tiempo para las inscripciones (ej: "Inscripción Febrero 2026 - Instrumentos").
 - **Campos**: `nombre`, `fechaApertura`, `fechaCierre`, `activo`.
 
-### `ofertaAcademica_YYYY/{materiaId}`
-- **Propósito**: Contiene cada materia que se ofrece en un año lectivo. Los datos de la materia se toman de los JSON de planes para asegurar consistencia.
-- **Campos**: `materiaId`, `nombre`, `planId`, `cursada`, etc.
-- **Subcolecciones**: `secuencias`.
+### `ofertaAcademica/{ciclo}` ✅ *implementado*
 
-#### `ofertaAcademica_YYYY/{materiaId}/secuencias/{secuenciaId}`
-- **Propósito**: Representa la comisión específica de una materia a la que el alumno se inscribe para cursar.
-- **Campos**: `id`, `horario`, `aula`, `docente`, `cupo`, `periodoId` (vincula al documento correspondiente en `periodosInscripcion`).
+- **Propósito**: Documento único con toda la oferta de un ciclo lectivo. Se carga desde la app (rol `coordinacion`, `useCargaOferta.js`) y lo consume `useOfertaAcademica.js`.
+- **Campos**: `nombreCiclo`, `actualizadoEn` y `etapas: [{ nombre, descripcion, desde, hasta, materias: [{ id, nombre, tipo, comisiones: [{ id, cupo, horario, aula, docente }] }] }]`.
 
 ### `inscripcionesCursada/{inscripcionId}`
 - **Propósito**: Registro de la solicitud de un estudiante a una `secuencia`. Clave para el tablero del bedel.

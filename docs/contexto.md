@@ -9,7 +9,7 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 **Colección principal: `usuarios`**
 - **Pre-registro**: documento con ID = `email` (lowercase). Campos: `nombre`, `apellido`, `carrera`, `dni`, `legajo`, `estado`, `roles` (array), `plan`
 - **Post-registro**: documento con ID = `uid` de Firebase Auth. Mismo contenido + `uid` + `actualizadoEn`. El documento `email` se elimina (writeBatch atómico).
-- **Roles**: array de strings lowercase (`['estudiante']`, `['estudiante', 'bedel']`). Normalizados por `obtenerUsuario()`.
+- **Roles**: array de strings lowercase (`['estudiante']`, `['estudiante', 'bedel']`). Valores posibles: `estudiante`, `docente`, `bedel`, `coordinacion`, `admin`. Normalizados por `obtenerUsuario()`.
 
 **Colección: `ofertaAcademica`**
 - Documento por ciclo (ej: `2026-1`)
@@ -43,7 +43,9 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 - **`auth/useAuth.js`**: Autenticación (login, logout, registro, reset). Único composable de Firebase Auth. Singleton global.
 - **`usuarios/useUsuarios.js`**: CRUD `usuarios`. Migración `email→uid`. Normalización de roles.
+- **`usuarios/useImportarUsuarios.js`**: Carga masiva de usuarios desde CSV (rol `coordinacion`). Validación temprana + `writeBatch` en lotes de ≤500.
 - **`inscripciones/useOfertaAcademica.js`**: Lectura de `ofertaAcademica/{ciclo}`.
+- **`inscripciones/useCargaOferta.js`**: Carga masiva de oferta desde CSV (`coordinacion`). Reemplaza el documento del ciclo en un `writeBatch`.
 - **`inscripciones/useInscripciones.js`**: Creación y lectura de inscripciones (subcolección de `usuarios`).
 - **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas.
 - **`useLayout.js`**: Theme + layout singleton (body class switching).
@@ -53,12 +55,12 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 ## Layouts y Theming
 
 ### Layouts dinámicos
-5 layouts, uno por rol:
+6 layouts, uno por rol:
 - `AccesoLayout.vue` — Login, registro, reset, términos
-- `EstudianteLayout.vue`, `AdminLayout.vue`, `BedelLayout.vue`, `DocenteLayout.vue` — Envuelven `BarraApp` + `<router-view>` + `FooterApp`
+- `EstudianteLayout.vue`, `AdminLayout.vue`, `BedelLayout.vue`, `DocenteLayout.vue`, `CoordinacionLayout.vue` — Envuelven `BarraApp` + `<router-view>` + `FooterApp`
 
 ### Temas por rol
-- Clases CSS en `style.css`: `.theme-estudiante` (teal), `.theme-docente` (blue), `.theme-bedel` (purple), `.theme-admin` (rose)
+- Clases CSS en `style.css`: `.theme-estudiante` (teal), `.theme-docente` (blue), `.theme-bedel` (purple), `.theme-coordinacion` (indigo), `.theme-admin` (rose)
 - `useLayout.js` mantiene `currentTheme` y `currentLayout` como refs singleton, aplica clases en `document.body` vía `watchEffect`
 - El router guard (`src/router/index.js`) llama `setLayout(requiredRole)` para cambiar layout
 
@@ -82,7 +84,8 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 ## Firestore Rules
 
-- `firestore.rules` usa funciones helper (`esAdmin()`, `esBedel()`) que hacen una lectura extra a Firestore por solicitud
+- `firestore.rules` usa funciones helper (`esAdmin()`, `esBedel()`, `esCoordinacion()`) que hacen una lectura extra a Firestore por solicitud
+- `usuarios`: `create` lo permite admin y `coordinacion` (esta última sin poder otorgar `admin`/`coordinacion`); el array `roles` solo lo puede modificar admin en el `update`. `ofertaAcademica`: `write` (create/update/**delete**) para `coordinacion` y admin
 - Colecciones dinámicas (`inscripciones${ciclo}` → `inscripciones20261`): wildcard de **segmento completo** + `matches()`
   (`match /usuarios/{userId}/{subcoleccion}/{materiaId}` con `subcoleccion.matches('^inscripciones[0-9]+$')`). Las reglas no
   soportan comodines parciales dentro de un segmento. Ver `AGENTS.md` §4.
@@ -91,16 +94,14 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 ## ⏳ Problemas identificados (pendientes)
 
-> Estado verificado el 19/10/2026: `npm run test:unit` → 39/39 ✅ y `npm run build` → ✅.
+> Estado verificado el 19/10/2026: `npm run test:unit` → 59/59 ✅ y `npm run build` → ✅.
 > Los tests de integración (reglas) no se pudieron correr localmente: falta Java 17 (ver `testing-setup.md`); el CI los corre.
 
 ### 🔴 Críticos
 
 | # | Archivo | Problema |
 |---|---------|----------|
-| 2 | `src/views/DashboardE.vue` | **Dead code** con imports rotos: importa `useAuth` desde ruta inexistente. No referenciado en el router. |
 | 3 | `firestore.rules` | ✅ **Arreglado y deployado** (19/10/2026): wildcard de segmento `{subcoleccion}` + `matches('^inscripciones[0-9]+$')` y `create`/`update` separados (el estudiante no puede tocar `estado`). Ya está publicado en producción y el workflow de `main` lo publica en cada release (`.github/scripts/deploy-firebase.sh`). |
-| 20 | `ofertaAcademica` (nombre y forma) | **Tres nombres distintos para la misma colección**: `scripts/importar-oferta.js` escribe en `ofertaAcademica_prueba2025` (documento por materia + subcolección `secuencias`), la app lee `ofertaAcademica/{ciclo}` (`useOfertaAcademica.js`) y `modelo-datos.md`/`importar-oferta.md` describen `ofertaAcademica_YYYY`. La vista de inscripciones nunca encuentra la oferta importada. |
 
 **Detalle del #3** (bloqueó el flujo principal en producción):
 
@@ -114,6 +115,18 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - **Costo**: `esAdmin()` y `esBedel()` hacen un `get()` por evaluación → 1-2 lecturas facturadas extra por request que las usa.
   Con ~800 estudiantes conviene mover el rol a custom claims (`request.auth.token.rol`).
 - **Validación y deploy**: `npm run test:integration` (requiere Java 17) valida contra los emuladores; el deploy lo hace el workflow de `main` en cada release (o a mano: `firebase deploy --only firestore:rules`).
+
+### 📋 Backlog FASE 2 (arquitectura de roles `coordinacion`)
+
+> Decidido el 19/10/2026 junto con la matriz de responsabilidades del 5to rol (`coordinacion`).
+> **Importante, no urgente** — no bloquea la FASE 1 (reglas de `usuarios`/`ofertaAcademica`, flujo de ingestión
+> y UI del rol). Cada punto es una mejora autónoma.
+
+| # | Área | Problema / Limitación | Solución prevista |
+|---|------|------------------------|-------------------|
+| F2-1 | `firestore.rules` + `useImportarUsuarios.js` | Las reglas solo validan **estructura** (que `roles` no contenga `admin`/`coordinacion`), no **semántica** del CSV (filas malformadas, email inválido, plan inexistente). Un rechazo a mitad de batch llega como `permission denied` sin contexto para el usuario. | ✅ (19/10/2026) **Resuelto en FASE 1**: `useImportarUsuarios.js` valida **todo el CSV antes de escribir** (todo-o-nada) y devuelve los errores por fila con `{ exito, datos, error }` (AGENTS §5). Las reglas quedan como red de seguridad. |
+| F2-2 | Ingestión de usuarios (`usuarios/{email}`) | La carga masiva escribe docs pre-registro con ID = email. Si el usuario ya se registró, su doc migró a `usuarios/{uid}` y el doc `email` ya no existe: re-importar crearía un **doc huérfano**, y detectarlo requeriría `where('email','==',...)` (query que las reglas de lectura no habilitan y que facturaría lecturas por fila). | Respetar que la carga masiva es **operación de inicio de ciclo**, nunca de remediación puntual. Si algún día se necesita corregir usuarios ya registrados, hacerlo con un flujo admin dedicado (query con permisos acotados o script con service account que bypasea reglas). |
+| F2-3 | `firestore.rules` (costo, relacionado con #3) | `esAdmin()`, `esBedel()` y `esCoordinacion()` hacen un `get()` por evaluación → 1-3 lecturas facturadas extra por request que las use. Con ~800 estudiantes y el 5to rol el costo crece. | Migrar los roles a **custom claims** (`request.auth.token.roles.hasAny([...])`): las helper pasan a leer el token con **cero lecturas extra**. Requiere que la CF `registrarUsuario` (o una nueva callable admin) actualice los claims vía Admin SDK cuando cambien los roles. |
 
 ### 🟡 Moderados
 

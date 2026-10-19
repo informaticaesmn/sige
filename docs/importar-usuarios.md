@@ -1,6 +1,10 @@
 # Importar usuarios
 
 > Importación de usuarios (estudiantes, docentes y bedeles) desde un CSV a la colección `usuarios`, con `scripts/import-usuarios.js`. Para la oferta académica, ver [importar-oferta.md](importar-oferta.md).
+>
+> **Dos caminos de importación (Oct 2026):**
+> - **Script `scripts/import-usuarios.js`** (este documento): corre con service account, **bypasea las reglas** de Firestore. Uso operativo/admin.
+> - **Carga in-app** (`src/views/coordinacion/CargaMasiva.vue` + `useImportarUsuarios.js`, rol `coordinacion`): mismo formato de CSV, pero sujeta a las reglas. Valida todo el archivo antes de escribir y usa `writeBatch` en lotes de ≤500. Ver [contexto.md](contexto.md#-backlog-fase-2-arquitectura-de-roles-coordinacion) para limitaciones (F2-1/F2-2).
 
 ## Planes
 
@@ -110,7 +114,10 @@ Los roles deben ser uno o más de los siguientes:
 - `estudiante`
 - `docente`
 - `bedel`
+- `coordinacion`
 - `admin`
+
+> En la **carga in-app** (rol `coordinacion`), `admin` y `coordinacion` están **reservados**: solo un admin puede otorgarlos (coincide con `firestore.rules`). El script con service account no tiene esa restricción.
 
 ## Reglas de validación
 
@@ -120,7 +127,7 @@ El script aplica las siguientes reglas de validación:
 2. **Los emails deben tener formato válido**
 3. **Solo los usuarios con rol "estudiante" deben tener al menos un plan asignado**
 4. **Los usuarios sin rol "estudiante" no deberían tener planes (se mostrará advertencia)**
-5. **Los roles deben ser válidos** (estudiante, docente, bedel, admin)
+5. **Los roles deben ser válidos** (estudiante, docente, bedel, coordinacion, admin)
 6. **Los roles se normalizan automáticamente a minúsculas**
 7. **Los códigos de plan se convierten automáticamente a nombres completos**
 8. **Los estudiantes pueden tener múltiples planes**
