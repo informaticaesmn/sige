@@ -44,6 +44,12 @@ Se actualizaron las configuraciones en los siguientes archivos:
 
 > ✅ **Resuelto (Oct 2026):** `.github/workflows/firebase-hosting-main.yml` ya deploya con
 > el proyecto real (`sige-esmn`), igual que `.firebaserc`.
+>
+> ⚠️ **Falta (19/10/2026):** la cuenta de servicio del secreto `FIREBASE_SERVICE_ACCOUNT_KEY`
+> no tiene roles en `sige-esmn` (el workflow venía deployando a `prueba1-esmn`, donde sí los
+> tenía). Hay que asignarle `Firebase Hosting Admin` + `Firebase Rules Admin` en el proyecto
+> nuevo, o generar un secreto nuevo; sin eso el workflow corre pero no publica
+> (`403 The caller does not have permission`).
 
 ## Instrucciones para Futuras Migraciones
 
