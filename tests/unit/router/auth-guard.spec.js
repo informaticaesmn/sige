@@ -27,7 +27,7 @@ vi.mock('vue-router', () => ({
     beforeEach: vi.fn((callback) => {
       // Guardamos el callback para poder ejecutarlo en los tests
       routerGuardCallback = callback
-      return router
+      return mockRouter
     }),
     onError: vi.fn(),
     onEachRoute: vi.fn(),
@@ -79,6 +79,7 @@ describe('auth-guard', () => {
         name: 'EstudianteTablero',
         path: '/estudiante',
         meta: { requiresAuth: true, role: 'estudiante' },
+        matched: [{ meta: { requiresAuth: true, role: 'estudiante' } }],
       }
       const from = {
         name: 'login',
@@ -86,10 +87,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - No debe redirigir a SeleccionarRol porque el usuario ya tiene roles
       // El guard principal de la app maneja la lógica de selección de rol
@@ -131,6 +132,7 @@ describe('auth-guard', () => {
         name: 'AdminTablero',
         path: '/admin',
         meta: { requiresAuth: true, role: 'admin' },
+        matched: [{ meta: { requiresAuth: true, role: 'admin' } }],
       }
       const from = {
         name: 'EstudianteTablero',
@@ -138,10 +140,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe redirigir al dashboard del usuario o al login
       expect(next).toHaveBeenCalled()
@@ -171,6 +173,7 @@ describe('auth-guard', () => {
         name: 'BedelTablero',
         path: '/bedel',
         meta: { requiresAuth: true, role: 'bedel' },
+        matched: [{ meta: { requiresAuth: true, role: 'bedel' } }],
       }
       const from = {
         name: 'EstudianteTablero',
@@ -178,10 +181,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert
       expect(next).toHaveBeenCalled()
@@ -208,6 +211,7 @@ describe('auth-guard', () => {
         name: 'EstudianteTablero',
         path: '/estudiante',
         meta: { requiresAuth: true, role: 'estudiante' },
+        matched: [{ meta: { requiresAuth: true, role: 'estudiante' } }],
       }
       const from = {
         name: 'login',
@@ -215,10 +219,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe redirigir al login
       expect(next).toHaveBeenCalledWith({ name: 'login' })
@@ -243,6 +247,7 @@ describe('auth-guard', () => {
         name: 'login',
         path: '/',
         meta: {},
+        matched: [],
       }
       const from = {
         name: 'home',
@@ -250,10 +255,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe permitir el acceso
       expect(next).toHaveBeenCalled()
@@ -290,6 +295,7 @@ describe('auth-guard', () => {
         name: 'EstudianteTablero',
         path: '/estudiante',
         meta: { requiresAuth: true, role: 'estudiante' },
+        matched: [{ meta: { requiresAuth: true, role: 'estudiante' } }],
       }
       const from = {
         name: 'login',
@@ -297,10 +303,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe aplicar el layout correcto
       expect(setLayout).toHaveBeenCalledWith('estudiante')
@@ -330,6 +336,7 @@ describe('auth-guard', () => {
         name: 'login',
         path: '/',
         meta: {},
+        matched: [],
       }
       const from = {
         name: 'home',
@@ -337,10 +344,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe aplicar layout de acceso
       expect(setLayout).toHaveBeenCalledWith('acceso')
@@ -367,6 +374,7 @@ describe('auth-guard', () => {
         name: 'PlanesEstudioPublico',
         path: '/planes-estudio',
         meta: {},
+        matched: [],
       }
       const from = {
         name: 'login',
@@ -374,10 +382,10 @@ describe('auth-guard', () => {
       }
       const next = vi.fn()
 
-      // Act - Ejecutar el guard
-      if (routerGuardCallback) {
-        await routerGuardCallback(to, from, next)
-      }
+      // Act - Importar el router (registra la guardia) y ejecutarla
+      await import('@/router/index.js')
+      expect(routerGuardCallback).not.toBeNull()
+      await routerGuardCallback(to, from, next)
 
       // Assert - Debe permitir el acceso
       expect(next).toHaveBeenCalled()

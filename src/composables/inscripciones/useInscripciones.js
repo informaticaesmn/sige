@@ -1,6 +1,6 @@
 // src/composables/inscripciones/useInscripciones.js
 import { ref } from 'vue'
-import { doc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore/lite'
 import { useAuth } from '@/composables/auth/useAuth.js'
 import { db } from '@/config/firebase.js'
 
@@ -31,6 +31,8 @@ export function useInscripciones(ciclo = '2026-1') {
         fechaInscripcion: serverTimestamp(),
         ciclo
       })
+
+      return { exito: true }
     } catch (e) {
       error.value = e.message
       console.error('Error al inscribir:', e)
@@ -40,16 +42,26 @@ export function useInscripciones(ciclo = '2026-1') {
     }
   }
 
-  // Opcional: cargar inscripciones actuales del estudiante
+  // Cargar inscripciones actuales del estudiante (subcolección dinámica)
   const cargarInscripciones = async () => {
-    const inscripcionesRef = collection(
-      db,
-      'usuarios',
-      user.value.uid,
-      `inscripciones${ciclo.replace('-', '')}`
-    )
-    const snapshot = await getDocs(inscripcionesRef)
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    if (!user.value?.uid) throw new Error('Usuario no autenticado')
+
+    error.value = null
+    try {
+      const inscripcionesRef = collection(
+        db,
+        'usuarios',
+        user.value.uid,
+        `inscripciones${ciclo.replace('-', '')}`
+      )
+      const snapshot = await getDocs(inscripcionesRef)
+      const datos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      return { exito: true, datos, error: null }
+    } catch (e) {
+      error.value = e.message
+      console.error('Error al cargar inscripciones:', e)
+      return { exito: false, error: e }
+    }
   }
 
   return {

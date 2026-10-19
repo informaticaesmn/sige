@@ -1,6 +1,6 @@
-u// src/composables/inscripciones/useOfertaAcademica.js
+// src/composables/inscripciones/useOfertaAcademica.js
 import { ref, computed, onMounted } from 'vue'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore/lite'
 import { db } from '@/config/firebase.js'
 
 export function useOfertaAcademica(ciclo) {

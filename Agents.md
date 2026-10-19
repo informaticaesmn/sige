@@ -4,12 +4,9 @@ Este documento define las reglas y convenciones que aplican a **toda** tarea de 
 Para contexto técnico (modelo de datos, layouts, composables, cloud functions, problemas pendientes), ver `context.md`.
 Para roadmap, plan de trabajo, stakeholders y contenido archivado, ver `NOTAS.md`.
 
-## 1. Filosofía General
+## 1. Filosofía
 
-- **Claridad sobre Astucia**: Escribe código que sea fácil de entender.
-- **Consistencia**: Sigue los patrones y estilos ya establecidos en el proyecto.
-- **Eficiencia**: Utiliza las herramientas y APIs de forma correcta para optimizar el rendimiento y los costos (especialmente en Firebase).
-- **Claridad para retomar el código**: que todas las funciones esten debidamente comentadas.
+- Claridad y consistencia por encima de astucia. Comenta cada función: el código se retoma meses después.
 
 ## 2. Estructura de Archivos y Nomenclatura
 
@@ -51,9 +48,13 @@ Para roadmap, plan de trabajo, stakeholders y contenido archivado, ver `NOTAS.md
 
 - **Branches**: `main` (producción, solo merge desde `dev`), `dev` (desarrollo activo).
 - **Mensajes de Commit**: Commits Convencionales: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`.
-- **Versionado**: `npm version <patch|minor|major>`. Scripts `update-dev` y `update-main` manejan el flujo. Push a `main` activa GitHub Action para deploy a Firebase.
+- **Versionado**: `update-dev.ps1` (solo en rama `dev`) y `update-main.ps1` hacen pull → `test:unit` + `build` (abortan si fallan) → `npm version` → push. Push a `main` activa GitHub Action para deploy a Firebase.
 
 ## 7. Patrón de Composables
 
 - Patrón `useXxx.js` en subdirectorios temáticos bajo `src/composables/`.
 - **Singleton**: Los composables con estado global (`useAuth`, `useLayout`) definen `ref()` y `computed()` a nivel de módulo, no dentro de la función factory.
+
+## 8. Tests Unitarios (Vitest)
+
+- Antes de tocar `tests/` o correr la suite, cargar la skill **`testing`** (trampas de mocks, aliases y orden de `vi.resetModules`).

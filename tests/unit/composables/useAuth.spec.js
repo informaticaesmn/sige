@@ -32,8 +32,8 @@ vi.mock('@/router/routerInstance.js', () => ({
   },
 }))
 
-// Mock de useUsuarios
-vi.mock('@composables/usuarios/useUsuarios.js', () => ({
+// Mock de useUsuarios (la alias válida es '@/composables/...')
+vi.mock('@/composables/usuarios/useUsuarios.js', () => ({
   obtenerUsuario: vi.fn(),
 }))
 

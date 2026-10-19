@@ -93,11 +93,8 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 | # | Archivo | Problema |
 |---|---------|----------|
-| 1 | `src/views/estudiante/InscripcionesE.vue` | **Dos bloques `<template>` completos** (líneas 1-44 y 46-110). El segundo usa los composables correctos; el primero es código muerto. **Rompe la compilación**. |
 | 2 | `src/views/DashboardE.vue` | **Dead code** con imports rotos: importa `useAuth` desde ruta inexistente. No referenciado en el router. |
-| 3 | `firestore.rules` (líneas 31-39) | Regla hardcodeada `inscripciones2026` pero el código usa `inscripciones20261`. **Inscripciones fallarán por permisos denegados**. `allow update` duplicado. |
-| 4 | `src/composables/inscripciones/useOfertaAcademica.js` | Importa desde `'firebase/firestore'` en lugar de `'firebase/firestore/lite'`. |
-| 5 | `src/composables/inscripciones/useInscripciones.js` | Importa desde `'firebase/firestore'` en lugar de `'firebase/firestore/lite'`. |
+| 3 | `firestore.rules` (líneas 31-39) | Regla hardcodeada `inscripciones2026` pero el código usa `inscripciones20261` → **inscripciones denegadas por permisos**. Además los dos `allow update` se combinan con OR: L33 deja al estudiante escribir `estado` y **auto-confirmarse**, anulando la restricción de L37. |
 
 ### 🟡 Moderados
 
@@ -107,14 +104,14 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 | 7 | `src/components/TerminosContenido.vue` vs `legal/` | **Dos copias duplicadas**. Confusión de imports. |
 | 8 | `src/views/auth/Register.vue` | Importa `FormCheckbox.vue` pero no lo usa. Redirección hardcodeada a `/estudiante`. |
 | 9 | `src/components/BarraApp.vue` (línea 63) | `alert('Función no implementada')` — viola Agents.md §5. |
-| 10 | `src/composables/inscripciones/useOfertaAcademica.js` (línea 1) | Typo: `u//` al inicio del comentario. |
 | 11 | `src/composables/useLayout.js` (línea 42) | `setLayout('acceso')` al nivel del módulo causa flash de tema antes del router guard. |
+| 16 | `src/composables/auth/useAuth.js` | No hace `unsubscribe` de `onAuthStateChanged`; en SPA no molesta, pero con HMR/montajes repetidos se acumulan listeners. |
+| 17 | Convención de error | `useInscripciones` **lanza** en "usuario no autenticado" mientras AGENTS §5 pide `{ exito, datos, error }`. Definir una sola convención. |
 
 ### 🟢 Sugerencias
 
 | # | Área | Sugerencia |
 |---|------|------------|
-| 12 | Testing | Instalar Vitest + Vue Test Utils — no existe infraestructura. |
 | 13 | CI/CD | Añadir GitHub Actions para lint + tests en PRs a `dev`. |
 | 14 | Error boundaries | `App.vue` no tiene manejador global de errores. |
 | 15 | Features | Tableros de Bedel/Docente/Admin son placeholders. |

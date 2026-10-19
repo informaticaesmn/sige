@@ -42,9 +42,36 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 
 
 
+## Revisión de código — hallazgos (Oct 2026)
+
+> Verificados al dejar la suite unitaria en verde (39/39) y `npm run build` OK. Son cosas a revisar **aparte** de los tests.
+
+### 🔴 Bloqueantes de producción
+
+- **`firestore.rules` L31 — la regla de inscripciones no matchea**: está hardcodeada como `inscripciones2026`, pero el código arma `inscripciones${ciclo.replace('-','')}` → `inscripciones20261` (`useInscripciones.js` L23/55). Todo alta/lectura de inscripciones da `permission denied`. Usar wildcard (`match /usuarios/{userId}/inscripciones{coleccionId}/{materiaId}`) y **deployar las reglas**.
+- **`firestore.rules` L33 vs L37 — agujero de seguridad en `estado`**: Firestore combina los `allow` con **OR**, así que el `allow create, update: if request.auth.uid == userId` (L33) deja que el estudiante escriba **cualquier campo** de su inscripción, incluido `estado`. La restricción de L37 (solo bedel/admin → `'confirmada'`) queda anulada: un estudiante puede auto-confirmarse. Separar `create` de `update` y acotar campos (`request.resource.data.diff(resource.data).affectedKeys().hasOnly([...])`).
+- **`useOfertaAcademica.js` (corregido hoy)**: tenía `u//` al inicio (byte `0x75`) → `ReferenceError: u is not defined` al importar el módulo, y `InscripcionesE.vue` lo importa (L115): **la vista de inscripciones se rompía al navegar**. Además usaba `doc/getDoc` del SDK completo mientras `src/config/firebase.js` inicializa `db` con `firebase/firestore/lite` (funciones incompatibles entre sí). Quedó en `/lite`.
+
+### 🟠 Importantes
+
+- **`useLayout.js` resetea el layout en cada llamada**: el factory ejecuta `setLayout('acceso')` en su cuerpo, así que todo componente que llama `useLayout()` fuerza el tema de acceso (parpadeo) antes de que la guardia lo corrija. Ese estado inicial debe ir a nivel de módulo (patrón singleton, AGENTS §7).
+- **`useAuth.js` no hace `unsubscribe` de `onAuthStateChanged`**: en una SPA no se nota, pero con HMR o montajes repetidos se acumulan listeners. Guardar el `unsubscribe` que devuelve y limpiarlo.
+- **`user.value = { uid, email, ...perfilFirestore }`**: si el doc de Firestore trae `uid`/`email` desactualizados, pisan los de Auth. Conviene que el spread vaya primero.
+- **Convención de error inconsistente**: en `useInscripciones` el caso "usuario no autenticado" **lanza** (`rejects.toThrow`) porque las vistas dependen de eso, pero AGENTS §5 pide `{ exito:false, error }`. Elegir UNA convención para todo el proyecto.
+- **`npm test` incluye integración y necesita emuladores**: `test:integration` corre con `firebase emulators:exec` y `tests/integration/firestore-rules.spec.js` espera escribir en `inscripciones20261`; hoy falla por la regla hardcodeada. Esos tests son la red de seguridad para el cambio de reglas: correrlos antes de deployar.
+
+### 🟡 Higiene / deuda
+
+- **Nada corre los tests automáticamente**: los 39 unitarios pasan solo en local; la GitHub Action deploya a `main` sin ejecutarlos. `update-dev.ps1` sí los corre, pero depende de que uno use el script.
+- **`alert()` en 5 lugares** (viola AGENTS §5): `BarraApp.vue` L63, `ResetPassword.vue` L48/51, `SeleccionarRol.vue` L55/63.
+- **Sin lint** (`eslint`) configurado: un `u//` suelto o un import no-lite no los detecta nadie hasta que explota en runtime.
+- **`NOTAS.md` tiene bloques duplicados**: las tablas de stack/plan de trabajo aparecen dos veces (≈L163-253 y ≈L445-526). Conviene deduplicar.
+- **Este archivo no se renderizaba**: el `<!--` de los PROMPT_SUGGESTIONs estaba sin cerrar, así que todo lo que venía después (OldAgents, plan de trabajo, etc.) quedaba comentado. Cerrado en esta revisión.
+
 <!--
 [PROMPT_SUGGESTION]¿Cómo puedo mejorar la guardia de navegación en `src/router/index.js` para que maneje la carga inicial del estado de autenticación y también verifique los roles de usuario para proteger las rutas?[/PROMPT_SUGGESTION]
 [PROMPT_SUGGESTION]Basado en el `useLayout.js`, ¿podrías mostrarme cómo integrar el cambio de layout y tema con el router de Vue para que cambie automáticamente según la ruta a la que se navega?[/PROMPT_SUGGESTION]
+-->
 
 
 ---

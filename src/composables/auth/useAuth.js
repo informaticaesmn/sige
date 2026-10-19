@@ -153,8 +153,10 @@ const userRoles = computed(() => user.value?.roles || [])
       await signOut(auth)
       user.value = null
       routerInstance.router.push({ name: 'login' })
+      return { exito: true }
     } catch (error) {
       console.error('Error en logout:', error)
+      return { exito: false, error }
     }
   }
 

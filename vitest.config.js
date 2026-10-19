@@ -12,6 +12,8 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     isolate: false,
+    // AGREGADO: Solo correr tests unitarios con este comando
+    include: ['tests/unit/**/*.spec.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

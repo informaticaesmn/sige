@@ -136,7 +136,12 @@ const { inscribirAMateria, cargarInscripciones } = useInscripciones(ciclo)
 const inscripcionesActuales = ref([])
 onMounted(async () => {
   try {
-    inscripcionesActuales.value = await cargarInscripciones()
+    const resultado = await cargarInscripciones()
+    if (resultado.exito) {
+      inscripcionesActuales.value = resultado.datos
+    } else {
+      throw resultado.error
+    }
   } catch (e) {
     console.error('Error al cargar inscripciones:', e)
     error.value = 'No se pudieron cargar tus inscripciones. Intenta recargar la página.'

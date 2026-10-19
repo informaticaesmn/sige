@@ -140,7 +140,12 @@ const userHasMultipleRoles = computed(() => {
 });
 
 const userName = computed(() => {
-  return user.value?.nombre || user.value?.email || 'Usuario';
+  // Nombre completo desde Firestore (nombre + apellido), con fallback a email
+  const nombreCompleto = [user.value?.nombre, user.value?.apellido]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
+  return nombreCompleto || user.value?.email || 'Usuario'
 });
 
 // --- Lógica de Menú Dinámico ---
