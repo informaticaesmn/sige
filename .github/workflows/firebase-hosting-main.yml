@@ -77,7 +77,17 @@ jobs:
           ls -l dist
           echo "=== Fin Verificación ==="
 
-      # 7. Desplegar a Firebase Hosting
+      # 7. Desplegar las reglas de Firestore
+      # El deploy de hosting NO publica las reglas: sin este paso `firestore.rules` queda
+      # desincronizado del código (así se coló el bug de inscripciones, ver docs/contexto.md #3).
+      # Va ANTES del hosting a propósito: si las reglas fallan, no se publica el frontend.
+      - name: Deploy Firestore Rules
+        run: |
+          SA="$RUNNER_TEMP/firebase-sa.json"
+          printf '%s' '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > "$SA"
+          GOOGLE_APPLICATION_CREDENTIALS="$SA" npx firebase deploy --only firestore:rules --project sige-esmn --non-interactive
+
+      # 8. Desplegar a Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

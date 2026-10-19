@@ -43,8 +43,9 @@ npm run dev
 | `npm run test:ui` | Vitest en modo interfaz gráfica |
 | `npm run test:coverage` | Tests + reporte de cobertura |
 
-Versionado y publicación: `update-dev.ps1` (rama `dev`) y `update-main.ps1` hacen pull → `test:unit` + `build` →
-`npm version` → push; si los tests o el build fallan, abortan. Un push a `main` dispara el deploy a Firebase Hosting.
+Versionado y publicación: `update-dev.ps1` (rama `dev`) y `update-main.ps1` (rama `main`) corren `test:unit` + `build` y
+abortan si fallan; `update-dev` además hace el `npm version` del ciclo. Un push a `main` dispara el deploy a Firebase
+Hosting **y de las reglas de `firestore.rules`** (paso `Deploy Firestore Rules`).
 
 ## Estado del proyecto
 

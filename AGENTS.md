@@ -48,7 +48,7 @@ Para notas de diseño, roadmap y plan de trabajo, ver `docs/notas.md`.
 
 - **Branches**: `main` (producción, solo merge desde `dev`), `dev` (desarrollo activo).
 - **Mensajes de Commit**: Commits Convencionales: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`.
-- **Versionado**: `update-dev.ps1` (solo en rama `dev`) y `update-main.ps1` hacen pull → `test:unit` + `build` (abortan si fallan) → `npm version` → push. Push a `main` activa GitHub Action para deploy a Firebase.
+- **Versionado**: `update-dev.ps1` (rama `dev`) hace pull → `test:unit` + `build` (aborta si fallan) → `npm version` → commit de release → push. `update-main.ps1` (rama `main`) resetea `main` a `dev`, corre `test:unit` + `build` (abortan si fallan), crea el tag del release y hace push. Un push a `main` dispara la GitHub Action que publica **hosting y las reglas de `firestore.rules`**.
 
 ## 7. Patrón de Composables
 
