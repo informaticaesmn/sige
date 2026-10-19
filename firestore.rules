@@ -11,20 +11,46 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['bedel']);
     }
 
+    function esCoordinacion() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['coordinacion']);
+    }
+
     // --- Usuarios ---
     match /usuarios/{userId} {
-      allow read: if request.auth.uid == userId || esBedel() || esAdmin();
-      allow create: if esAdmin();
+      // Lectura: el propio usuario, o los roles de gestión (bedel/coordinacion/admin).
+      allow read: if request.auth.uid == userId || esBedel() || esCoordinacion() || esAdmin();
+
+      // Alta (incluye la carga masiva por CSV de coordinación):
+      // - admin puede crear cualquier usuario.
+      // - coordinacion puede dar de alta estudiantes, docentes y bedeles, pero
+      //   NUNCA crear un 'admin' ni otro 'coordinacion' (evita el auto-ascenso
+      //   creando un documento nuevo). Solo admin otorga roles privilegiados.
+      allow create: if esAdmin() ||
+                    (esCoordinacion() &&
+                     !request.resource.data.roles.hasAny(['admin', 'coordinacion']));
+
+      // Update: el array `roles` queda congelado para todos salvo admin.
+      // (a) el dueño edita sus datos sin tocar roles
+      // (b) bedel/coordinacion editan campos no-roles de estudiantes
+      // (c) admin sin restricciones: único rol que puede ascender/degradar
       allow update: if (request.auth.uid == userId && request.resource.data.roles == resource.data.roles) ||
-                     (esBedel() && resource.data.roles.hasAny(['estudiante']) && request.resource.data.roles == resource.data.roles) ||
-                     esAdmin();
+                    ((esBedel() || esCoordinacion()) &&
+                     resource.data.roles.hasAny(['estudiante']) &&
+                     request.resource.data.roles == resource.data.roles) ||
+                    esAdmin();
+
+      // Borrar usuarios es tarea exclusiva de admin.
       allow delete: if esAdmin();
     }
 
-    // --- Oferta Académica (solo lectura para todos los autenticados) ---
+    // --- Oferta Académica ---
+    // Documento único por ciclo (`ofertaAcademica/{ciclo}`, ver useOfertaAcademica.js).
+    // Lectura para cualquier autenticado; escritura para coordinacion y admin.
+    // `write` incluye create + update + delete: coordinación puede "limpiar" un
+    // ciclo completo (la carga reemplaza el documento entero, ver useCargaOferta.js).
     match /ofertaAcademica/{ciclo} {
       allow read: if request.auth != null;
-      allow write: if esAdmin(); // solo vos o bedeles con rol admin
+      allow write: if esCoordinacion() || esAdmin();
     }
 
     // --- Inscripciones de un usuario (subcolección por ciclo) ---

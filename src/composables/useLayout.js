@@ -7,14 +7,14 @@ const currentLayout = ref('acceso') // valor por defecto
 // Estado para el tema visual (lo que aplica CSS)
 const currentTheme = ref('estudiante') // tema por defecto
 
-const themeNames = ['estudiante', 'docente', 'bedel', 'admin']
-const layoutNames = ['estudiante', 'docente', 'bedel', 'admin', 'acceso']
+const themeNames = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin']
+const layoutNames = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin', 'acceso']
 const themeClasses = themeNames.map(name => `theme-${name}`)
 
 export function useLayout() {
   /**
    * Cambia el layout de la aplicación.
-   * @param {'estudiante' | 'docente' | 'bedel' | 'admin' | 'acceso'} layoutName
+   * @param {'estudiante' | 'docente' | 'bedel' | 'coordinacion' | 'admin' | 'acceso'} layoutName
    */
   function setLayout(layoutName) {
     currentLayout.value = layoutName

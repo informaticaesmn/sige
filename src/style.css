@@ -24,6 +24,12 @@
   --color-primary-dark: 126 34 206;/* #7e22ce - purple-700 */
 }
 
+.theme-coordinacion {
+  --color-primary: 79 70 229;       /* #4f46e5 - indigo-600 */
+  --color-primary-light: 99 102 241;/* #6366f1 - indigo-500 */
+  --color-primary-dark: 67 56 202;  /* #4338ca - indigo-700 */
+}
+
 .theme-admin {
   --color-primary: 244 63 94;       /* #f43f5e - rose-500 */
   --color-primary-light: 248 113 113;/* #f87171 - rose-400 */

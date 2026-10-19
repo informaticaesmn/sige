@@ -121,7 +121,7 @@ function validarUsuario(usuario) {
   roles = roles.map(r => typeof r === 'string' ? r.toLowerCase() : String(r).toLowerCase())
   
   // Validar que los roles sean válidos
-  const rolesValidos = ['estudiante', 'docente', 'bedel', 'admin']
+  const rolesValidos = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin']
   const rolesInvalidos = roles.filter(r => !rolesValidos.includes(r))
   if (rolesInvalidos.length > 0) {
     errores.push(`Roles inválidos: ${rolesInvalidos.join(', ')}`)

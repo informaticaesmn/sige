@@ -20,6 +20,7 @@ export default {
     'theme-estudiante',
     'theme-docente',
     'theme-bedel',
+    'theme-coordinacion',
     'theme-admin',
   ],
   theme: {

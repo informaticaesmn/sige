@@ -44,6 +44,7 @@ const labels = {
   estudiante: 'Estudiante',
   docente: 'Docente',
   bedel: 'Bedel',
+  coordinacion: 'Coordinación',
   admin: 'Administrador'
 }
 

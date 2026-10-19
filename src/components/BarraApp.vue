@@ -100,7 +100,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/auth/useAuth'
 import { useRouter } from 'vue-router'
 import { vOnClickOutside } from '@vueuse/components'
-import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon, ArrowUpTrayIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import TerminosContenido from '@/components/legal/TerminosContenido.vue'
 
 const menuOpen = ref(false)
@@ -161,6 +161,10 @@ const menuLinks = {
   bedel: [
     { to: '/bedel', text: 'Tablero Bedel', icon: WindowIcon },
     { to: '/bedel/inscripciones', text: 'Confirmar Inscripciones', icon: Square3Stack3DIcon }
+  ],
+  coordinacion: [
+    { to: '/coordinacion', text: 'Tablero Coordinación', icon: WindowIcon },
+    { to: '/coordinacion/carga', text: 'Carga Masiva', icon: ArrowUpTrayIcon }
   ],
   docente: [
     { to: '/docente', text: 'Tablero Docente', icon: WindowIcon },

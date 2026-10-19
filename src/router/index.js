@@ -60,6 +60,17 @@ const routes = [
     ]
   },
 
+  // CON LAYOUT (coordinacion) — carga masiva de usuarios y oferta académica
+  {
+    path: '/coordinacion',
+    component: () => import('@/layouts/CoordinacionLayout.vue'),
+    meta: { requiresAuth: true, role: 'coordinacion' },
+    children: [
+      { path: '', name: 'CoordinacionTablero', component: () => import('@/views/coordinacion/TableroC.vue') },
+      { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaMasiva.vue') }
+    ]
+  },
+
   // CON LAYOUT (docente)
   {
     path: '/docente',
