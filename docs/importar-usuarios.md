@@ -1,4 +1,8 @@
-# Importar Usuarios## Planes
+# Importar usuarios
+
+> Importación de usuarios (estudiantes, docentes y bedeles) desde un CSV a la colección `usuarios`, con `scripts/import-usuarios.js`. Para la oferta académica, ver [importar-oferta.md](importar-oferta.md).
+
+## Planes
 
 Los estudiantes pueden tener uno o más planes. Se pueden especificar los códigos de plan de las siguientes maneras:
 
@@ -123,7 +127,8 @@ El script aplica las siguientes reglas de validación:
 
 ## Ejecución
 
-1. Crea tu archivo CSV con los datos de los usuarios (puedes usar `usuarios.csv` como plantilla)
+1. Crea tu archivo CSV con los datos de los usuarios y guardalo como `data/usuarios.csv`
+   (esa carpeta no se versiona en git: ver `data/README.md` para el formato exacto)
 2. Ejecuta el script de importación:
    ```bash
    node scripts/import-usuarios.js

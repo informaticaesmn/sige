@@ -5,6 +5,12 @@ mesas de examen y una trayectoria académica detallada.
 Deja los datos de los planes en archivos JSON: "plan_id.json", 
 para su visibilidad publica y el consumo sin lecturas a Firestore.
 
+> **Estado (Oct 2026):** este documento es una **propuesta de diseño**, no la foto de lo implementado.
+> Hoy los planes de estudio viven en `public/planes/*.json` y la oferta en la colección `ofertaAcademica`
+> (un documento por ciclo). Las colecciones `planesDeEstudio`, `perfiles`, `resumenAcademico`,
+> `inscripcionesCursada`, `inscripcionesExamen`, `mesasExamen` y `trayectoriaAcademica` **todavía no existen**.
+> El estado real está en [contexto.md](contexto.md#modelo-de-datos-firestore).
+
 ## Diagrama Maestro Unificado
 
 ```mermaid

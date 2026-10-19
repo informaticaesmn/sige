@@ -24,7 +24,7 @@ description: Usar cuando haya que correr, arreglar o escribir tests unitarios en
 
 ## Convención de retorno
 
-- Todo composable expone `{ exito, datos, error }` (Agents.md §5). `toEqual({ exito: true, datos: undefined, error: undefined })` pasa con `{ exito: true }` porque `toEqual` ignora propiedades `undefined`: no agregar campos de más.
+- Todo composable expone `{ exito, datos, error }` (AGENTS.md §5). `toEqual({ exito: true, datos: undefined, error: undefined })` pasa con `{ exito: true }` porque `toEqual` ignora propiedades `undefined`: no agregar campos de más.
 
 ## Criterio de terminación
 

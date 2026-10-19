@@ -5,7 +5,9 @@
  */
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'
 
-export const TEST_PROJECT_ID = 'sige-test'
+// El `--project` del CLI y este id tienen que coincidir: firebase.json tiene
+// `singleProjectMode: true`, así que el emulador rechaza otros project ids.
+export const TEST_PROJECT_ID = 'demo-sige'
 
 let testEnv
 

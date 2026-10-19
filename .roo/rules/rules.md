@@ -9,4 +9,4 @@ REGLAS ABSOLUTAS DEL STACK:
 6. ARCHIVOS: Respeta la nomenclatura: Componentes en PascalCase.vue, Composables en camelCase.js con prefijo 'use'.
 
 CONTEXTO DEL PROYECTO:
-Antes de proponer cambios arquitectónicos o generar código nuevo, lee y respeta las convenciones detalladas en el archivo `Agents.md` ubicado en la raíz del proyecto.
+Antes de proponer cambios arquitectónicos o generar código nuevo, lee y respeta las convenciones detalladas en el archivo `AGENTS.md` ubicado en la raíz del proyecto (y el contexto técnico en `docs/contexto.md`).

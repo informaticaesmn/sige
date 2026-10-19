@@ -27,16 +27,38 @@ service cloud.firestore {
       allow write: if esAdmin(); // solo vos o bedeles con rol admin
     }
 
-    // --- Inscripciones de un usuario (subcolección) ---
-    match /usuarios/{userId}/inscripciones2026/{materiaId} {
-      // Solo el propio usuario puede crear/actualizar sus inscripciones
-      allow create, update: if request.auth.uid == userId;
-      // Solo el usuario, bedeles o admin pueden leer
-      allow read: if request.auth.uid == userId || esBedel() || esAdmin();
-      // Solo bedeles o admin pueden confirmar (cambiar estado a "confirmada")
-      allow update: if (esBedel() || esAdmin()) && 
-                    request.resource.data.estado == 'confirmada' &&
-                    request.resource.data.keys().hasOnly(['estado']);
+    // --- Inscripciones de un usuario (subcolección por ciclo) ---
+    // La subcolección se llama `inscripciones` + ciclo sin guiones:
+    //   ciclo "2026-1" -> usuarios/{uid}/inscripciones20261/{materiaId}
+    //   (ver src/composables/inscripciones/useInscripciones.js)
+    //
+    // OJO: NO se puede usar un comodín parcial tipo `inscripciones{ciclo}` porque las
+    // reglas de Firestore solo soportan comodines de segmento completo (`{id}`) o
+    // recursivos (`{id=**}`). Por eso se captura el segmento entero y se valida con
+    // matches().
+    match /usuarios/{userId}/{subcoleccion}/{materiaId} {
+      function esInscripcion() {
+        return subcoleccion.matches('^inscripciones[0-9]+$');
+      }
+
+      // Cada estudiante ve lo suyo; bedel y admin ven todo.
+      allow read: if esInscripcion() && (request.auth.uid == userId || esBedel() || esAdmin());
+
+      // El estudiante crea su inscripción, siempre en estado 'pendiente'.
+      allow create: if esInscripcion() && request.auth.uid == userId &&
+                    request.resource.data.estado == 'pendiente';
+
+      // El estudiante puede modificar su inscripción (ej. cambiar de comisión) pero
+      // NUNCA el estado: no puede auto-confirmarse.
+      // Bedel/admin sí pueden confirmar, pero solo tocando el campo `estado`.
+      allow update: if esInscripcion() &&
+        ((request.auth.uid == userId &&
+          request.resource.data.estado == resource.data.estado) ||
+         ((esBedel() || esAdmin()) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])));
+
+      // Borrar inscripciones es tarea de bedel/admin.
+      allow delete: if esInscripcion() && (esBedel() || esAdmin());
     }
   }
 }

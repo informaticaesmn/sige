@@ -11,8 +11,8 @@ if (!db) {
   process.exit(1)
 }
 
-// Leer el archivo CSV
-const csv = readFileSync('./usuarios.csv', 'utf8')
+// Leer el archivo CSV (los datos NO se versionan: ver data/README.md)
+const csv = readFileSync('./data/usuarios.csv', 'utf8')
 const records = parse(csv, { columns: true, skip_empty_lines: true })
 
 // Contador para el seguimiento

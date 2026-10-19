@@ -2,6 +2,16 @@
 
 Esta documentación describe la configuración inicial de testing para el proyecto SIGE, que utiliza Vitest, Vue Test Utils y Firebase Emulator Suite.
 
+> **Estado (Oct 2026):** la configuración ya está implementada en el repo y la corre el CI. Lo que hay que saber:
+> - **Unitarios**: `npm run test:unit` → `vitest run tests/unit` (config: `vitest.config.js`).
+> - **Integración**: `npm run test:integration` → `firebase emulators:exec --only firestore,auth --project demo-sige "vitest run --config vitest.integration.config.js"`.
+>   Necesita **Java 17** instalado (el emulador de Firestore es un jar). Sin Java falla con
+>   `Could not spawn 'java -version'`. En CI lo provee `actions/setup-java`.
+> - Este documento es la guía de **instalación desde cero** y tiene partes obsoletas: `initializeTestApp`
+>   (§9) ya no existe en `@firebase/rules-unit-testing` v5 (su `RulesTestContext` solo tiene
+>   `firestore/database/storage`, no `.auth()`) y las variables `VITE_*_EMULATOR*` (§6) no las lee la app.
+> - Estado real y trampas de mocks: [contexto.md](contexto.md) y `.opencode/skills/testing/SKILL.md`.
+
 ## 1. Prerrequisitos
 
 ### Node.js

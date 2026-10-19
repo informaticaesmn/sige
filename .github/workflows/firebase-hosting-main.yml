@@ -84,4 +84,6 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}' # Token generado por GitHub para la acción
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' # <--- Usamos el nombre correcto del secreto
           channelId: live # Despliega a la URL principal (el canal 'live')
-          projectId: prueba1-esmn
+          # Debe ser el proyecto real, igual que en .firebaserc. Antes decía
+          # 'prueba1-esmn' (proyecto viejo): el release se deployaba ahí.
+          projectId: sige-esmn

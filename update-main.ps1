@@ -1,4 +1,4 @@
-# update-main.ps1
+﻿# update-main.ps1
 # Release en la rama 'main': sincroniza con 'dev', crea tag y pushea.
 # 'main' es un espejo exacto de 'origin/dev' (reset --hard).
 # Asume que la versión fue incrementada previamente en 'dev' por update-dev.ps1.
@@ -37,6 +37,15 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 Write-Host "'main' ahora es un espejo de 'dev'." -ForegroundColor Green
+
+# --- 3a. Verificar tests unitarios antes del push (integridad de calidad) ---
+Write-Host "Ejecutando tests unitarios (npm run test:unit)..."
+npm run test:unit
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: Los tests unitarios fallaron. No se hará push. Arreglalo antes del release." -ForegroundColor Red
+    exit 1
+}
+Write-Host "Tests unitarios OK." -ForegroundColor Green
 
 # --- 3b. Verificar build antes de push (integridad de calidad) ---
 if (-not $SkipBuild) {

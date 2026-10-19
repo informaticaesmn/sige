@@ -1,8 +1,8 @@
-# Agents.md - Guía de Estilo y Convenciones para SIGE
+# AGENTS.md — Guía de estilo y convenciones para SIGE
 
 Este documento define las reglas y convenciones que aplican a **toda** tarea de desarrollo en SIGE.
-Para contexto técnico (modelo de datos, layouts, composables, cloud functions, problemas pendientes), ver `context.md`.
-Para roadmap, plan de trabajo, stakeholders y contenido archivado, ver `NOTAS.md`.
+Para contexto técnico (modelo de datos, layouts, composables, cloud functions, problemas pendientes), ver `docs/contexto.md`.
+Para notas de diseño, roadmap y plan de trabajo, ver `docs/notas.md`.
 
 ## 1. Filosofía
 
@@ -32,7 +32,7 @@ Para roadmap, plan de trabajo, stakeholders y contenido archivado, ver `NOTAS.md
 - **Lecturas**: Prefiere `getDoc` por ID. Usa `query`/`getDocs` solo cuando necesites filtrar. Indexa los campos filtrados.
 - **Escrituras**: Usa `writeBatch` para operaciones atómicas multi-documento. Usa `setDoc` para crear/sobrescribir y `updateDoc` para modificar campos.
 - **IDs de Documento**: Estrategia `email` → `uid` para pre-aprobación y registro.
-- **Firestore Rules**: Usa wildcards `{coleccionId}` para colecciones con nombres dinámicos (ej. `inscripciones${ciclo}`), nunca nombres estáticos.
+- **Firestore Rules**: Para colecciones con nombres dinámicos (ej. `inscripciones${ciclo}` → `inscripciones20261`) usá un wildcard de **segmento completo** + `matches()`: `match /usuarios/{userId}/{subcoleccion}/{materiaId}` con `subcoleccion.matches('^inscripciones[0-9]+$')`. Nunca hardcodees el nombre del ciclo.
 
 ### Autenticación
 

@@ -23,10 +23,10 @@ Este documento registra la migración del proyecto Firebase de `prueba-1.esmn` a
 
 Se actualizaron las configuraciones en los siguientes archivos:
 
-- [src/config/firebase.js](file:///C:/Users/Usuario/Documents/ProyectosDev/sige/src/config/firebase.js) - Configuración del SDK de Firebase
-- [.env](file:///C:/Users/Usuario/Documents/ProyectosDev/sige/.env) - Variables de entorno con las credenciales del nuevo proyecto
-- [firebase.json](file:///C:/Users/Usuario/Documents/ProyectosDev/sige/firebase.json) - Configuración de Firebase CLI
-- [.firebaserc](file:///C:/Users/Usuario/Documents/ProyectosDev/sige/.firebaserc) - Configuración de proyectos Firebase
+- [`src/config/firebase.js`](../src/config/firebase.js) - Configuración del SDK de Firebase
+- [`.env`](../.env) - Variables de entorno con las credenciales del nuevo proyecto (ver [`.env.example`](../.env.example))
+- [`firebase.json`](../firebase.json) - Configuración de Firebase CLI
+- [`.firebaserc`](../.firebaserc) - Configuración de proyectos Firebase (hoy: `sige-esmn`)
 
 ### 2. Funciones Cloud
 
@@ -41,6 +41,9 @@ Se actualizaron las configuraciones en los siguientes archivos:
 
 - Se requiere actualizar los secrets en GitHub para apuntar al nuevo proyecto
 - Se requiere actualizar las variables de entorno en Vercel si se sigue utilizando
+
+> ✅ **Resuelto (Oct 2026):** `.github/workflows/firebase-hosting-main.yml` ya deploya con
+> el proyecto real (`sige-esmn`), igual que `.firebaserc`.
 
 ## Instrucciones para Futuras Migraciones
 

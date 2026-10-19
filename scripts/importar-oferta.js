@@ -11,7 +11,7 @@
 // 1. Asegúrate de tener un archivo de clave de cuenta de servicio de Firebase en la raíz del
 //    proyecto. Este script espera un archivo llamado 'sige-admin-key.json'.
 //
-// 2. Coloca el archivo CSV con la oferta de secuencias en la raíz del proyecto.
+// 2. Coloca el archivo CSV con la oferta de secuencias en `data/oferta-terciario.csv`.
 //
 // 3. Instala las dependencias necesarias:
 //    npm install firebase-admin csv-parser
@@ -31,7 +31,7 @@ import csv from 'csv-parser';
 // --- CONFIGURACIÓN ---
 const TARGET_COLLECTION = 'ofertaAcademica_prueba2025';
 const SERVICE_ACCOUNT_KEY_PATH = './sige-admin-key.json';
-const CSV_FILE_PATH = './Inscripciones Terciario - Mat.csv';
+const CSV_FILE_PATH = './data/oferta-terciario.csv';
 const PLANS_DIR_PATH = './public/planes';
 // --- FIN DE CONFIGURACIÓN ---
 

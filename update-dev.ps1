@@ -1,4 +1,4 @@
-# update-dev.ps1
+﻿# update-dev.ps1
 # Automatiza el versionado en la rama dev: commitea cambios, incrementa versión,
 # actualiza README.md y pushea todo. Saltea el incremento si no hay cambios reales.
 param (
@@ -91,11 +91,14 @@ Write-Host "Actualizando README.md para la versión v$version..."
 $readmePath = "README.md"
 $readmeContent = Get-Content $readmePath -Raw -Encoding UTF8
 
-# Regex con lookbehind/lookahead para reemplazar SOLO el contenido entre los tags
-$pattern = "(?s)(<!--VERSION-->).*?(<!--/VERSION-->)"
-$replacement = "<!--VERSION-->`nVersion actual: dev v$version`n<!--/VERSION-->"
+# El marcador de versión tiene que quedar en UNA sola línea: el workflow
+# update-readme-v2.yml lo reemplaza con `sed` (trabaja línea a línea). Antes se
+# escribía con saltos de línea y a partir de ahí el workflow nunca volvía a matchear.
+$pattern = "(?s)<!--VERSION-->.*?<!--/VERSION-->"
+$replacement = "<!--VERSION-->Versión actual: dev v$version<!--/VERSION-->"
 $updatedContent = $readmeContent -replace $pattern, $replacement
-Set-Content -Path $readmePath -Value $updatedContent -Encoding UTF8
+# Escribir SIN BOM: `Set-Content -Encoding UTF8` en PS 5.1 agrega BOM al archivo.
+[System.IO.File]::WriteAllText((Resolve-Path $readmePath).Path, $updatedContent, (New-Object System.Text.UTF8Encoding($false)))
 
 # --- 7. Crear un único commit de versión ---
 Write-Host "Creando commit de versión v$version..."

@@ -45,23 +45,11 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
-      # 7. Iniciar Firebase Emulators
-      - name: Start Firebase Emulators
-        run: |
-          npm install -g firebase-tools
-          firebase emulators:exec "echo 'Emulators ready'" --project demo-test &
-          sleep 10
-        env:
-          FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
-          FIRESTORE_EMULATOR_HOST: localhost:8080
-
-      # 8. Tests de Integración con Firebase Emulators
+      # 7. Tests de Integración con Firebase Emulators
+      # `npm run test:integration` levanta y apaga los emuladores por su cuenta
+      # (`firebase emulators:exec`), así que no hace falta un paso separado.
       - name: Run integration tests
         run: npm run test:integration
-        env:
-          FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
-          FIRESTORE_EMULATOR_HOST: localhost:8080
-          VITE_USE_EMULATOR: true
 
       # 9. Subir reporte de coverage como artifact
       - name: Upload coverage report

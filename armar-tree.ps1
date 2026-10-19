@@ -1,4 +1,4 @@
-function Show-Tree {
+﻿function Show-Tree {
     param(
         [string]$Path = ".",
         [string]$Indent = "",

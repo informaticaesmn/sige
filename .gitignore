@@ -34,3 +34,14 @@ secrets
 
 # claves y credenciales
 service-account-key.json
+sige-admin-key.json
+
+# Emuladores de Firebase (logs y cachés generados)
+.firebase/
+
+# Árbol de archivos generado por armar-tree.ps1
+estructura.txt
+
+# Datos de importación: contienen datos personales (DNI, emails, docentes),
+# por eso NO se versionan. Ver data/README.md
+data/*.csv

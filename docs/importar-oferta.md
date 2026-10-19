@@ -2,6 +2,12 @@
 
 Este documento define el formato necesario para los archivos CSV que se usarán para poblar las colecciones de Firestore.
 
+> **Estado (Oct 2026):** implementado en `scripts/importar-oferta.js`. Ojo con dos desfasajes conocidos:
+> la sección 4 describe colecciones (`planesDeEstudio`, `materias`) que hoy no existen (los planes son los JSON de
+> `public/planes/`), y el script apunta a la colección `ofertaAcademica_prueba2025` mientras la app lee
+> `ofertaAcademica/{ciclo}` (ver [contexto.md](contexto.md#-problemas-identificados-pendientes)).
+> Para la importación de usuarios, ver [importar-usuarios.md](importar-usuarios.md).
+
 ## Importante: Formatos de archivo
 
 - **CSV**: Se usa únicamente para importación de datos desde Google Sheets u otras herramientas
@@ -176,33 +182,10 @@ Cada documento representa una materia en la oferta académica con sus secuencias
 
 ---
 
-## 5. Formato para Arrays en Google Sheets
+## 5. Formato para arrays en Google Sheets
 
-Para obtener el formato correcto en CSV al exportar desde Google Sheets:
-
-### Opción 1 (recomendada - separada por comas):
-En la celda de Google Sheets:
-```
-662,PREGRADO
-```
-
-Resultado en CSV:
-```
-662,PREGRADO
-```
-
-### Opción 2 (formato JSON):
-En la celda de Google Sheets:
-```
-["662","PREGRADO"]
-```
-
-Resultado en CSV:
-```
-"""662"",""PREGRADO"""
-```
-
-El script de importación maneja ambos formatos correctamente.
+Los arrays (`roles`, `plan`) se exportan con comillas dobles envolviendo el campo y las comillas internas duplicadas.
+El detalle y los ejemplos están en [importar-usuarios.md](importar-usuarios.md#exportación-desde-google-sheets): no hace falta mantenerlo duplicado en dos documentos.
 
 ---
 
