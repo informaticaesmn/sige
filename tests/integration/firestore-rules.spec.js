@@ -14,7 +14,7 @@ import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
 // que devuelve `rules-unit-testing` es una instancia del SDK completo (compat), así que
 // las funciones de `/lite` (clases propias) la rechazan con
 // "Expected first argument to doc() to be a CollectionReference, ...".
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 
 import { setupTestEnvironment, generateTestEmail } from './setup.js'
 import { clearFirestore } from './teardown.js'
@@ -113,6 +113,97 @@ describe('Firestore Security Rules', () => {
 
       // Cambiar otros campos (ej. la comisión): denegado
       await assertFails(updateDoc(refDelBedel, { comisionId: 'comision-hackeada' }))
+    })
+  })
+
+  describe('Rol coordinacion (carga masiva y oferta académica)', () => {
+    /**
+     * Crea el documento del actor con sus roles vía `withSecurityRulesDisabled`
+     * (equivalente a lo que haría el Admin SDK en producción) y devuelve un
+     * Firestore autenticado como ese usuario.
+     */
+    const crearActorConRoles = async (email, roles) => {
+      const uid = `uid-${email.split('@')[0]}`
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        await setDoc(doc(context.firestore(), 'usuarios', uid), { email, roles })
+      })
+      return { uid, db: testEnv.authenticatedContext(uid, { email }).firestore() }
+    }
+
+    it('debe permitir a coordinacion crear usuarios estudiante/docente/bedel', async () => {
+      const { db: coordDb } = await crearActorConRoles('coord-crea@test.com', ['coordinacion'])
+
+      await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-alumno@test.com'), {
+        email: 'nuevo-alumno@test.com', roles: ['estudiante'], estado: 'pendiente_registro'
+      }))
+      await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-docente@test.com'), {
+        email: 'nuevo-docente@test.com', roles: ['docente'], estado: 'pendiente_registro'
+      }))
+      await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-bedel@test.com'), {
+        email: 'nuevo-bedel@test.com', roles: ['bedel'], estado: 'pendiente_registro'
+      }))
+    })
+
+    it('NO debe permitir a coordinacion crear un admin ni otro coordinador', async () => {
+      const { db: coordDb } = await crearActorConRoles('coord-crea2@test.com', ['coordinacion'])
+
+      await assertFails(setDoc(doc(coordDb, 'usuarios', 'falso-admin@test.com'), {
+        email: 'falso-admin@test.com', roles: ['admin'], estado: 'pendiente_registro'
+      }))
+      await assertFails(setDoc(doc(coordDb, 'usuarios', 'falso-coord@test.com'), {
+        email: 'falso-coord@test.com', roles: ['coordinacion'], estado: 'pendiente_registro'
+      }))
+    })
+
+    it('NO debe permitir a coordinacion modificar el array roles (sí otros campos de un estudiante)', async () => {
+      const { db: coordDb } = await crearActorConRoles('coord-update@test.com', ['coordinacion'])
+      const alumnoUid = 'alumno-para-ascender'
+
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        await setDoc(doc(context.firestore(), 'usuarios', alumnoUid), {
+          email: 'alumno@test.com', roles: ['estudiante'], estado: 'activo'
+        })
+      })
+
+      // Ascenso encubierto editando `roles`: denegado
+      await assertFails(updateDoc(doc(coordDb, 'usuarios', alumnoUid), { roles: ['admin'] }))
+      // Editar un campo normal (sin tocar roles): permitido
+      await assertSucceeds(updateDoc(doc(coordDb, 'usuarios', alumnoUid), { estado: 'egresado' }))
+    })
+
+    it('debe permitir a admin modificar el array roles', async () => {
+      const { db: adminDb } = await crearActorConRoles('admin-roles@test.com', ['admin'])
+      const alumnoUid = 'alumno-a-ascender'
+
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        await setDoc(doc(context.firestore(), 'usuarios', alumnoUid), {
+          email: 'alumno2@test.com', roles: ['estudiante'], estado: 'activo'
+        })
+      })
+
+      await assertSucceeds(updateDoc(doc(adminDb, 'usuarios', alumnoUid), { roles: ['estudiante', 'bedel'] }))
+    })
+
+    it('NO debe permitir a un estudiante crear usuarios', async () => {
+      const { db: userDb } = crearEstudianteAutenticado('estudiante-crea')
+
+      await assertFails(setDoc(doc(userDb, 'usuarios', 'intruso@test.com'), {
+        email: 'intruso@test.com', roles: ['estudiante']
+      }))
+    })
+
+    it('debe permitir a coordinacion escribir y borrar la oferta académica', async () => {
+      const { db: coordDb } = await crearActorConRoles('coord-oferta@test.com', ['coordinacion'])
+      const ofertaRef = doc(coordDb, 'ofertaAcademica', '2026-1')
+
+      await assertSucceeds(setDoc(ofertaRef, { nombreCiclo: 'Ciclo 2026-1', etapas: [] }))
+      await assertSucceeds(deleteDoc(ofertaRef))
+    })
+
+    it('NO debe permitir a un estudiante escribir la oferta académica', async () => {
+      const { db: userDb } = crearEstudianteAutenticado('estudiante-oferta')
+
+      await assertFails(setDoc(doc(userDb, 'ofertaAcademica', '2026-2'), { nombreCiclo: 'x' }))
     })
   })
 })
