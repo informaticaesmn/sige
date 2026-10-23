@@ -11,7 +11,7 @@
 - armar una vista para los nuevos inscriptos. Pregrado * (formulario de carga de preinscripcion) `descartado para 2026`
 
 ## cosas a tener en cuenta
-- cambiar `todos los usuarios a DNI` ver de implementarlo Diciembre 2025 o Febrero 2026
+- cambiar `todos los usuarios a DNI` ***Listo***
 - seguir trabajando en las `inscripciones a instrumento`.
 
 ## ideotas

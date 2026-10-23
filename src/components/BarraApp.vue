@@ -60,7 +60,7 @@
           <button @click="showTerminos = true" class="dropdown-item">
             Términos y Condiciones
           </button>
-          <button @click="alert('Función no implementada')" class="dropdown-item">
+          <button @click="solicitarBaja" class="dropdown-item">
             Solicitar Baja
           </button>
           <div class="border-t border-stone-200 my-1"></div>
@@ -184,6 +184,14 @@ function navigate(path, closeMenus = false) {
 async function logout() {
   await logoutFirebase()
   router.push('/')
+}
+
+/**
+ * Solicitar baja de usuario — funcionalidad pendiente de implementar.
+ * @todo: Implementar el flujo de solicitud de baja con validación y confirmación.
+ */
+function solicitarBaja() {
+  console.warn('[TODO] Solicitar Baja: funcionalidad no implementada todavía')
 }
 </script>
 

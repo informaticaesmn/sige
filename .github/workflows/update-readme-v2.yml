@@ -28,9 +28,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18' # O la versión que uses
+          node-version: '22' # Node 22 LTS
 
       # Configurar Git con el nombre del bot
       - name: Configure Git
