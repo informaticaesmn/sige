@@ -26,7 +26,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import FormCheckbox from '@/components/ui/FormCheckbox.vue'
-import TerminosContenido from '@/components/TerminosContenido.vue'
+import TerminosContenido from '@/components/legal/TerminosContenido.vue'
 
 const router = useRouter()
 const acceptTerms = ref(false)

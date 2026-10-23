@@ -34,6 +34,15 @@
         :error="passwordConfirmError"
       />
       
+      <!-- Aceptar términos -->
+      <FormCheckbox
+        id="acceptTerms"
+        label="Acepto los términos y condiciones"
+        v-model="acceptTerms"
+        :error="acceptTermsError"
+        :required="true"
+      />
+
       <!-- Mensaje de error general -->
       <p v-if="errorMessage" class="alert alert-danger">
         {{ errorMessage }}
@@ -78,6 +87,7 @@ const passwordError = ref('')
 const passwordConfirmError = ref('')
 const errorMessage = ref('') // Para errores generales
 const acceptTerms = ref(false)
+const acceptTermsError = ref('')
 
 const isLoading = ref(false)
 
@@ -94,6 +104,8 @@ function validateForm() {
   if (!email.value) { emailError.value = 'Ingresá tu email'; isValid = false }
   if (password.value.length < 6) { passwordError.value = 'La contraseña debe tener al menos 6 caracteres'; isValid = false }
   if (password.value !== passwordConfirm.value) { passwordConfirmError.value = 'Las contraseñas no coinciden'; isValid = false }
+  if (!acceptTerms.value) { acceptTermsError.value = 'Debes aceptar los términos y condiciones'; isValid = false }
+  else { acceptTermsError.value = '' }
   
   return isValid
 }
@@ -110,9 +122,8 @@ async function handleRegister() {
     const { exito, error } = await registrarUsuario(email.value, password.value)
     
     if (exito) {
-      // El onAuthStateChanged en useAuth se encargará de redirigir o actualizar el estado.
-      // Si se necesita una redirección específica post-registro, aquí es el lugar.
-      router.push('/estudiante') // O a una página de "Bienvenido"
+      // El onAuthStateChanged en useAuth se encargará de redirigir al dashboard según el rol.
+      // registrarUsuario() -> loginFirebase() ya resuelve la redirección, no se necesita router.push() aquí.
     } else {
       if (error?.code === 'auth/email-already-in-use') {
         errorMessage.value = 'El email ya está en uso por otra cuenta. Si olvidaste tu contraseña, puedes restablecerla desde la pantalla de ingreso.'
