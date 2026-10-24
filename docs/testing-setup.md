@@ -15,7 +15,7 @@ Esta documentación describe la configuración inicial de testing para el proyec
 ## 1. Prerrequisitos
 
 ### Node.js
-- **Versión requerida**: Node.js v20 o v22 (acorde a las Cloud Functions)
+- **Versión requerida**: Node.js v24 (LTS) (acorde al proyecto y Cloud Functions)
 - Verifica tu versión con:
   ```bash
   node --version

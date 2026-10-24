@@ -77,7 +77,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - Definidas en `codebase-functions/index.js`
 - Región: `southamerica-east1`
 - **`registrarUsuario` (Callable)**: Verifica pre-aprobación, crea usuario en Auth, migra doc `email→uid` con `writeBatch`, devuelve perfil
-- Configuración: maxInstances 10, Node 22
+- Configuración: maxInstances 10, Node 24
 - Cliente llama con `httpsCallable(functions, 'nombreFuncion')` desde `@/config/firebase.js`
 
 ---

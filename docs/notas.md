@@ -182,10 +182,10 @@ Generar una aplicación web de bajo costo y alta eficiencia que centralice y sim
 
 | Capa | Tecnología | Versión | Comentario |
 |------|-----------|---------|------------|
-| Framework | Vue | ^3.4.27 | Composition API, `<script setup>` |
+| Framework | Vue | ^3.5.44 | Composition API, `<script setup>` |
 | Bundler | Vite | ^5.3.1 (5.4.21 instalado) | Build y dev server |
 | CSS | TailwindCSS | ^3.4.3 | Theming con variables CSS |
-| Routing | vue-router | ^4.4.0 | Guardia global `beforeEach` |
+| Routing | vue-router | ^4.6.4 | Guardia global `beforeEach` |
 | Iconos | Heroicons | ^2.2.0 | Vue 24/outline y 16/solid |
 | Utilidades | @vueuse/components | ^13.9.0 | `v-on-click-outside` |
 | Auth | Firebase Auth | ^12.2.1 | Login, registro, reset |
@@ -193,7 +193,7 @@ Generar una aplicación web de bajo costo y alta eficiencia que centralice y sim
 | Functions | Firebase Functions v2 | ^6.6.0 | `registrarUsuario` callable |
 | Hosting (prod) | Firebase Hosting | — | Rama `main` |
 | Hosting (staging) | Vercel | — | Rama `dev` |
-| Node.js | — | v24.20.0 | Runtime local y builds |
+| Node.js | — | v24.x (LTS) | Runtime local y builds |
 
 #### Estructura de Directorios
 
@@ -350,4 +350,131 @@ sige/
 18. Completar tableros de Bedel/Docente/Admin.
 19. Sistema de notificaciones UI.
 
+---
 
+## Plan de Actualización del Stack Tecnológico (Octubre 2026)
+
+> Estado inicial: Node.js 24.x LTS ya implementado y validado (59/59 tests y build exitosos).
+> A continuación se define la hoja de ruta para la modernización gradual del stack.
+
+### Matriz de Componentes y Complejidad
+
+| Componente | Versión actual | Objetivo sugerido | Complejidad | Riesgo |
+|------------|----------------|-------------------|-------------|--------|
+| **Vue Core** | ^3.4.27 | ^3.5.x | 🟢 Baja | Mínimo (100% retrocompatible) |
+| **Vue Router** | ^4.4.0 | ^4.5.x | 🟢 Baja | Mínimo |
+| **@vueuse/components** | ^13.9.0 | ^13.9.x / ^14.x | 🟢 Baja | Mínimo |
+| **Vite** | ^5.3.1 (5.4.21) | ^6.x | 🟡 Media | Medio (plugins y config) |
+| **@vitejs/plugin-vue** | ^5.0.5 | ^6.x | 🟡 Media | Vinculado a Vite 6 |
+| **Vitest** | ^2.1.9 | ^3.x / ^4.x / ^5.x | 🔴 Alta | Alto (comportamiento de mocks) |
+| **jsdom** | ^25.0.1 | ^26.x+ | 🟡 Media | Medio (APIs de Storage/DOM) |
+| **Firebase Web SDK** | ^12.2.1 | ^13.x | 🟡 Media | Medio (preservar imports /lite) |
+| **firebase-admin** | ^12.7.0 | ^13.x / ^14.x | 🟡 Media | Medio (Auth types en CF) |
+| **firebase-functions** | ^6.6.0 | ^7.x | 🟡 Media | Medio (Cloud Functions v2) |
+| **firebase-tools (CLI)** | ^13.0.0 | ^13.35.x / ^14.x | 🟢 Baja | Bajo |
+| **Tailwind CSS** | ^3.4.3 | ^4.x | 🔴 Alta | Alto (cambio de config JS a @theme) |
+| **ESLint (Raíz)** | No configurado | Flat Config v9 | 🟡 Media | Bajo (mejora calidad de código) |
+
+---
+
+### Fases de Ejecución
+
+#### 🚀 FASE 1: Core Seguro (Riesgo Bajo)
+* **Alcance**:
+  - Actualizar ue a ^3.5.x (motor de reactividad optimizado, utilidades nativas).
+  - Actualizar ue-router a la última ^4.x estable (^4.5.x).
+  - Actualizar irebase-tools a la última versión compatible.
+  - Actualizar dependencias de soporte sin breaking changes (@vueuse/components).
+* **Validación**:
+  - 
+pm run test:unit (59/59 ✅).
+  - 
+pm run build (compilación sin warnings ni regresiones).
+
+#### 🧪 FASE 2: Toolchain de Build y Testing (Riesgo Medio / Alto)
+* **Alcance**:
+  - Migrar ite de 5.x a 6.x y @vitejs/plugin-vue acorde.
+  - Migrar itest (y plugins de coverage/ui) de 2.x a versión moderna (3+).
+  - Actualizar jsdom si es requerido.
+* **Riesgos y atención**:
+  - Vitest 2 está en EOL. Versiones 3+ alteraron el orden de resolución de mocks (i.mock y i.resetModules).
+  - Requiere auditar exhaustivamente los mocks de Firebase Auth y Firestore en 	ests/unit/composables/useAuth.spec.js y outer/auth-guard.spec.js.
+
+#### ☁️ FASE 3: Backend & Firebase Services (Riesgo Medio)
+* **Alcance**:
+  - Evaluar Firebase Web SDK v13 en el frontend.
+  - Actualizar irebase-admin y irebase-functions en codebase-functions/.
+* **Riesgos y atención**:
+  - Mantener la convención de irebase/firestore/lite en todos los composables.
+  - Probar egistrarUsuario en emuladores locales antes de desplegar.
+
+#### 🎨 FASE 4: UI & Estilos (Riesgo Alto - Postergada)
+* **Alcance**:
+  - Migración de TailwindCSS v3 a v4.
+* **Riesgos y atención**:
+  - Tailwind v4 elimina 	ailwind.config.js y migra toda la configuración a @theme en CSS.
+  - SIGE implementa 5 temas por rol con selectores de body (.theme-estudiante, etc.) y variables CSS personalizadas.
+  - Mantener en Tailwind v3 hasta que la funcionalidad y tableros restantes estén completados.
+---
+
+## Plan de Actualización del Stack Tecnológico (Octubre 2026)
+
+> Estado inicial: Node.js 24.x LTS ya implementado y validado (59/59 tests y build exitosos).
+> A continuación se define la hoja de ruta para la modernización gradual del stack.
+
+### Matriz de Componentes y Complejidad
+
+| Componente | Versión actual | Objetivo sugerido | Complejidad | Riesgo |
+|------------|----------------|-------------------|-------------|--------|
+| **Vue Core** | `^3.4.27` | `^3.5.x` | 🟢 Baja | Mínimo (100% retrocompatible) |
+| **Vue Router** | `^4.4.0` | `^4.5.x` | 🟢 Baja | Mínimo |
+| **@vueuse/components** | `^13.9.0` | `^13.9.x` / `^14.x` | 🟢 Baja | Mínimo |
+| **Vite** | `^5.3.1` (5.4.21) | `^6.x` | 🟡 Media | Medio (plugins y config) |
+| **@vitejs/plugin-vue** | `^5.0.5` | `^6.x` | 🟡 Media | Vinculado a Vite 6 |
+| **Vitest** | `^2.1.9` | `^3.x` / `^4.x` / `^5.x` | 🔴 Alta | Alto (comportamiento de mocks) |
+| **jsdom** | `^25.0.1` | `^26.x+` | 🟡 Media | Medio (APIs de Storage/DOM) |
+| **Firebase Web SDK** | `^12.2.1` | `^13.x` | 🟡 Media | Medio (preservar imports /lite) |
+| **firebase-admin** | `^12.7.0` | `^13.x` / `^14.x` | 🟡 Media | Medio (Auth types en CF) |
+| **firebase-functions** | `^6.6.0` | `^7.x` | 🟡 Media | Medio (Cloud Functions v2) |
+| **firebase-tools (CLI)** | `^13.0.0` | `^13.35.x` / `^14.x` | 🟢 Baja | Bajo |
+| **Tailwind CSS** | `^3.4.3` | `^4.x` | 🔴 Alta | Alto (cambio de config JS a @theme) |
+| **ESLint (Raíz)** | No configurado | Flat Config v9 | 🟡 Media | Bajo (mejora calidad de código) |
+
+---
+
+### Fases de Ejecución
+
+#### 🚀 FASE 1: Core Seguro (Riesgo Bajo)
+* **Alcance**:
+  - Actualizar `vue` a `^3.5.x` (motor de reactividad optimizado, utilidades nativas).
+  - Actualizar `vue-router` a la última `^4.x` estable (`^4.5.x`).
+  - Actualizar `firebase-tools` a la última versión compatible.
+  - Actualizar dependencias de soporte sin breaking changes (`@vueuse/components`).
+* **Validación**:
+  - `npm run test:unit` (59/59 ✅).
+  - `npm run build` (compilación sin warnings ni regresiones).
+
+#### 🧪 FASE 2: Toolchain de Build y Testing (Riesgo Medio / Alto)
+* **Alcance**:
+  - Migrar `vite` de 5.x a 6.x y `@vitejs/plugin-vue` acorde.
+  - Migrar `vitest` (y plugins de coverage/ui) de 2.x a versión moderna (3+).
+  - Actualizar `jsdom` si es requerido.
+* **Riesgos y atención**:
+  - Vitest 2 está en EOL. Versiones 3+ alteraron el orden de resolución de mocks (`vi.mock` y `vi.resetModules`).
+  - Requiere auditar exhaustivamente los mocks de Firebase Auth y Firestore en `tests/unit/composables/useAuth.spec.js` y `router/auth-guard.spec.js`.
+
+#### ☁️ FASE 3: Backend & Firebase Services (Riesgo Medio)
+* **Alcance**:
+  - Evaluar Firebase Web SDK v13 en el frontend.
+  - Actualizar `firebase-admin` y `firebase-functions` en `codebase-functions/`.
+* **Riesgos y atención**:
+  - Mantener la convención de `firebase/firestore/lite` en todos los composables.
+  - Probar `registrarUsuario` en emuladores locales antes de desplegar.
+
+#### 🎨 FASE 4: UI & Estilos (Riesgo Alto - Postergada)
+* **Alcance**:
+  - Migración de TailwindCSS v3 a v4.
+* **Riesgos y atención**:
+  - Tailwind v4 elimina `tailwind.config.js` y migra toda la configuración a `@theme` en CSS.
+  - SIGE implementa 5 temas por rol con selectores de body (`.theme-estudiante`, etc.) y variables CSS personalizadas.
+  - Mantener en Tailwind v3 hasta que la funcionalidad y tableros restantes estén completados.
