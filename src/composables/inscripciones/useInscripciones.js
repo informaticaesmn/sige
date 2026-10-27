@@ -10,7 +10,7 @@ export function useInscripciones(ciclo = '2026-1') {
   const loading = ref(false)
 
   const inscribirAMateria = async (materiaId, comisionId) => {
-    if (!user.value?.uid) throw new Error('Usuario no autenticado')
+    if (!user.value?.uid) return { exito: false, error: new Error('Usuario no autenticado') }
     
     loading.value = true
     error.value = null
@@ -36,7 +36,7 @@ export function useInscripciones(ciclo = '2026-1') {
     } catch (e) {
       error.value = e.message
       console.error('Error al inscribir:', e)
-      throw e
+      return { exito: false, error: e }
     } finally {
       loading.value = false
     }
@@ -44,7 +44,7 @@ export function useInscripciones(ciclo = '2026-1') {
 
   // Cargar inscripciones actuales del estudiante (subcolección dinámica)
   const cargarInscripciones = async () => {
-    if (!user.value?.uid) throw new Error('Usuario no autenticado')
+    if (!user.value?.uid) return { exito: false, error: new Error('Usuario no autenticado') }
 
     error.value = null
     try {

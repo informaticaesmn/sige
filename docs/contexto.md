@@ -133,12 +133,12 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 | # | Archivo | Problema |
 |---|---------|----------|
 | 6 | `src/views/auth/ResetPassword.vue` | Importa `getAuth`/`sendPasswordResetEmail` directamente. Debería usar `useAuth.js`. Usa `alert()`. |
-| 7 | `src/components/TerminosContenido.vue` vs `legal/` | **Dos copias duplicadas**. Confusión de imports. |
+| 7 | `src/components/TerminosContenido.vue` vs `legal/` | **Dos copias duplicadas**. Confusión de imports. ✅ **Resuelto (Bloque 1/Paso 3)**: verificado en `src/` — ningún import apunta a la ruta vieja; copia canónica en `src/components/legal/TerminosContenido.vue`. |
 | 8 | `src/views/auth/Register.vue` | Importa `FormCheckbox.vue` pero no lo usa. Redirección hardcodeada a `/estudiante`. |
 | 9 | `src/components/BarraApp.vue` (línea 63) | `alert('Función no implementada')` — viola AGENTS.md §5. |
 | 11 | `src/composables/useLayout.js` (línea 42) | `setLayout('acceso')` al nivel del módulo causa flash de tema antes del router guard. |
 | 16 | `src/composables/auth/useAuth.js` | No hace `unsubscribe` de `onAuthStateChanged`; en SPA no molesta, pero con HMR/montajes repetidos se acumulan listeners. |
-| 17 | Convención de error | `useInscripciones` **lanza** en "usuario no autenticado" mientras AGENTS §5 pide `{ exito, datos, error }`. Definir una sola convención. |
+| 17 | Convención de error | `useInscripciones` **lanza** en "usuario no autenticado" mientras AGENTS §5 pide `{ exito, datos, error }`. Definir una sola convención. ✅ **Resuelto (Bloque 1/Paso 2)**: ahora devuelve `{ exito: false, error }` en L13, L39 y L47; tests actualizados en `useInscripciones.spec.js` (59/59 ✅). |
 
 ### 🟢 Sugerencias
 
@@ -154,7 +154,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 |---|---------|----------|
 | 19 | `.github/workflows/test-and-validate.yml` | Corre `build` + `test:unit` + `test:integration` en push a `dev`/`main`, pero el deploy a Firebase no depende de él. ✅ (19/10/2026): sacado el paso que levantaba los emuladores con `&` + `sleep 10` (chocaba con el que ya levanta `emulators:exec`), agregado `vitest.integration.config.js` (sin él `vitest run tests/integration` no encontraba archivos) y el deploy de `main` ahora apunta a `sige-esmn` (decía `prueba1-esmn`). Falta: que el deploy dependa del job de tests. ✅ (19/10/2026) El deploy de `main` ahora usa `.github/scripts/deploy-firebase.sh` (la CLI local, sin la acción `FirebaseExtended/action-hosting-deploy@v0`, que fallaba con `npx ... exit code 2` al chocar con el `firebase-tools` del repo): publica **hosting** y también **`firestore.rules`** (este último primero y con `continue-on-error: true`, para que un fallo de reglas no deje sin publicar la app). Los errores del CLI quedan como anotación `::error` en el run. ✅ (19/10/2026) Causa del último fallo y arreglo: el secreto `FIREBASE_SERVICE_ACCOUNT_KEY` guardaba una clave del proyecto viejo (`firebase-adminsdk-9p782@prueba1-esmn`) — de ahí que los releases publicaran en `prueba1-esmn`. El workflow nuevo fallaba con `Failed to get Firebase project ...` (hosting) y `403 The caller does not have permission` (reglas). Se reemplazó por una clave nueva de `firebase-adminsdk-fbsvc@sige-esmn` con los roles `Firebase Hosting Admin` + `Firebase Rules Admin`; run verde `39207423186` (hosting + reglas). |
 | 21 | Datos personales en repo público | `usuarios.csv` (DNI, nombre, email, roles) e `Inscripciones Terciario - Mat.csv` (docentes, aulas, horarios) estaban versionados en un repo **público** (Ley 25.326). Ahora viven en `data/` (ignorado, ver `data/README.md`) y los scripts apuntan ahí, pero **siguen en el historial de git**: si molesta, hay que reescribirlo (`git filter-repo`) o pasar el repo a privado. |
-| 22 | `.env` local | `VITE_FIREBASE_STORAGE_BUCKET` tiene un typo (`sige-esmn.firebasestore.app`); el valor correcto es `sige-esmn.firebasestorage.app` (el secreto del CI ya lo tiene bien). Hoy no rompe nada porque la app no usa Firebase Storage, pero cualquier uso futuro fallaría. |
+| 22 | `.env` local | `VITE_FIREBASE_STORAGE_BUCKET` tiene un typo (`sige-esmn.firebasestore.app`); el valor correcto es `sige-esmn.firebasestorage.app` (el secreto del CI ya lo tiene bien). Hoy no rompe nada porque la app no usa Firebase Storage, pero cualquier uso futuro fallaría. ✅ **Resuelto (Bloque 1/Paso 1)**: corregido a `sige-esmn.firebasestorage.app`. Build ✅. |
 
 ---
 

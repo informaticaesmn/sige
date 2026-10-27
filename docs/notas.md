@@ -62,8 +62,8 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 - `useLayout.js` resetea el layout en cada llamada (parpadeo de tema).
 - `useAuth.js` no hace `unsubscribe` de `onAuthStateChanged`.
 - `alert()` en `BarraApp.vue`, `ResetPassword.vue` y `SeleccionarRol.vue` (viola AGENTS Â§5).
-- ConvenciÃ³n de error sin definir: `useInscripciones` lanza en "usuario no autenticado" en lugar de devolver `{ exito:false, error }` (viola AGENTS Â§5).
-- `.env` local escribe `VITE_FIREBASE_STORAGE_BUCKET="sige-esmn.firebasestore.app"` (le falta la `a`): el valor correcto es `sige-esmn.firebasestorage.app`, que es el que tiene el secreto del CI. Como la app no usa Firebase Storage, hoy no rompe nada, pero es una bomba de tiempo.
+- ConvenciÃ³n de error sin definir: `useInscripciones` lanza en "usuario no autenticado" en lugar de devolver `{ exito:false, error }` (viola AGENTS Â§5). ✅ Resuelto (Bloque 1/Paso 2): `useInscripciones` ahora devuelve `{ exito: false, error }` en lugar de lanzar.
+- `.env` local escribe `VITE_FIREBASE_STORAGE_BUCKET="sige-esmn.firebasestore.app"` (le falta la `a`): el valor correcto es `sige-esmn.firebasestorage.app`, que es el que tiene el secreto del CI. Como la app no usa Firebase Storage, hoy no rompe nada, pero es una bomba de tiempo. ✅ Resuelto (Bloque 1/Paso 1): corregido a `sige-esmn.firebasestorage.app`.
 - âœ… (19/10/2026) Los CSV con datos personales se sacaron del repo (ahora en `data/`, ignorado por git) y el workflow de deploy a Firebase Hosting ya apunta a `sige-esmn` (antes `prueba1-esmn`).
 
 
@@ -212,7 +212,6 @@ sige/
 â”‚   â”‚   â”œâ”€â”€ BarraApp.vue        # Nav dinÃ¡mica por rol + dropdown usuario + tÃ©rminos modal
 â”‚   â”‚   â”œâ”€â”€ FooterApp.vue       # Footer con versiÃ³n, layout actual
 â”‚   â”‚   â”œâ”€â”€ AppLoading.vue      # Spinner overlay durante init de auth
-â”‚   â”‚   â”œâ”€â”€ TerminosContenido.vue    # âš ï¸ Duplicado de legal/TerminosContenido.vue
 â”‚   â”‚   â”œâ”€â”€ legal/TerminosContenido.vue  # âš ï¸ Importado por BarraApp
 â”‚   â”‚   â”œâ”€â”€ ui/                 # FormInput.vue, FormCheckbox.vue
 â”‚   â”‚   â””â”€â”€ estudiante/         # PerfilCard, InscripcionesVigentesCard, MateriasAprobadasCard,
@@ -329,7 +328,7 @@ sige/
 #### Fase 2: Mejoras de calidad de cÃ³digo ðŸŸ¡
 
 5. **Refactorizar `ResetPassword.vue`** â€” Usar `resetPassword` de `useAuth.js`. Reemplazar `alert()` con UI feedback.
-6. **Consolidar `TerminosContenido.vue`** â€” Unificar las dos copias en `src/components/legal/`.
+6. **Consolidar `TerminosContenido.vue`** â€” Unificar las dos copias en `src/components/legal/`. ✅ Hecho (Bloque 1/Paso 3): única copia en `legal/`; imports verificados en `src/`.
 7. **Limpiar `Register.vue`** â€” Remover import no usado. Arreglar redirecciÃ³n hardcodeada.
 8. **Limpiar `BarraApp.vue`** â€” Reemplazar `alert()` en "Solicitar Baja".
 9. **Refactorizar `useLayout.js`** â€” Mover `setLayout('acceso')` de mÃ³dulo a `App.vue`/`main.js`.

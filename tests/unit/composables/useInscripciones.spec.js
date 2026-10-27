@@ -115,9 +115,12 @@ describe('useInscripciones', () => {
       // Act
       const { useInscripciones } = await import('@/composables/inscripciones/useInscripciones.js')
       const { cargarInscripciones } = useInscripciones('20261')
-      
-      // El composable lanza un error si el usuario no está autenticado
-      await expect(cargarInscripciones()).rejects.toThrow('Usuario no autenticado')
+      const resultado = await cargarInscripciones()
+
+      // Assert - convención { exito, error } en vez de throw
+      expect(resultado.exito).toBe(false)
+      expect(resultado.error).toBeInstanceOf(Error)
+      expect(resultado.error.message).toBe('Usuario no autenticado')
     })
 
     it('debe manejar el ciclo dinámico correctamente', async () => {
@@ -200,11 +203,15 @@ describe('useInscripciones', () => {
       const { useInscripciones } = await import('@/composables/inscripciones/useInscripciones.js')
       const { inscribirAMateria } = useInscripciones(ciclo)
       
-      // El composable lanza un error
-      await expect(inscribirAMateria(materiaId, comisionId)).rejects.toThrow('Permission denied')
+      // Act
+      const resultado = await inscribirAMateria(materiaId, comisionId)
+
+      // Assert - convención { exito, error } en vez de throw
+      expect(resultado.exito).toBe(false)
+      expect(resultado.error.message).toBe('Permission denied')
     })
 
-    it('debe lanzar error si el usuario no está autenticado', async () => {
+    it('debe retornar { exito: false } si el usuario no está autenticado', async () => {
       // Arrange
       const { useAuth } = await import('@/composables/auth/useAuth.js')
       useAuth.mockReturnValue({
@@ -214,9 +221,12 @@ describe('useInscripciones', () => {
       // Act
       const { useInscripciones } = await import('@/composables/inscripciones/useInscripciones.js')
       const { inscribirAMateria } = useInscripciones('20261')
-      
-      // El composable lanza un error si el usuario no está autenticado
-      await expect(inscribirAMateria('materia-001', 'comision-001')).rejects.toThrow('Usuario no autenticado')
+      const resultado = await inscribirAMateria('materia-001', 'comision-001')
+
+      // Assert - convención { exito, error } en vez de throw
+      expect(resultado.exito).toBe(false)
+      expect(resultado.error).toBeInstanceOf(Error)
+      expect(resultado.error.message).toBe('Usuario no autenticado')
     })
 
     it('debe construir la ruta correcta para la subcolección inscripciones${ciclo}', async () => {
