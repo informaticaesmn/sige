@@ -137,7 +137,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 | 8 | `src/views/auth/Register.vue` | Importa `FormCheckbox.vue` pero no lo usa. Redirección hardcodeada a `/estudiante`. |
 | 9 | `src/components/BarraApp.vue` (línea 63) | `alert('Función no implementada')` — viola AGENTS.md §5. |
 | 11 | `src/composables/useLayout.js` (línea 42) | `setLayout('acceso')` al nivel del módulo causa flash de tema antes del router guard. |
-| 16 | `src/composables/auth/useAuth.js` | No hace `unsubscribe` de `onAuthStateChanged`; en SPA no molesta, pero con HMR/montajes repetidos se acumulan listeners. |
+| 16 | `src/composables/auth/useAuth.js` | No hace `unsubscribe` de `onAuthStateChanged`; en SPA no molesta, pero con HMR/montajes repetidos se acumulan listeners. ✅ **Resuelto (Bloque 2/Paso 4)**: `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
 | 17 | Convención de error | `useInscripciones` **lanza** en "usuario no autenticado" mientras AGENTS §5 pide `{ exito, datos, error }`. Definir una sola convención. ✅ **Resuelto (Bloque 1/Paso 2)**: ahora devuelve `{ exito: false, error }` en L13, L39 y L47; tests actualizados en `useInscripciones.spec.js` (59/59 ✅). |
 
 ### 🟢 Sugerencias
@@ -145,7 +145,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 | # | Área | Sugerencia |
 |---|------|------------|
 | 13 | Lint | No hay ESLint configurado: cosas como un identificador suelto o un import no-`lite` no las detecta nadie hasta que rompen en runtime. |
-| 14 | Error boundaries | `App.vue` no tiene manejador global de errores. |
+| 14 | Error boundaries | `App.vue` no tiene manejador global de errores. ✅ **Resuelto (Bloque 2/Paso 5)**: `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
 | 15 | Features | Tableros de Bedel/Docente/Admin son placeholders. |
 
 ### 🔧 Infra / CI-CD

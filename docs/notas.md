@@ -60,7 +60,7 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 ### ðŸŸ¡ Para revisar
 
 - `useLayout.js` resetea el layout en cada llamada (parpadeo de tema).
-- `useAuth.js` no hace `unsubscribe` de `onAuthStateChanged`.
+- `useAuth.js` no hace `unsubscribe` de `onAuthStateChanged`. ✅ Resuelto (Bloque 2/Paso 4): `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar nuevo listener y en `logoutFirebase`.
 - `alert()` en `BarraApp.vue`, `ResetPassword.vue` y `SeleccionarRol.vue` (viola AGENTS Â§5).
 - ConvenciÃ³n de error sin definir: `useInscripciones` lanza en "usuario no autenticado" en lugar de devolver `{ exito:false, error }` (viola AGENTS Â§5). ✅ Resuelto (Bloque 1/Paso 2): `useInscripciones` ahora devuelve `{ exito: false, error }` en lugar de lanzar.
 - `.env` local escribe `VITE_FIREBASE_STORAGE_BUCKET="sige-esmn.firebasestore.app"` (le falta la `a`): el valor correcto es `sige-esmn.firebasestorage.app`, que es el que tiene el secreto del CI. Como la app no usa Firebase Storage, hoy no rompe nada, pero es una bomba de tiempo. ✅ Resuelto (Bloque 1/Paso 1): corregido a `sige-esmn.firebasestorage.app`.

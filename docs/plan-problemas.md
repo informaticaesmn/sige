@@ -22,13 +22,17 @@
 | 7 | Duplicado de `TerminosContenido.vue` | Verificado en `src/`: ningún import apunta a `@/components/TerminosContenido.vue`; la copia canónica es `src/components/legal/TerminosContenido.vue`. ✅ Bloque 1 / Paso 3. |
 | 17 | `useInscripciones.js` lanza `throw` | Reemplazado por `return { exito: false, error }` en L13, L39 y L47. Tests actualizados en `useInscripciones.spec.js`. ✅ Bloque 1 / Paso 2. |
 | 22 | Typo en `.env`: `firebasestore.app` → `firebasestorage.app` | Corregido en `.env` L4. Build ✅. ✅ Bloque 1 / Paso 1. |
+| 16 | `useAuth.js` — `onAuthStateChanged` unsubscribe | **Resuelto (Bloque 2/Paso 4)**: `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar un nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
+| 14 | `App.vue` — error boundary global | **Resuelto (Bloque 2/Paso 5)**: `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
 
 ### 🔴 Pendientes de resolver
 
 | # | Problema | Archivo(s) | Severidad |
 |---|----------|------------|-----------|
-| 16 | **`useAuth.js` no hace unsubscribe de `onAuthStateChanged`** | `src/composables/auth/useAuth.js` L49 | 🟡 Moderado |
 | 13 | **No hay ESLint configurado** | Raíz del proyecto | 🟢 Sugerencia |
+| 19b | **Deploy no depende de tests** | `.github/workflows/firebase-hosting-main.yml` | 🟡 Moderado |
+| F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
+| F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
 | 14 | **Sin error boundary global** | `src/App.vue` | 🟢 Sugerencia |
 | 19b | **Deploy no depende de tests** | `.github/workflows/firebase-hosting-main.yml` | 🟡 Moderado |
 | F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
@@ -65,15 +69,15 @@
 - **Riesgo**: Ninguno
 - **Test**: Build pasa
 
-### Bloque 2 — Mejora de robustez (riesgo medio)
+### Bloque 2 — Mejora de robustez (riesgo medio) ✅ Completado
 
-#### Paso 4: Guardar unsubscribe de `onAuthStateChanged` en `useAuth.js`
+#### Paso 4: Guardar unsubscribe de `onAuthStateChanged` en `useAuth.js` ✅ Completado
 - **Archivo**: [`useAuth.js`](file:///c:/Users/genar/Documents/DEV/sige/src/composables/auth/useAuth.js) L49
 - **Cambio**: Almacenar el valor de retorno de `onAuthStateChanged` en una variable de módulo (`let unsubscribeAuth = null`). Antes de registrar un nuevo listener (L43-49), llamar `unsubscribeAuth?.()`. En `logoutFirebase`, llamar `unsubscribeAuth?.()` y setear a `null`.
 - **Riesgo**: Bajo. En producción (SPA sin HMR) no cambia el comportamiento. En desarrollo con HMR evita listeners acumulados.
 - **Test**: Los tests existentes de `useAuth.spec.js` siguen pasando (el mock de `onAuthStateChanged` ya retorna una función).
 
-#### Paso 5: Agregar error boundary global en `App.vue`
+#### Paso 5: Agregar error boundary global en `App.vue` ✅ Completado
 - **Archivo**: [`App.vue`](file:///c:/Users/genar/Documents/DEV/sige/src/App.vue)
 - **Cambio**: En `<script setup>`, agregar:
   ```js

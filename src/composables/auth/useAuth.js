@@ -22,6 +22,9 @@ const estaCargando = ref(true)
 let authReadyPromise = null
 let resolveAuthReady = null
 
+// Unsubscribe del listener de onAuthStateChanged (evita listeners acumulados con HMR)
+let unsubscribeAuth = null
+
 /**
  * Función para cargar datos del usuario desde Firestore
  */
@@ -45,8 +48,11 @@ function checkAuthState() {
       resolveAuthReady = resolve
     })
 
+    // Limpiar listener previo (útil en desarrollo con HMR / reinicios del módulo)
+    unsubscribeAuth?.()
+
     // onAuthStateChanged se ejecuta una vez al inicio y cada vez que cambia el estado de auth
-    onAuthStateChanged(auth, async (firebaseUser) => {
+    unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const perfilFirestore = await loadUserData(firebaseUser.uid)
         user.value = {
@@ -152,6 +158,9 @@ const userRoles = computed(() => user.value?.roles || [])
     try {
       await signOut(auth)
       user.value = null
+      // Liberar el listener de auth al cerrar sesión
+      unsubscribeAuth?.()
+      unsubscribeAuth = null
       routerInstance.router.push({ name: 'login' })
       return { exito: true }
     } catch (error) {
