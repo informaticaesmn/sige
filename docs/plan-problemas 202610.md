@@ -24,18 +24,14 @@
 | 22 | Typo en `.env`: `firebasestore.app` → `firebasestorage.app` | Corregido en `.env` L4. Build ✅. ✅ Bloque 1 / Paso 1. |
 | 16 | `useAuth.js` — `onAuthStateChanged` unsubscribe | **Resuelto (Bloque 2/Paso 4)**: `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar un nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
 | 14 | `App.vue` — error boundary global | **Resuelto (Bloque 2/Paso 5)**: `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
-| 19b | `firebase-hosting-main.yml` — deploy sin gate de tests | **Resuelto (Bloque 3/Paso 6)**: agregado step `npm run test:unit` antes de `npm run build` como gate local. |
+| 13 | **No hay ESLint configurado** | **Resuelto (Bloque 4/Paso 7)**: `eslint.config.js` creado con flat config v9, script `"lint": "eslint src/"` agregado a `package.json`. Reglas configuradas como `warn` inicialmente. `npm run lint` sale con código 0. Tests 59/59 ✅ · Build ✅. |
 
 ### 🔴 Pendientes de resolver
 
 | # | Problema | Archivo(s) | Severidad |
 |---|----------|------------|-----------|
-| 13 | **No hay ESLint configurado** | Raíz del proyecto | 🟢 Sugerencia |
 | F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
 | F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
-| 14 | **Sin error boundary global** | `src/App.vue` | 🟢 Sugerencia |
-| 19b | **Deploy no depende de tests** | `.github/workflows/firebase-hosting-main.yml` | 🟡 Moderado |
-| F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
 | F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
 
 ---
@@ -101,11 +97,10 @@
 
 ### Bloque 4 — Mejoras de calidad (cuando haya tiempo)
 
-#### Paso 7: Configurar ESLint (flat config v9)
-- **Archivos nuevos**: `eslint.config.js`, posiblemente `.vscode/settings.json`
-- **Cambio**: Instalar `eslint`, `eslint-plugin-vue`, `@eslint/js`. Crear config flat con reglas recomendadas + la regla de no importar de `firebase/firestore` (sin `/lite`). Agregar script `"lint": "eslint src/"` a `package.json`.
-- **Riesgo**: Medio. Puede revelar muchos warnings existentes. Configurar inicialmente como `warn` y no `error` para no romper CI.
-- **Test**: `npm run lint` reporta sin romper.
+#### Paso 7: Configurar ESLint (flat config v9) ✅ Completado
+- **Archivos nuevos**: `eslint.config.js`
+- **Cambio**: Instalado `eslint`, `@eslint/js`, `eslint-plugin-vue`, `globals`. Creada config flat con reglas recomendadas + regla `no-restricted-imports` para `firebase/firestore` (sin `/lite`). Agregado script `"lint": "eslint src/"` a `package.json`. Todo configurado como `warn` inicialmente para no romper CI.
+- **Test**: `npm run lint` sale con código 0 (553 problemas, 7 errors → 0 errors, solo warnings). Tests 59/59 ✅ · Build ✅.
 
 #### Paso 8 (Backlog F2-3): Migrar roles a custom claims
 - **Archivos**: `codebase-functions/index.js` (CF `registrarUsuario`), `firestore.rules`

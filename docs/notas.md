@@ -86,6 +86,7 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 | 16 | `useAuth.js` no hace unsubscribe de `onAuthStateChanged` | Bloque 2 / Paso 4 | `unsubscribeAuth` en variable de mÃ³dulo; se llama antes de nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
 | 14 | `App.vue` — sin error boundary global | Bloque 2 / Paso 5 | `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
 | 19b | Deploy no depende de tests | Bloque 3 / Paso 6 | `firebase-hosting-main.yml` ejecuta `npm run test:unit` como gate antes de `npm run build` y deploy. |
+| 13 | ESLint no configurado | Bloque 4 / Paso 7 | `eslint.config.js` creado con flat config v9, script `"lint": "eslint src/"` en `package.json`. Reglas como `warn`. `npm run lint` código 0. |
 
 ---
 

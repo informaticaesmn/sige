@@ -135,7 +135,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 | # | Área | Sugerencia |
 |---|------|------------|
-| 13 | Lint | No hay ESLint configurado: cosas como un identificador suelto o un import no-`lite` no las detecta nadie hasta que rompen en runtime. |
+| 13 | Lint | No hay ESLint configurado: cosas como un identificador suelto o un import no-`lite` no las detecta nadie hasta que rompen en runtime. ✅ **Resuelto (Bloque 4/Paso 7)**: `eslint.config.js` creado con flat config v9 + script `lint` en `package.json`. Reglas como `warn` inicialmente. `npm run lint` código 0. |
 | 15 | Features | Tableros de Bedel/Docente/Admin son placeholders. |
 
 ### 🔧 Infra / CI-CD
