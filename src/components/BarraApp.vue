@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/auth/useAuth'
 import { useRouter } from 'vue-router'
 import { vOnClickOutside } from '@vueuse/components'

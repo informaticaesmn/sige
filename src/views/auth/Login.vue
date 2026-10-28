@@ -118,11 +118,4 @@ async function handleLogin() {
   isLoading.value = false;
 }
 
-
-function goToReset() {
-  router.push('/reset-password')
-}
-function goToRegister() {
-  router.push('/registro')
-}
 </script>

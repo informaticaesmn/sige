@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/auth/useAuth.js'
 import FormInput from '@/components/ui/FormInput.vue'
@@ -90,10 +90,6 @@ const acceptTerms = ref(false)
 const acceptTermsError = ref('')
 
 const isLoading = ref(false)
-
-const isFormValid = computed(() => {
-  return email.value && password.value && password.value === passwordConfirm.value && password.value.length >= 6
-})
 
 function validateForm() {
   emailError.value = ''

@@ -47,7 +47,7 @@ export function usePlanesEstudio() {
         error.value = err.message
       }
       console.error('Error cargando plan:', err)
-      throw new Error(error.value)
+      throw new Error(error.value, { cause: err })
     } finally {
       loading.value = false
     }

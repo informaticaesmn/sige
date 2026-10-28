@@ -91,10 +91,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import CorrelativasList from './CorrelativasList.vue'
 import { XMarkIcon, ClipboardIcon, CheckCircleIcon, PrinterIcon } from '@heroicons/vue/24/outline'
-import { onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   materia: {

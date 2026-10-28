@@ -66,6 +66,9 @@ exports.registrarUsuario = onCall(async (request) => {
     const nuevoUid = userRecord.uid;
     const perfilCompletoRef = db.collection("usuarios").doc(nuevoUid);
 
+    // Establecer custom claims con los roles del usuario (cero lecturas extra en Firestore rules)
+    await auth.setCustomUserClaims(nuevoUid, { roles: perfilTemporal.roles || [] });
+
     // Usar un batch para asegurar la atomicidad de la migración
     const batch = db.batch();
 

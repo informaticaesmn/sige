@@ -18,7 +18,6 @@ async function cargarInscripcionesPendientes(ciclo = '2026-1') {
   try {
     // La subcolección usa el nombre inscripciones${ciclo.replace('-', '')}
     // (ej: inscripciones20261), siguiendo el patrón de Firestore Rules.
-    const subcoleccion = `inscripciones${ciclo.replace('-', '')}`
 
     // Query sobre la colecciones de inscripciones de todos los usuarios.
     // Nota: Firestore no soporta collection group queries con where en subcolecciones

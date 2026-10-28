@@ -4,15 +4,15 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function esAdmin() {
-      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['admin']);
+      return request.auth.token['roles'] != null && request.auth.token['roles'].hasAny(['admin']);
     }
 
     function esBedel() {
-      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['bedel']);
+      return request.auth.token['roles'] != null && request.auth.token['roles'].hasAny(['bedel']);
     }
 
     function esCoordinacion() {
-      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.roles.hasAny(['coordinacion']);
+      return request.auth.token['roles'] != null && request.auth.token['roles'].hasAny(['coordinacion']);
     }
 
     // --- Usuarios ---

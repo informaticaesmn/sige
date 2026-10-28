@@ -8,7 +8,6 @@ const currentLayout = ref('acceso')
 const currentTheme = ref('estudiante')
 
 const themeNames = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin']
-const layoutNames = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin', 'acceso']
 const themeClasses = themeNames.map(name => `theme-${name}`)
 
 /**

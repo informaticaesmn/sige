@@ -39,9 +39,9 @@
           <tr 
             v-for="materia in resultados" 
             :key="materia.codigo"
-            @click="$emit('seleccionar', materia)"
-            @keydown.enter="$emit('seleccionar', materia)"
-            @keydown.space.prevent="$emit('seleccionar', materia)"
+            @click="emit('seleccionar', materia)"
+            @keydown.enter="emit('seleccionar', materia)"
+            @keydown.space.prevent="emit('seleccionar', materia)"
             class="hover:bg-stone-50 cursor-pointer focus:outline-none focus:bg-stone-100 focus:ring-2 focus:ring-blue-500"
             tabindex="0"
             :aria-label="`Ver detalles de ${materia.nombre}`"
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({
   plan: {

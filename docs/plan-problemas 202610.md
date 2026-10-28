@@ -31,8 +31,7 @@
 | # | Problema | Archivo(s) | Severidad |
 |---|----------|------------|-----------|
 | F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
-| F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
-| F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
+| F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | **Resuelto (Bloque 4/Paso 8)**: custom claims en `registrarUsuario` + reglas leen `request.auth.token['roles']`. Tests 13/13 ✅. Usuarios existentes necesitan script de migración. | 🟡 Backlog (migración script) |
 
 ---
 
@@ -102,11 +101,11 @@
 - **Cambio**: Instalado `eslint`, `@eslint/js`, `eslint-plugin-vue`, `globals`. Creada config flat con reglas recomendadas + regla `no-restricted-imports` para `firebase/firestore` (sin `/lite`). Agregado script `"lint": "eslint src/"` a `package.json`. Todo configurado como `warn` inicialmente para no romper CI.
 - **Test**: `npm run lint` sale con código 0 (553 problemas, 7 errors → 0 errors, solo warnings). Tests 59/59 ✅ · Build ✅.
 
-#### Paso 8 (Backlog F2-3): Migrar roles a custom claims
-- **Archivos**: `codebase-functions/index.js` (CF `registrarUsuario`), `firestore.rules`
-- **Cambio**: En la CF, después de crear el usuario en Auth, setear custom claims con `admin.auth().setCustomUserClaims(uid, { roles })`. En `firestore.rules`, reemplazar `esAdmin()` / `esBedel()` / `esCoordinacion()` (que hacen `get()`) por `request.auth.token.roles.hasAny(['admin'])` (cero lecturas extra).
-- **Riesgo**: Alto. Requiere que **todos** los usuarios existentes reciban claims (migration script). Los tokens se refrescan cada hora, así que hay un delay. Necesita testing con emuladores.
-- **Prerequisito**: Tener tests de integración corriendo localmente (Java 17).
+#### Paso 8 (Backlog F2-3): Migrar roles a custom claims ✅ Completado
+- **Archivos**: `codebase-functions/index.js` (CF `registrarUsuario`), `firestore.rules`, `tests/integration/firestore-rules.spec.js`
+- **Cambio**: En `registrarUsuario`, después de `auth.createUser()`, se agregó `await auth.setCustomUserClaims(nuevoUid, { roles: perfilTemporal.roles || [] })`. En `firestore.rules`, las funciones `esAdmin()` / `esBedel()` / `esCoordinacion()` ahora leen `request.auth.token['roles']` (cero lecturas extra a Firestore). Los tests de integración se actualizaron para incluir `roles` en los claims del token de prueba.
+- **Test**: `npm run test:integration` → 13/13 ✅. `npm run test:unit` → 59/59 ✅. `npm run build` → ✅.
+- **Nota pendiente**: Los usuarios ya registrados en producción necesitan un script de migración para recibir custom claims (los tokens se refrescan cada hora).
 
 ---
 

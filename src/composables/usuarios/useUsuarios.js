@@ -3,13 +3,7 @@ import { db } from '@/config/firebase.js'
 import {
   doc,
   getDoc,
-  setDoc,
-  deleteDoc,
-  collection,
-  query,
   updateDoc,
-  where,
-  limit,
   writeBatch
 } from 'firebase/firestore/lite'
 

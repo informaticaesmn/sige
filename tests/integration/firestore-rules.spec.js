@@ -42,7 +42,7 @@ describe('Firestore Security Rules', () => {
     const uid = `uid-${email.split('@')[0]}`
     return {
       user: { uid, email },
-      db: testEnv.authenticatedContext(uid, { email }).firestore(),
+      db: testEnv.authenticatedContext(uid, { email, roles: [] }).firestore(),
     }
   }
 
@@ -105,7 +105,7 @@ describe('Firestore Security Rules', () => {
         materiaId: 'materia-003', estado: 'pendiente', ciclo: '20261'
       }))
 
-      const bedelDb = testEnv.authenticatedContext(bedelUid, { email: 'bedel@test.com' }).firestore()
+      const bedelDb = testEnv.authenticatedContext(bedelUid, { email: 'bedel@test.com', roles: ['bedel'] }).firestore()
       const refDelBedel = doc(bedelDb, 'usuarios', user.uid, 'inscripciones20261', 'materia-003')
 
       // Confirmar: permitido
@@ -127,7 +127,7 @@ describe('Firestore Security Rules', () => {
       await testEnv.withSecurityRulesDisabled(async (context) => {
         await setDoc(doc(context.firestore(), 'usuarios', uid), { email, roles })
       })
-      return { uid, db: testEnv.authenticatedContext(uid, { email }).firestore() }
+      return { uid, db: testEnv.authenticatedContext(uid, { email, roles }).firestore() }
     }
 
     it('debe permitir a coordinacion crear usuarios estudiante/docente/bedel', async () => {
