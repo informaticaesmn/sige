@@ -24,13 +24,13 @@
 | 22 | Typo en `.env`: `firebasestore.app` → `firebasestorage.app` | Corregido en `.env` L4. Build ✅. ✅ Bloque 1 / Paso 1. |
 | 16 | `useAuth.js` — `onAuthStateChanged` unsubscribe | **Resuelto (Bloque 2/Paso 4)**: `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar un nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
 | 14 | `App.vue` — error boundary global | **Resuelto (Bloque 2/Paso 5)**: `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
+| 19b | `firebase-hosting-main.yml` — deploy sin gate de tests | **Resuelto (Bloque 3/Paso 6)**: agregado step `npm run test:unit` antes de `npm run build` como gate local. |
 
 ### 🔴 Pendientes de resolver
 
 | # | Problema | Archivo(s) | Severidad |
 |---|----------|------------|-----------|
 | 13 | **No hay ESLint configurado** | Raíz del proyecto | 🟢 Sugerencia |
-| 19b | **Deploy no depende de tests** | `.github/workflows/firebase-hosting-main.yml` | 🟡 Moderado |
 | F2-2 | **Re-importar usuarios ya registrados crea doc huérfano** | Decisión de diseño, no acción de código inmediata | 🟡 Backlog |
 | F2-3 | **Roles en Firestore rules = lecturas extra facturadas** | `firestore.rules` + Cloud Function | 🟡 Backlog (custom claims) |
 | 14 | **Sin error boundary global** | `src/App.vue` | 🟢 Sugerencia |
@@ -93,10 +93,9 @@
 
 ### Bloque 3 — Infra / CI-CD
 
-#### Paso 6: Hacer que el deploy dependa de los tests
+#### Paso 6: Hacer que el deploy dependa de los tests ✅ Completado
 - **Archivo**: [`.github/workflows/firebase-hosting-main.yml`](file:///c:/Users/genar/Documents/DEV/sige/.github/workflows/firebase-hosting-main.yml)
-- **Opción A** (recomendada): Agregar `needs: test-and-validate` en el job `build_and_deploy`. Pero como están en workflows separados, hay que mover los tests al mismo workflow o usar `workflow_run`.
-- **Opción B** (más simple): Agregar un step de `npm run test:unit` + `npm run build` directamente en `firebase-hosting-main.yml` **antes** del deploy, como gate local. Ya tiene `npm run build`; falta agregar `npm run test:unit` antes.
+- **Opción B aplicada**: Agregado step `npm run test:unit` directamente en `firebase-hosting-main.yml` **antes** de `npm run build`, como gate local. Si los tests fallan, el workflow se detiene y no se despliega.
 - **Riesgo**: Bajo. Solo agrega un gate.
 - **Test**: El workflow se prueba con un push a `main`.
 

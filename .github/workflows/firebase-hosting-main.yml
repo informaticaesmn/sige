@@ -41,7 +41,11 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # 5. Construir la aplicación Vue (genera la carpeta 'dist')
+      # 5. Ejecutar tests unitarios (gate antes de construir y desplegar)
+      - name: Run Unit Tests
+        run: npm run test:unit
+
+      # 6. Construir la aplicación Vue (genera la carpeta 'dist')
       - name: Build Vue App with Debug
         run: |
           echo "=== Debug: Verificando TODAS las variables ==="

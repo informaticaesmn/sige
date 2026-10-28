@@ -64,10 +64,31 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 - `alert()` en `BarraApp.vue`, `ResetPassword.vue` y `SeleccionarRol.vue` (viola AGENTS Â§5).
 - ConvenciÃ³n de error sin definir: `useInscripciones` lanza en "usuario no autenticado" en lugar de devolver `{ exito:false, error }` (viola AGENTS Â§5). ✅ Resuelto (Bloque 1/Paso 2): `useInscripciones` ahora devuelve `{ exito: false, error }` en lugar de lanzar.
 - `.env` local escribe `VITE_FIREBASE_STORAGE_BUCKET="sige-esmn.firebasestore.app"` (le falta la `a`): el valor correcto es `sige-esmn.firebasestorage.app`, que es el que tiene el secreto del CI. Como la app no usa Firebase Storage, hoy no rompe nada, pero es una bomba de tiempo. ✅ Resuelto (Bloque 1/Paso 1): corregido a `sige-esmn.firebasestorage.app`.
-- âœ… (19/10/2026) Los CSV con datos personales se sacaron del repo (ahora en `data/`, ignorado por git) y el workflow de deploy a Firebase Hosting ya apunta a `sige-esmn` (antes `prueba1-esmn`).
+- âœ… (19/10/2026) Los CSV con datos personales se sacaron del repo (ahora en `data/`, ignorado por git) y el workflow de deploy a Firebase Hosting ya apunta a `sige-esmn` (antes `prueba1-esmn`). ✅ (Bloque 3/Paso 6): el workflow de deploy a `main` ahora ejecuta `npm run test:unit` como gate antes de construir y desplegar.
 
+
+### ðŸš Historial de problemas resueltos
+
+> Problemas que ya no requieren acción. Se archivan acÃ¡ para mantener `docs/contexto.md` sÃ³lo con lo que falta.
+
+| # | Problema | Resuelto en | Evidencia |
+|---|----------|-------------|-----------|
+| 3 | `firestore.rules` — wildcard hardcodeado + auto-confirmaciÃ³n | Antes del Bloque 1 (19/10/2026) | Deployado el 19/10. Reglas con wildcard de segmento completo + `matches()`. |
+| F2-1 | ValidaciÃ³n semÃ¡ntica del CSV de usuarios | Antes del Bloque 1 | `useImportarUsuarios.js` valida todo-o-nada con `{ exito, datos, error }`. |
+| 6 | `ResetPassword.vue` — import directo de Firebase + `alert()` | Antes del Bloque 1 | Usa `useAuth().resetPassword()`, feedback en UI, sin `alert()`. |
+| 8 | `Register.vue` — import no usado + redirecciÃ³n hardcodeada | Antes del Bloque 1 | `FormCheckbox` se usa. RedirecciÃ³n delega en `onAuthStateChanged`. |
+| 9 | `BarraApp.vue` — `alert('Función no implementada')` | Antes del Bloque 1 | `solicitarBaja()` usa `console.warn('[TODO]...')`. |
+| 11 | `useLayout.js` — `setLayout('acceso')` a nivel de mÃ³dulo | Antes del Bloque 1 | Solo `currentLayout = ref('acceso')` como valor inicial. |
+| 64 (notas) | `alert()` en `SeleccionarRol.vue` | Antes del Bloque 1 | Reemplazado por estado de error en UI. |
+| 7 | Duplicado de `TerminosContenido.vue` | Bloque 1 / Paso 3 | Verificado en `src/`: ningÃºn import apunta a la ruta vieja. Copia canÃ³nica en `legal/`. |
+| 17 | `useInscripciones.js` lanza `throw` | Bloque 1 / Paso 2 | Devuelve `{ exito: false, error }` en L13, L39, L47. Tests actualizados. |
+| 22 | Typo en `.env`: `firebasestore.app` | Bloque 1 / Paso 1 | Corregido a `sige-esmn.firebasestorage.app`. Build ✅. |
+| 16 | `useAuth.js` no hace unsubscribe de `onAuthStateChanged` | Bloque 2 / Paso 4 | `unsubscribeAuth` en variable de mÃ³dulo; se llama antes de nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
+| 14 | `App.vue` — sin error boundary global | Bloque 2 / Paso 5 | `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
+| 19b | Deploy no depende de tests | Bloque 3 / Paso 6 | `firebase-hosting-main.yml` ejecuta `npm run test:unit` como gate antes de `npm run build` y deploy. |
 
 ---
+
 
 ## OldAgents
 

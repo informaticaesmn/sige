@@ -124,37 +124,25 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 | # | Área | Problema / Limitación | Solución prevista |
 |---|------|------------------------|-------------------|
-| F2-1 | `firestore.rules` + `useImportarUsuarios.js` | Las reglas solo validan **estructura** (que `roles` no contenga `admin`/`coordinacion`), no **semántica** del CSV (filas malformadas, email inválido, plan inexistente). Un rechazo a mitad de batch llega como `permission denied` sin contexto para el usuario. | ✅ (19/10/2026) **Resuelto en FASE 1**: `useImportarUsuarios.js` valida **todo el CSV antes de escribir** (todo-o-nada) y devuelve los errores por fila con `{ exito, datos, error }` (AGENTS §5). Las reglas quedan como red de seguridad. |
 | F2-2 | Ingestión de usuarios (`usuarios/{email}`) | La carga masiva escribe docs pre-registro con ID = email. Si el usuario ya se registró, su doc migró a `usuarios/{uid}` y el doc `email` ya no existe: re-importar crearía un **doc huérfano**, y detectarlo requeriría `where('email','==',...)` (query que las reglas de lectura no habilitan y que facturaría lecturas por fila). | Respetar que la carga masiva es **operación de inicio de ciclo**, nunca de remediación puntual. Si algún día se necesita corregir usuarios ya registrados, hacerlo con un flujo admin dedicado (query con permisos acotados o script con service account que bypasea reglas). |
 | F2-3 | `firestore.rules` (costo, relacionado con #3) | `esAdmin()`, `esBedel()` y `esCoordinacion()` hacen un `get()` por evaluación → 1-3 lecturas facturadas extra por request que las use. Con ~800 estudiantes y el 5to rol el costo crece. | Migrar los roles a **custom claims** (`request.auth.token.roles.hasAny([...])`): las helper pasan a leer el token con **cero lecturas extra**. Requiere que la CF `registrarUsuario` (o una nueva callable admin) actualice los claims vía Admin SDK cuando cambien los roles. |
 
 ### 🟡 Moderados
 
-| # | Archivo | Problema |
-|---|---------|----------|
-| 6 | `src/views/auth/ResetPassword.vue` | Importa `getAuth`/`sendPasswordResetEmail` directamente. Debería usar `useAuth.js`. Usa `alert()`. |
-| 7 | `src/components/TerminosContenido.vue` vs `legal/` | **Dos copias duplicadas**. Confusión de imports. ✅ **Resuelto (Bloque 1/Paso 3)**: verificado en `src/` — ningún import apunta a la ruta vieja; copia canónica en `src/components/legal/TerminosContenido.vue`. |
-| 8 | `src/views/auth/Register.vue` | Importa `FormCheckbox.vue` pero no lo usa. Redirección hardcodeada a `/estudiante`. |
-| 9 | `src/components/BarraApp.vue` (línea 63) | `alert('Función no implementada')` — viola AGENTS.md §5. |
-| 11 | `src/composables/useLayout.js` (línea 42) | `setLayout('acceso')` al nivel del módulo causa flash de tema antes del router guard. |
-| 16 | `src/composables/auth/useAuth.js` | No hace `unsubscribe` de `onAuthStateChanged`; en SPA no molesta, pero con HMR/montajes repetidos se acumulan listeners. ✅ **Resuelto (Bloque 2/Paso 4)**: `unsubscribeAuth` guardado en variable de módulo; se llama antes de registrar nuevo listener y en `logoutFirebase`. Tests 59/59 ✅. |
-| 17 | Convención de error | `useInscripciones` **lanza** en "usuario no autenticado" mientras AGENTS §5 pide `{ exito, datos, error }`. Definir una sola convención. ✅ **Resuelto (Bloque 1/Paso 2)**: ahora devuelve `{ exito: false, error }` en L13, L39 y L47; tests actualizados en `useInscripciones.spec.js` (59/59 ✅). |
+> Sin problemas moderados pendientes. Todos los problemas de esta categoría ya fueron resueltos (ver historial en `docs/notas.md` → "Historial de problemas resueltos").
 
 ### 🟢 Sugerencias
 
 | # | Área | Sugerencia |
 |---|------|------------|
 | 13 | Lint | No hay ESLint configurado: cosas como un identificador suelto o un import no-`lite` no las detecta nadie hasta que rompen en runtime. |
-| 14 | Error boundaries | `App.vue` no tiene manejador global de errores. ✅ **Resuelto (Bloque 2/Paso 5)**: `onErrorCaptured` agregado en `<script setup>` con logging. Build ✅. |
 | 15 | Features | Tableros de Bedel/Docente/Admin son placeholders. |
 
 ### 🔧 Infra / CI-CD
 
 | # | Archivo | Problema |
 |---|---------|----------|
-| 19 | `.github/workflows/test-and-validate.yml` | Corre `build` + `test:unit` + `test:integration` en push a `dev`/`main`, pero el deploy a Firebase no depende de él. ✅ (19/10/2026): sacado el paso que levantaba los emuladores con `&` + `sleep 10` (chocaba con el que ya levanta `emulators:exec`), agregado `vitest.integration.config.js` (sin él `vitest run tests/integration` no encontraba archivos) y el deploy de `main` ahora apunta a `sige-esmn` (decía `prueba1-esmn`). Falta: que el deploy dependa del job de tests. ✅ (19/10/2026) El deploy de `main` ahora usa `.github/scripts/deploy-firebase.sh` (la CLI local, sin la acción `FirebaseExtended/action-hosting-deploy@v0`, que fallaba con `npx ... exit code 2` al chocar con el `firebase-tools` del repo): publica **hosting** y también **`firestore.rules`** (este último primero y con `continue-on-error: true`, para que un fallo de reglas no deje sin publicar la app). Los errores del CLI quedan como anotación `::error` en el run. ✅ (19/10/2026) Causa del último fallo y arreglo: el secreto `FIREBASE_SERVICE_ACCOUNT_KEY` guardaba una clave del proyecto viejo (`firebase-adminsdk-9p782@prueba1-esmn`) — de ahí que los releases publicaran en `prueba1-esmn`. El workflow nuevo fallaba con `Failed to get Firebase project ...` (hosting) y `403 The caller does not have permission` (reglas). Se reemplazó por una clave nueva de `firebase-adminsdk-fbsvc@sige-esmn` con los roles `Firebase Hosting Admin` + `Firebase Rules Admin`; run verde `39207423186` (hosting + reglas). |
 | 21 | Datos personales en repo público | `usuarios.csv` (DNI, nombre, email, roles) e `Inscripciones Terciario - Mat.csv` (docentes, aulas, horarios) estaban versionados en un repo **público** (Ley 25.326). Ahora viven en `data/` (ignorado, ver `data/README.md`) y los scripts apuntan ahí, pero **siguen en el historial de git**: si molesta, hay que reescribirlo (`git filter-repo`) o pasar el repo a privado. |
-| 22 | `.env` local | `VITE_FIREBASE_STORAGE_BUCKET` tiene un typo (`sige-esmn.firebasestore.app`); el valor correcto es `sige-esmn.firebasestorage.app` (el secreto del CI ya lo tiene bien). Hoy no rompe nada porque la app no usa Firebase Storage, pero cualquier uso futuro fallaría. ✅ **Resuelto (Bloque 1/Paso 1)**: corregido a `sige-esmn.firebasestorage.app`. Build ✅. |
 
 ---
 
