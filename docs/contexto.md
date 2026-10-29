@@ -94,8 +94,8 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 ## ⏳ Problemas identificados (pendientes)
 
-> Estado verificado el 19/10/2026: `npm run test:unit` → 59/59 ✅ y `npm run build` → ✅.
-> Los tests de integración (reglas) no se pudieron correr localmente: falta Java 17 (ver `testing-setup.md`); el CI los corre.
+> Estado verificado el 29/10/2026: `npm run test:unit` → 59/59 ✅, `npm run test:integration` → 13/13 ✅
+> (con `firebase-tools` 15 y Java 21, ver `testing-setup.md`) y `npm run build` → ✅.
 
 ### 🔴 Críticos
 
@@ -114,7 +114,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
   Hay test de regresión en `tests/integration/firestore-rules.spec.js`.
 - **Costo**: `esAdmin()` y `esBedel()` hacen un `get()` por evaluación → 1-2 lecturas facturadas extra por request que las usa.
   Con ~800 estudiantes conviene mover el rol a custom claims (`request.auth.token.rol`).
-- **Validación y deploy**: `npm run test:integration` (requiere Java 17) valida contra los emuladores; el deploy lo hace el workflow de `main` en cada release (o a mano: `firebase deploy --only firestore:rules`).
+- **Validación y deploy**: `npm run test:integration` (requiere Java 21) valida contra los emuladores; el deploy lo hace el workflow de `main` en cada release (o a mano: `firebase deploy --only firestore:rules`).
 
 ### 📋 Backlog FASE 2 (arquitectura de roles `coordinacion`)
 

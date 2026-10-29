@@ -5,8 +5,10 @@ Esta documentación describe la configuración inicial de testing para el proyec
 > **Estado (Oct 2026):** la configuración ya está implementada en el repo y la corre el CI. Lo que hay que saber:
 > - **Unitarios**: `npm run test:unit` → `vitest run tests/unit` (config: `vitest.config.js`).
 > - **Integración**: `npm run test:integration` → `firebase emulators:exec --only firestore,auth --project demo-sige "vitest run --config vitest.integration.config.js"`.
->   Necesita **Java 17** instalado (el emulador de Firestore es un jar). Sin Java falla con
->   `Could not spawn 'java -version'`. En CI lo provee `actions/setup-java`.
+>   Necesita **Java 21** instalado (el emulador de Firestore es un jar y `firebase-tools` 15
+>   ya no acepta versiones anteriores a 21). Sin Java falla con `Could not spawn 'java -version'`;
+>   con una versión vieja falla con `firebase-tools no longer supports Java version before 21`.
+>   En CI lo provee `actions/setup-java` (Temurin 21).
 > - Este documento es la guía de **instalación desde cero** y tiene partes obsoletas: `initializeTestApp`
 >   (§9) ya no existe en `@firebase/rules-unit-testing` v5 (su `RulesTestContext` solo tiene
 >   `firestore/database/storage`, no `.auth()`) y las variables `VITE_*_EMULATOR*` (§6) no las lee la app.

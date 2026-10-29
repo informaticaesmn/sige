@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21' # firebase-tools 15 exige Java 21+ para los emuladores
 
       # 4. Instalación de dependencias
       - name: Install dependencies
