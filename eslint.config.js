@@ -23,8 +23,7 @@ export default [
       'no-unused-vars': 'warn',
       'vue/no-unused-vars': 'warn',
       'no-undef': 'warn',
-      'preserve-caught-error': 'warn',
-      'vue/multi-word-component-names': 'warn'
+      'preserve-caught-error': 'warn'
     }
   },
 
@@ -39,5 +38,16 @@ export default [
       }
     }
     return config
-  })
+  }),
+
+  // Overrides finales: este bloque va AL FINAL porque los configs de arriba
+  // (flat/recommended) pisan las reglas definidas antes. Las vistas de auth
+  // usan nombres de una sola palabra (Login, Register, Terminos), así que la
+  // regla queda como warning y `npm run lint` no corta con exit 1.
+  {
+    files: ['**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'warn'
+    }
+  }
 ]
