@@ -1,161 +1,245 @@
 # Importar usuarios
 
-> Importación de usuarios (estudiantes, docentes y bedeles) desde un CSV a la colección `usuarios`, con `scripts/import-usuarios.js`. Para la oferta académica, ver [importar-oferta.md](importar-oferta.md).
+> **Estado (30/10/2026):** documento actualizado a **CSV v2** en la etapa E0 del
+> [plan de carga de usuarios](plan-carga-usuarios-202610.md). El modelo de datos está en
+> [modelo-datos.md](modelo-datos.md).
 >
-> **Dos caminos de importación (Oct 2026):**
-> - **Script `scripts/import-usuarios.js`** (este documento): corre con service account, **bypasea las reglas** de Firestore. Uso operativo/admin.
-> - **Carga in-app** (`src/views/coordinacion/CargaMasiva.vue` + `useImportarUsuarios.js`, rol `coordinacion`): mismo formato de CSV, pero sujeta a las reglas. Valida todo el archivo antes de escribir y usa `writeBatch` en lotes de ≤500. Ver [contexto.md](contexto.md#-backlog-fase-2-arquitectura-de-roles-coordinacion) para limitaciones (F2-1/F2-2).
+> **Datos actuales:** Firestore solo contiene los usuarios de prueba de `data/usuarios.csv`
+> (9 filas, formato legacy). No hay datos reales.
 
-## Planes
+## 1. Dos caminos de importación
 
-Los estudiantes pueden tener uno o más planes. Se pueden especificar los códigos de plan de las siguientes maneras:
+| Camino | Rol / credenciales | Alcance | Sujeto a rules |
+|---|---|---|---|
+| **Carga in-app** (`CargaMasiva.vue` + `useImportarUsuarios.js`) | `coordinacion` (o `admin`) | **Solo estudiantes ingresantes** (`roles = ["estudiante"]`) | Sí |
+| **Script** (`scripts/import-usuarios.js`) | Service account | Estudiantes vigentes, docentes, bedeles y coordinadores | No (bypasea rules) |
 
-### Formato JSON (recomendado):
-```csv
-"[""662"",""PREGRADO""]"
-```
+Ambos caminos comparten el mismo núcleo de validación (E2): normalización, planes con JSON,
+fechas, duplicados y construcción de documentos. La diferencia es el origen de los datos y los
+roles permitidos.
 
-### Formato separado por comas:
-```csv
-"662,PREGRADO"
-```
+- La **carga in-app** no reemplaza usuarios existentes y no sirve para remediar casos puntuales:
+  es una operación de **inicio de ciclo**.
+- El **script** es la vía para cargas masivas que no sean de ingresantes y para pruebas con
+  service account.
 
-### Planes disponibles
+## 2. Fuente de verdad de los planes
 
-| Código | Nombre completo |
-|--------|-----------------|
-| 662 | 662 Profesorado de Música |
-| 662A | 662A Profesorado de Música con orientación en Arpa |
-| 662B | 662B Profesorado de Música con orientación en Canto |
-| 662C | 662C Profesorado de Música con orientación en Clarinete |
-| 662D | 662D Profesorado de Música con orientación en Composición |
-| 662F | 662F Profesorado de Música con orientación en Dirección Coral |
-| 662G | 662G Profesorado de Música con orientación en Guitarra |
-| 662H | 662H Profesorado de Música con orientación en Fagot |
-| 662J | 662J Profesorado de Música con orientación en Piano |
-| 662K | 662K Profesorado de Música con orientación en Oboe |
-| 662L | 662L Profesorado de Música con orientación en Instrumento de Cuerda |
-| 662M | 662M Profesorado de Música con orientación en Instrumento de Percusión |
-| 662N | 662N Profesorado de Música con orientación en Instrumento de Viento Metal |
-| 662P | 662P Profesorado de Música con orientación en Instrumento de Viento Madera |
-| 662Q | 662Q Profesorado de Música con orientación en Tuba |
-| 662R | 662R Profesorado de Música con orientación en Trombón |
-| 662S | 662S Profesorado de Música con orientación en Trompeta |
-| 662T | 662T Profesorado de Música con orientación en Violín |
-| 662U | 662U Profesorado de Música con orientación en Viola |
-| 662V | 662V Profesorado de Música con orientación en Violoncello |
-| 663 | 663 Profesorado de Música con orientación en Dirección Coral |
-| 664 | 664 Profesorado de Música con orientación en Canto Lírico |
-| 665 | 665 Profesorado de Música con orientación en Dirección Orquestal |
-| 666 | 666 Profesorado de Música con orientación en Composición |
-| 389 | 389 Cantante |
-| 390 | 390 Compositor |
-| 391 | 391 Director Coral |
-| 392 | 392 Director Orquestal |
-| 393 | 393 Instrumentista |
-| 708 | 708 Técnico Superior en Sonido |
-| PREGRADO | PREGRADO Programa Propedéutico
+- `public/planes/planes.json` es la **única fuente** de códigos y nombres. No se hardcodea un
+  mapa de planes en la app ni en el script.
+- `public/planes/{codigo}.json` contiene materias, años y correlatividades.
+- Solo se puede dar de alta un plan cuyo JSON exista, se pueda normalizar y esté revisado. Si
+  una fila referencia un plan no disponible, **no se escribe nada** y se reportan las filas y
+  los planes causantes.
 
-## Descripción
+### Disponibilidad actual (30/10/2026)
 
-Este documento explica cómo importar usuarios al sistema SIGE desde un archivo CSV. El proceso crea documentos en la colección `usuarios` de Firestore con los datos básicos de los estudiantes, docentes y bedeles.
+| Plan | ¿JSON? | ¿Pregrado? | Se puede usar en altas |
+|---|---|---|---|
+| `662` | Sí | Sí (11 materias de año 0) | ✅ |
+| `708` | Sí | No | ✅ (estado inicial `activo`) |
+| `662G` | Sí, pero **no normalizable** (`Plan: "62G"`, array legacy, sin año 0) | No | ❌ bloqueado hasta revisión |
+| Otros 34 planes de `planes.json` | No | — | ❌ bloqueados hasta cargar el JSON |
 
-## Preparación
+> Los usuarios de prueba ya cargados pueden referenciar planes sin JSON (`664`, `666`, `662G`).
+> La migración de E3 conserva esos datos históricos, pero **no se pueden usar en altas nuevas**
+> hasta que el plan esté disponible.
 
-1. Asegúrate de tener un archivo `.env` con las variables de entorno del nuevo proyecto Firebase (`sige-esmn`)
-2. Crea un archivo CSV con los datos de los usuarios siguiendo el formato especificado
-3. Asegúrate de tener instaladas las dependencias necesarias:
-   ```bash
-   npm install
-   ```
+## 3. CSV v2
 
-## Exportación desde Google Sheets
+### 3.1 Columnas
 
-Para exportar correctamente los datos desde Google Sheets a CSV:
+| Columna | Obligatoria | Descripción |
+|---|---|---|
+| `dni` | Sí | Documento sin puntos ni espacios. Único en el archivo y en Firestore. |
+| `nombre` | Sí | Nombre/s. |
+| `apellido` | Sí | Apellido/s. |
+| `email` | Sí | Email lowercase. Único en el archivo y en Firestore. |
+| `plan` | Condicional | Código(s) de plan. Obligatorio si el usuario es estudiante. Array JSON o lista separada por comas. |
+| `fecha_inscripcion` | Condicional | Obligatoria si hay planes. Un `AAAA-MM-DD` para todos los planes o un array paralelo al de `plan`. |
+| `numero_legajo` | No | Si falta, se genera con el contador (formato previsto `AAAA-NNNN`, a confirmar en E5). |
+| `roles` | Condicional | En la **carga in-app** no se pide: se fija `["estudiante"]`. Si viene, debe ser exactamente `["estudiante"]`. En el **script** es obligatoria y acepta todos los roles válidos. |
 
-1. **Para campos array (roles, plan)**:
-   - Usa comillas dobles para envolver todo el contenido del campo
-   - Escapa las comillas dobles internas duplicándolas
-   - Ejemplo: `"[\"estudiante\",\"docente\"]"`
-
-2. **Formato recomendado**:
-   - Usa el formato JSON para arrays: `"[\"valor1\",\"valor2\"]"`
-   - Esto evita problemas de interpretación
-
-3. **Alternativa más simple**:
-   - Puedes usar valores separados por comas sin comillas: `valor1,valor2`
-   - El script lo interpretará correctamente
-
-## Formato del archivo CSV
-
-El archivo CSV debe tener las siguientes columnas:
-
-| Columna   | Descripción                           | Requerido |
-|-----------|---------------------------------------|-----------|
-| dni       | Documento de identidad                | Sí        |
-| nombre    | Nombre/s del usuario                  | Sí        |
-| apellido  | Apellido/s del usuario                | Sí        |
-| email     | Correo electrónico institucional      | Sí        |
-| roles     | Roles del usuario (formato JSON array)| Sí        |
-| plan      | Código(s) del plan de estudio (solo para estudiantes)| Condicional |
-
-### Ejemplo de contenido:
+### 3.2 Formatos aceptados para arrays
 
 ```csv
-dni,nombre,apellido,email,roles,plan
-37348389,Maria José,ORTEGA,majo_959@hotmail.com,"[""estudiante""]","[""708""]"
-30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""estudiante"",""docente""]","[""662"",""PREGRADO""]"
-12345678,Bedel,DE PRUEBA,bedel@esmn.com.ar,"[""bedel""]",
+"[""662"",""708""]"
 ```
 
-## Roles disponibles
+o, alternativamente:
 
-Los roles deben ser uno o más de los siguientes:
-- `estudiante`
-- `docente`
-- `bedel`
-- `coordinacion`
-- `admin`
+```csv
+"662,708"
+```
 
-> En la **carga in-app** (rol `coordinacion`), `admin` y `coordinacion` están **reservados**: solo un admin puede otorgarlos (coincide con `firestore.rules`). El script con service account no tiene esa restricción.
+Para `fecha_inscripcion` se acepta una fecha única o un array con la misma cantidad de
+elementos que `plan`:
 
-## Reglas de validación
+```csv
+"[""2026-03-02"",""2025-08-11""]"
+```
 
-El script aplica las siguientes reglas de validación:
+### 3.3 Ejemplos
 
-1. **Todos los usuarios deben tener**: DNI, nombre, apellido y email
-2. **Los emails deben tener formato válido**
-3. **Solo los usuarios con rol "estudiante" deben tener al menos un plan asignado**
-4. **Los usuarios sin rol "estudiante" no deberían tener planes (se mostrará advertencia)**
-5. **Los roles deben ser válidos** (estudiante, docente, bedel, coordinacion, admin)
-6. **Los roles se normalizan automáticamente a minúsculas**
-7. **Los códigos de plan se convierten automáticamente a nombres completos**
-8. **Los estudiantes pueden tener múltiples planes**
+Carga in-app (solo estudiantes):
 
-## Ejecución
+```csv
+dni,nombre,apellido,email,plan,fecha_inscripcion,numero_legajo
+37348389,María José,ORTEGA,majo@ejemplo.com,"[""662""]","2026-03-02",
+30941843,Victoria,MACLEAN,prof.vmaclean@gmail.com,"[""662"",""708""]","[""2026-03-02"",""2025-08-11""]",
+12345678,Juan,PEREZ,juan@ejemplo.com,"[""708""]","2026-03-02","2026-0007"
+```
 
-1. Crea tu archivo CSV con los datos de los usuarios y guardalo como `data/usuarios.csv`
-   (esa carpeta no se versiona en git: ver `data/README.md` para el formato exacto)
-2. Ejecuta el script de importación:
-   ```bash
-   node scripts/import-usuarios.js
-   ```
+Script con roles (docentes, bedeles, estudiantes vigentes):
 
-## Proceso de registro
+```csv
+dni,nombre,apellido,email,roles,plan,fecha_inscripcion,numero_legajo
+24109557,Adriana Edith,FALCON,adrianabusina@gmail.com,"[""bedel"",""docente"",""estudiante""]","[""708""]","2024-03-01",
+98765432,Administrador,DEL SISTEMA,admin@esmn.com.ar,"[""admin""]",,,
+```
 
-Una vez importados los usuarios:
-1. Los usuarios tendrán el estado `pendiente_registro`
-2. Podrán registrarse en la aplicación usando el email proporcionado
-3. Durante el registro, se les pedirá crear una contraseña
-4. El sistema migrará su documento de `usuarios/{email}` a `usuarios/{uid}` automáticamente
+### 3.4 Normalización
 
-## Consideraciones
+- `email`: trim + lowercase.
+- `dni`: trim y eliminación de puntos/espacios.
+- `roles`: trim + lowercase + sin duplicados.
+- `plan`: trim de cada código; se conserva el código (no se reemplaza por el nombre).
+- `fecha_inscripcion`: `AAAA-MM-DD`; se convierte a `Timestamp` al construir el documento.
+- Los encabezados se validan: si falta una columna obligatoria, el archivo completo se rechaza.
 
-- Los emails deben ser únicos por usuario
-- Los roles se normalizan a minúsculas automáticamente
-- Todos los datos se almacenan en minúsculas para mantener consistencia
-- La fecha de importación se registra automáticamente
-- Si hay errores en la validación, el script se detendrá y mostrará los detalles
-- El campo campus ha sido eliminado del formato de importación
-- Los estudiantes pueden tener múltiples planes almacenados en un array
-- Los códigos de plan se convierten automáticamente a nombres completos según la lista predefinida
+## 4. Validación y reglas de aborto
+
+La regla general es **todo-o-nada**: se valida el archivo completo **antes** de escribir. Si
+cualquier fila es inválida, no se escribe ningún documento.
+
+Se rechaza la carga si:
+
+1. Falta `dni`, `nombre`, `apellido` o `email`.
+2. El email no tiene formato válido.
+3. Un rol no es válido, o la carga in-app incluye roles distintos de `estudiante`.
+4. Un estudiante no tiene al menos un plan; un no-estudiante tiene planes (advertencia en el
+   script, error en la carga in-app de estudiantes).
+5. Un plan no está en `planes.json`, no tiene JSON, no se puede normalizar o está bloqueado
+   (`662G`).
+6. Falta `fecha_inscripcion` para algún plan, la fecha no es válida o el array de fechas no
+   coincide en longitud con el de planes.
+7. Hay emails o DNI repetidos **dentro del archivo**.
+8. Hay emails o DNI que ya existen en Firestore (pre-registro o usuario registrado).
+9. `numero_legajo` tiene un formato inválido o, si se define como único, ya existe.
+
+### 4.1 Duplicados en memoria
+
+Antes de consultar Firestore se deduplican **email** y **DNI** dentro del CSV. Esto evita
+lecturas innecesarias y, sobre todo, que dos `batch.set` al mismo `usuarios/{email}` se pisen
+silenciosamente.
+
+### 4.2 Duplicados en Firestore
+
+- Se consulta por **chunks de 30** con `in` sobre `email` y, en una consulta separada, sobre
+  `dni` (Firestore no permite combinar dos `in` en una sola consulta).
+- Si un email ya existe como pre-registro (`usuarios/{email}`) o como usuario registrado
+  (`usuarios/{uid}` con el campo `email`), se aborta la carga completa.
+- **Nunca** se modifica un usuario ya registrado.
+
+### 4.3 Costo estimado
+
+Para N = 800 ingresantes: unas **854 lecturas** de validación (2 × ⌈800/30⌉ consultas `in`;
+~800 coincidencias + ≤54 consultas vacías) y ~1.600 escrituras (`usuario` + `legajo` por fila,
+más la auditoría). A los precios actuales de Firestore es despreciable; el objetivo es la
+correctitud, no el costo.
+
+## 5. Qué escribe una carga
+
+Por cada fila válida, en un `writeBatch` de ≤500 **operaciones** (cada fila consume 2:
+`usuario` + `legajo`, así que un lote alcanza ~250 filas):
+
+1. `usuarios/{email}` con el shape v2:
+   - `personaId` (UUID generado en el cliente),
+   - `dni`, `nombre`, `apellido`, `email`,
+   - `roles` (`["estudiante"]` en la carga in-app),
+   - `estadoRegistro: "pendiente_registro"`,
+   - `estadoUsuario: "activo"`,
+   - `planes` como **mapa por código**,
+   - `numeroLegajo`,
+   - `creadoEl`.
+2. `legajos/{personaId}` con los datos administrativos disponibles y el mismo `numeroLegajo`.
+3. Al finalizar: `importaciones/{id}` con el hash del archivo, el usuario que ejecutó, totales y
+   errores.
+
+### 5.1 Estado inicial del plan
+
+| Plan | Estado inicial |
+|---|---|
+| Con materias de año `0` (pregrado) | `ingresante` |
+| Sin materias de año `0` | `activo` |
+
+Cada entrada del mapa guarda: `id`, `nombre` (snapshot), `estado`, `fechaInscripcion`,
+`vigente: true` y `origen: "carga_masiva"` (o `"script"`).
+
+### 5.2 Lotes y fallos parciales
+
+La validación es todo-o-nada, pero Firestore no ofrece una transacción de miles de documentos.
+Las escrituras se parten en lotes de ≤500. Si un lote falla después de que otros ya se
+confirmaron, el resultado informa **importados vs fallidos** y las filas afectadas; esos casos
+se limpian a mano con el reporte (no se reintenta a ciegas).
+
+## 6. Ejecución
+
+### 6.1 Carga in-app
+
+1. Entrar con un usuario `coordinacion` o `admin`.
+2. Abrir la vista de carga masiva desde el menú de coordinación (o por URL).
+3. Seleccionar el CSV v2 y previsualizar: filas válidas, con error y duplicadas.
+4. Confirmar. Si hay un solo error, no se escribe nada.
+
+### 6.2 Script
+
+```bash
+# Dry-run (por defecto): valida y muestra el diff, no escribe
+node scripts/import-usuarios.js --dry-run
+
+# Aplicar los cambios
+node scripts/import-usuarios.js --apply
+```
+
+- `--dry-run` es el modo por defecto; `--apply` debe ser explícito.
+- El script lee `./data/usuarios.csv` (no se versiona: ver `data/README.md`).
+- El reporte por consola indica filas válidas, errores y planes bloqueados. No se debe
+  versionar ningún archivo de salida con datos personales.
+
+> **Estado:** `--dry-run`/`--apply` y el núcleo v2 son el objetivo de **E10**. Hasta entonces,
+> `scripts/import-usuarios.js` sigue con el flujo v1 y escribe directamente.
+
+## 7. Proceso de registro posterior
+
+1. Los usuarios importados quedan con `estadoRegistro: "pendiente_registro"` y sin `uid`.
+2. Se registran en la app con el email cargado.
+3. La Cloud Function `registrarUsuario` crea la cuenta en Auth y migra el documento de
+   `usuarios/{email}` a `usuarios/{uid}` en un `writeBatch`.
+4. La migración **copia todos los campos**, incluidos `personaId`, `planes` y
+   `numeroLegajo`; el legajo no se mueve.
+5. `estadoRegistro` pasa a `"registrado"`.
+
+## 8. Migración de los datos de prueba
+
+`data/usuarios.csv` sigue en **formato legacy** (`dni,nombre,apellido,email,roles,plan`) y sus
+planes incluyen códigos sin JSON (`664`, `666`, `662G`). No se usa como entrada de la carga
+in-app v2.
+
+Para la transición:
+
+1. E3 migra los documentos existentes con `scripts/migrar-usuarios-v2.js` (dry-run primero).
+2. E10 adapta `scripts/import-usuarios.js` al núcleo v2 y permite un dry-run sobre el CSV de
+   prueba.
+3. Si se necesita volver a cargar el CSV legacy, se convierte primero a v2 o se usa el script
+   con la compatibilidad que defina E10.
+
+## 9. Consideraciones
+
+- Los emails y DNI deben ser únicos por usuario.
+- Los roles y emails se normalizan a minúsculas.
+- `carrera = plan`: no hay un campo `carrera` independiente.
+- Un usuario puede tener varios planes, cada uno con su fecha de inscripción y estado.
+- Los planes sin JSON no se pueden asignar en altas nuevas.
+- La fecha de importación y el `personaId` se registran automáticamente.
+- No se versionan CSV ni reportes con datos personales.

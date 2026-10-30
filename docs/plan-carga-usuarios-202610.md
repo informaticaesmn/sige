@@ -35,7 +35,7 @@
 | Pieza | Estado real (30/10/2026) |
 |---|---|
 | `usuarios` | Pre-registro con ID = `email` (lowercase), `estado: 'pendiente_registro'`, campos `dni, nombre, apellido, email, roles[], planes[]` (array de nombres). Post-registro pasa a `usuarios/{uid}` con `uid` y `actualizadoEn`. |
-| `perfiles` | **No existe.** `docs/modelo-datos.md` lo marca como propuesta. `PerfilCard.vue` lee `carrera` y `legajo`, pero nadie los escribe. |
+| `perfiles` | **No existe.** El modelo v2 lo reemplaza por `legajos` (legajo digital). `PerfilCard.vue` lee `carrera` y `legajo`, pero nadie los escribe. |
 | Carga masiva | **Existe** (`CargaMasiva.vue` + `useImportarUsuarios.js`): CSV, valida todo antes de escribir, `writeBatch` en lotes de ≤500. También hay `scripts/import-usuarios.js` con service account. |
 | Alta individual | **No existe** (ni estudiante ni docente). |
 | Rules de `usuarios` | `create`: admin, o coordinación sin poder otorgar `admin`/`coordinacion`. **Bedel no puede crear.** Bedel solo actualiza usuarios con rol `estudiante` y sin tocar `roles`. |
@@ -43,6 +43,10 @@
 | Planes | `public/planes/planes.json` lista **37** planes; solo **3** tienen JSON (`662`, `662G`, `708`). |
 | Lectura del plan del usuario | `TableroE.vue` y `PlanesEstudioView.vue` leen `user.plan` (singular); la importación escribe `planes` (plural). **Hoy un estudiante importado no ve sus planes.** |
 | Tests | `test:unit` 59/59, `test:integration` 13/13, `build` OK, `lint` 0 errores / 534 warnings. |
+
+> **Datos actuales (30/10/2026):** Firestore solo contiene los **9 usuarios de prueba**
+> cargados desde `data/usuarios.csv`. No hay datos reales. El CSV de prueba sigue en formato
+> legacy (`roles` + `plan` array).
 
 ---
 
@@ -508,6 +512,9 @@ fechas, planes con JSON) es del cliente + tests. Las rules son la última barrer
 
 **Objetivo:** dejar aprobado el shape de §3 y la matriz de §5 antes de escribir código.
 
+> **Estado:** ✅ **Completada (30/10/2026).** Documentos actualizados; no se tocó código ni
+> colecciones.
+
 **Pasos**
 1. Revisar y aprobar este documento.
 2. Actualizar `docs/modelo-datos.md`: `legajos`, `planes` como mapa, `estadoRegistro`,
@@ -779,7 +786,8 @@ composable no.
 | `docs/modelo-datos.md`, `docs/contexto.md` | Modelo nuevo y estado de implementación. |
 | Tests | Unitarios nuevos (planes, validación, alta, legajo) e integración de rules. |
 
-**Migración de datos:** con un solo usuario real, el riesgo es bajo. Aun así:
+**Migración de datos:** solo hay **9 usuarios de prueba** en Firestore (ninguno real). El
+riesgo es bajo. Aun así:
 1. Backup de `usuarios` (export o script que imprima el doc actual).
 2. Correr `scripts/migrar-usuarios-v2.js` en dry-run y revisar el diff.
 3. Aplicar, verificar login y planes.
@@ -808,7 +816,7 @@ composable no.
 - Sincronización de custom claims al editar roles (`actualizarRoles`).
 - Corrección de datos de estudiantes ya registrados (la hace el Bedel; fuera de estos flujos).
 - Notificaciones por email (invitaciones, avisos de vencimiento).
-- Migración de datos históricos reales (solo hay un usuario de prueba).
+- Migración de datos históricos reales (**no hay datos reales**; solo 9 usuarios de prueba).
 - `inactivo-graduado` (descartado: la graduación es por plan).
 - Regla de abandono en primer año (provisoria; §11).
 
