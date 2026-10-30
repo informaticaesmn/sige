@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # Node 22 LTS
+          node-version: '24' # Node 24 LTS
 
       # Configurar Git con el nombre del bot
       - name: Configure Git
