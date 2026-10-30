@@ -38,11 +38,13 @@ roles permitidos.
 |---|---|---|---|
 | `662` | Sí | Sí (11 materias de año 0) | ✅ |
 | `708` | Sí | No | ✅ (estado inicial `activo`) |
-| `662G` | Sí, pero **no normalizable** (`Plan: "62G"`, array legacy, sin año 0) | No | ❌ bloqueado hasta revisión |
+| `662G` | Sí, pero **no normalizable** (`Plan: "62G"`, array legacy, sin año 0, códigos duplicados, equivalencias/correlativas con `662` sin revisar) | No | ❌ bloqueado hasta revisión |
 | Otros 34 planes de `planes.json` | No | — | ❌ bloqueados hasta cargar el JSON |
 
-> Los usuarios de prueba ya cargados pueden referenciar planes sin JSON (`664`, `666`, `662G`).
-> La migración de E3 conserva esos datos históricos, pero **no se pueden usar en altas nuevas**
+> Los usuarios de prueba ya se limpiaron (30/10/2026) para dejar solo los planes `662` y
+> `708`. En Firestore v1 quedaron como nombres completos; en `data/usuarios.csv` como códigos.
+> E3 normaliza ambos a la clave canónica. Si apareciera algún documento viejo con `664`, `666`
+> o `662G`, la migración lo conserva como histórico, pero **no se puede usar en altas nuevas**
 > hasta que el plan esté disponible.
 
 ## 3. CSV v2
@@ -55,7 +57,7 @@ roles permitidos.
 | `nombre` | Sí | Nombre/s. |
 | `apellido` | Sí | Apellido/s. |
 | `email` | Sí | Email lowercase. Único en el archivo y en Firestore. |
-| `plan` | Condicional | Código(s) de plan. Obligatorio si el usuario es estudiante. Array JSON o lista separada por comas. |
+| `plan` | Condicional | Código(s) canónicos de plan (string), ej. `662`, `662G`. Obligatorio si el usuario es estudiante. Array JSON o lista separada por comas. No se aceptan nombres completos en v2. |
 | `fecha_inscripcion` | Condicional | Obligatoria si hay planes. Un `AAAA-MM-DD` para todos los planes o un array paralelo al de `plan`. |
 | `numero_legajo` | No | Si falta, se genera con el contador (formato previsto `AAAA-NNNN`, a confirmar en E5). |
 | `roles` | Condicional | En la **carga in-app** no se pide: se fija `["estudiante"]`. Si viene, debe ser exactamente `["estudiante"]`. En el **script** es obligatoria y acepta todos los roles válidos. |
@@ -103,7 +105,10 @@ dni,nombre,apellido,email,roles,plan,fecha_inscripcion,numero_legajo
 - `email`: trim + lowercase.
 - `dni`: trim y eliminación de puntos/espacios.
 - `roles`: trim + lowercase + sin duplicados.
-- `plan`: trim de cada código; se conserva el código (no se reemplaza por el nombre).
+- `plan`: trim de cada código; se conserva el código canónico (no se reemplaza por el nombre).
+  Se acepta el alias legacy `62G` → `662G`; cualquier otro código debe existir en
+  `planes.json`. Los nombres completos solo se aceptan al normalizar datos v1 de Firestore,
+  no en CSV v2.
 - `fecha_inscripcion`: `AAAA-MM-DD`; se convierte a `Timestamp` al construir el documento.
 - Los encabezados se validan: si falta una columna obligatoria, el archivo completo se rechaza.
 
@@ -222,9 +227,9 @@ node scripts/import-usuarios.js --apply
 
 ## 8. Migración de los datos de prueba
 
-`data/usuarios.csv` sigue en **formato legacy** (`dni,nombre,apellido,email,roles,plan`) y sus
-planes incluyen códigos sin JSON (`664`, `666`, `662G`). No se usa como entrada de la carga
-in-app v2.
+`data/usuarios.csv` sigue en **formato legacy** (`dni,nombre,apellido,email,roles,plan`), pero
+sus planes ya se limpiaron a los códigos con JSON (`662`, `708`). No se usa como entrada de la
+carga in-app v2.
 
 Para la transición:
 

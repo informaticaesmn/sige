@@ -60,8 +60,8 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 
 | Etapa | Alcance | Estado |
 |---|---|---|
-| E0 | Contrato de datos y documentación | ✅ **Aprobada** (este commit) |
-| E1 | Utilidades de planes y detección de pregrado (`src/utils/planes.js`) | ⏳ Pendiente |
+| E0 | Contrato de datos y documentación | ✅ **Completada** (30/10/2026) |
+| E1 | Utilidades de planes y detección de pregrado (`src/utils/planes.js`) | ✅ **Completada** (30/10/2026) |
 | E2 | Validación compartida v2 + CSV v2 | ⏳ Pendiente |
 | E3 | Migración de shape y compatibilidad de lectores | ⏳ Pendiente |
 | E4 | Rules y tests de integración | ⏳ Pendiente |
@@ -102,11 +102,14 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - **`inscripciones/useOfertaAcademica.js`**: Lectura de `ofertaAcademica/{ciclo}`.
 - **`inscripciones/useCargaOferta.js`**: Carga masiva de oferta desde CSV (`coordinacion`). Reemplaza el documento del ciclo en un `writeBatch`.
 - **`inscripciones/useInscripciones.js`**: Creación y lectura de inscripciones (subcolección de `usuarios`).
-- **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas. En E1/E2 reutiliza el normalizador compartido de `src/utils/planes.js`.
+- **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas. En E2/E3 debe reutilizar el normalizador compartido de `src/utils/planes.js` (hoy todavía lee el JSON crudo).
 - **`useLayout.js`**: Theme + layout singleton (body class switching).
 
 **Utilidades puras compartidas (nuevas):**
-- `src/utils/planes.js` (E1): normalización de JSON, detección de pregrado y catálogo disponible.
+- `src/utils/planes.js` (E1): normalización de JSON (formato actual y legacy), detección de
+  pregrado, `estadoInicialDePlan` y catálogo explícito (`catalogoDePlanes`, `esPlanDisponible`).
+  `662G` no está en el catálogo: su JSON declara `Plan: "62G"` (alias legacy, no código
+  canónico), no tiene año 0 y tiene códigos duplicados.
 - `src/utils/validacionUsuarios.js` (E2): normalización y validación de usuarios, planes y fechas; construcción de `usuarios` y `legajos`.
 - `src/utils/csv.js` (E2): parser CSV v2 con columnas y arrays paralelos.
 
@@ -183,7 +186,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 
 ## ⏳ Problemas identificados (pendientes)
 
-> Estado verificado el 29/10/2026: `npm run test:unit` → 59/59 ✅, `npm run test:integration` → 13/13 ✅
+> Estado verificado el 30/10/2026: `npm run test:unit` → 72/72 ✅, `npm run test:integration` → 13/13 ✅
 > (con `firebase-tools` 15 y Java 21, ver `testing-setup.md`) y `npm run build` → ✅.
 
 ### 🔴 Críticos

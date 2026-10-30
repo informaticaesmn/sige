@@ -1,6 +1,6 @@
 # Plan: carga de usuarios, legajo digital y estados académicos
 
-> **Estado:** plan cerrado (30/10/2026), listo para ejecutar por etapas.
+> **Estado:** plan aprobado (30/10/2026) y en ejecución por etapas. E0 y E1 completadas.
 > **Alcance:** tres flujos de carga de usuarios (masiva de ingresantes, alta individual de
 > estudiantes y alta individual de docentes), el modelo de datos que los soporta (legajo
 > digital, planes por usuario y estados) y el diseño —sin implementación— del cálculo de
@@ -40,13 +40,15 @@
 | Alta individual | **No existe** (ni estudiante ni docente). |
 | Rules de `usuarios` | `create`: admin, o coordinación sin poder otorgar `admin`/`coordinacion`. **Bedel no puede crear.** Bedel solo actualiza usuarios con rol `estudiante` y sin tocar `roles`. |
 | Custom claims | Se setean en `registrarUsuario`. `actualizarRoles()` escribe solo Firestore y **no sincroniza claims** (deuda aparte). |
-| Planes | `public/planes/planes.json` lista **37** planes; solo **3** tienen JSON (`662`, `662G`, `708`). |
+| Planes | `public/planes/planes.json` lista **37** planes; solo **3** tienen JSON (`662`, `662G`, `708`). Solo **2** son utilizables (`662`, `708`); `662G` está bloqueado. |
 | Lectura del plan del usuario | `TableroE.vue` y `PlanesEstudioView.vue` leen `user.plan` (singular); la importación escribe `planes` (plural). **Hoy un estudiante importado no ve sus planes.** |
-| Tests | `test:unit` 59/59, `test:integration` 13/13, `build` OK, `lint` 0 errores / 534 warnings. |
+| Tests | `test:unit` 72/72, `test:integration` 13/13, `build` OK, `lint` 0 errores / 534 warnings. |
 
 > **Datos actuales (30/10/2026):** Firestore solo contiene los **9 usuarios de prueba**
 > cargados desde `data/usuarios.csv`. No hay datos reales. El CSV de prueba sigue en formato
-> legacy (`roles` + `plan` array).
+> legacy (`roles` + `plan` array). Los planes de esos usuarios ya se limpiaron para dejar solo
+> `662` y `708`: en Firestore v1 como nombres completos, en el CSV como códigos. E3 los
+> normaliza a la clave canónica.
 
 ---
 
@@ -137,6 +139,21 @@
 - Solo por URL, **sin botón temporal**. Las vistas de Bedel se rediseñan en otra
   conversación (vista centrada en un estudiante por nombre/apellido/DNI; vista de
   secuencias). No planificarlas acá.
+
+### D11 — Códigos de plan: código oficial como string
+
+- El código canónico es el de `public/planes/planes.json`, **siempre como string**:
+  `662`, `708`, `662G`, `662A`, etc. No se deriva ni se trunca.
+- `62G` es un **alias legacy** de `662G` (aparece en el JSON viejo). Se acepta al leer datos
+  históricos, pero nunca se escribe como código canónico.
+- El código identifica el plan; el nombre es solo para mostrar y se resuelve desde
+  `planes.json` (en v2 se puede guardar como snapshot en `planes[codigo].nombre`).
+- Los planes de orientación (`662A`…`662X`) comparten entre sí un tronco común y solo cambian
+  la materia de instrumento fundamental; **no son idénticos al `662` sin orientación**. La
+  identidad sigue siendo el código oficial; si se quiere evitar duplicar 24 JSON, se compone
+  `tronco común de orientaciones + instrumento` al cargar (ver §9 de `modelo-datos.md`).
+- El apóstrofo de Google Sheets es una solución de planilla, no del modelo: la columna debe
+  formatearse como texto y el CSV debe exportar el código entre comillas.
 
 ### Modelo de estados
 
@@ -304,14 +321,23 @@ volumen o las consultas lo justifican; hoy no.
 - Fuente: `public/planes/planes.json` (código y nombre) + `public/planes/{codigo}.json`
   (materias y correlatividades).
 - Funciones puras nuevas en `src/utils/planes.js`:
-  - `normalizarPlanJson(json, codigo)` → `{ plan, nombre, materias: { id: { anio, nombre, cursada } } }`.
+  - `normalizarPlanJson(json, codigo)` → `{ disponible, codigo, plan, nombre, formato,
+    materias: { id: { anio, nombre, cursada, correlativas } }, motivo }`. No lanza
+    excepciones; si no puede normalizar devuelve `disponible: false` y un `motivo`.
     Soporta los dos formatos actuales (objeto y array legacy).
-  - `anioDeMateria(id)` → año (`0` = pregrado).
+  - `anioDeMateria(id)` → año (`0` = pregrado). Acepta `plan-A.N`, `plan-AA-NN` y legacy.
   - `tienePregrado(plan)` → `true` si existe alguna materia con año `0`.
-  - `estadoInicialDePlan(plan)` → `ingresante` | `activo`.
-  - `catalogoDePlanes()` → códigos con JSON disponible (para validar D8).
-- Si el JSON no se puede normalizar o el `plan` interno no coincide con el código del
-  archivo, el plan se considera **no disponible** y bloquea la carga.
+  - `estadoInicialDePlan(plan)` → `ingresante` | `activo` | `null` (no disponible).
+  - `catalogoDePlanes()` / `esPlanDisponible(codigo)` → catálogo explícito de códigos con
+    JSON revisado (para validar D8). Hoy: `662` y `708`.
+  - En E2 se suma `resolverCodigoPlan(valor)` (o equivalente): acepta el código canónico, el
+    alias legacy `62G` → `662G` y, solo para datos v1, el nombre completo
+    (`"662 Profesorado de Música"` → `662`). Devuelve `{ codigo, nombre }` desde `planes.json`.
+- El código canónico es el oficial de `planes.json`, siempre string (D11). No se trunca a
+  `62G` ni se deriva del nombre.
+- Si el JSON no se puede normalizar, el `plan` interno no coincide con el código del archivo
+  (o con su alias legacy), hay materias sin año o códigos duplicados, el plan se considera
+  **no disponible** y bloquea la carga.
 
 ### 3.5 CSV v2 (carga masiva de ingresantes)
 
@@ -534,6 +560,12 @@ con el CSV de §3.5.
 
 **Objetivo:** una única forma de leer un plan JSON y decidir si tiene pregrado.
 
+> **Estado:** ✅ **Completada (30/10/2026).** `src/utils/planes.js` normaliza el formato
+> actual (`662`, `708`) y el legacy, detecta pregrado y expone un catálogo explícito con
+> solo `662` y `708`. `662G` queda fuera a propósito: su JSON interno declara `Plan: "62G"`,
+> no tiene año 0 (pregrado), tiene códigos de materia duplicados y sus equivalencias y
+> correlativas con `662` todavía no están revisadas. 13 tests nuevos; suite 72/72 en verde.
+
 **Pasos**
 1. Crear `src/utils/planes.js` con las funciones de §3.4.
 2. Soportar los dos formatos actuales y reportar el que no se pueda normalizar.
@@ -543,7 +575,8 @@ con el CSV de §3.5.
 
 **Archivos:** `src/utils/planes.js` (nuevo), `tests/unit/utils/planes.spec.js` (nuevo).
 **Colecciones:** ninguna.
-**Verificación:** `npm run test:unit`; el test imprime el catálogo y las excepciones.
+**Verificación:** `npm run test:unit`; los tests validan el catálogo disponible y que `662G`
+queda como no disponible.
 **Depende de:** E0.
 
 ---
@@ -556,6 +589,8 @@ y por el script.
 **Pasos**
 1. Crear `src/utils/validacionUsuarios.js` con:
    - `normalizarEmail`, `normalizarDni`, `normalizarRoles`, `normalizarFecha`.
+   - `resolverCodigoPlan(valor, planesJson)`: código canónico, alias `62G` → `662G` y nombre
+     completo v1 → código. Devuelve `{ codigo, nombre }` o error.
    - `validarDatosUsuario(datos, { rolesPermitidos, catalogoPlanes })`.
    - `construirDocumentoUsuario(datos)` (nuevo shape, `personaId` y `planes` mapa).
    - `construirLegajo(datos)`.
@@ -580,7 +615,9 @@ y por el script.
 
 **Pasos**
 1. `useUsuarios.obtenerUsuario`: normalizar `estadoRegistro` (compatibilidad con `estado`
-   viejo) y `planes` (si viene array de strings, convertirlo a mapa mínimo).
+   viejo) y `planes` (si viene array de strings, convertirlo a mapa mínimo). El array puede
+   traer códigos (`"662"`), nombres completos (`"662 Profesorado de Música"`) o el alias
+   legacy (`"62G"`): siempre se escribe el código canónico (`662G`) como clave del mapa.
 2. Unificar `user.plan` → `user.planes` en `TableroE.vue`, `PlanesEstudioView.vue`,
    `PlanesEstudioCard.vue` y `PerfilCard.vue`.
 3. Script `scripts/migrar-usuarios-v2.js` (dry-run por defecto): agrega `personaId`,
@@ -837,8 +874,11 @@ riesgo es bajo. Aun así:
 6. **Formato canónico de códigos de materia:** los JSON usan `plan-A.N` (ej. `662-0.1`), no
    `xxxx-AA-NN.N`. ¿Se normalizan los JSON al formato nuevo o el parser acepta ambos?
    (Ver Anexo A.)
-7. **`662G`:** su JSON tiene `Plan: "62G"` (sin el `6`), códigos sin prefijo de plan y **no
-   tiene año 0**. ¿Se corrige y se le agrega pregrado, o queda bloqueado hasta revisión?
+7. **`662G`:** su JSON tiene `Plan: "62G"` (sin el `6`), códigos sin prefijo de plan, **no
+   tiene año 0** y tiene 4 códigos duplicados (`62G.1.1`, `62G.2.1`, `62G.3.1`, `62G.4.1`).
+   **Decisión E1:** queda bloqueado hasta que se normalice, se le agregue pregrado y se
+   revisen equivalencias y correlativas con `662`. El normalizador lo reporta como no
+   disponible; no se usa en altas.
 8. **`numeroLegajo`:** ¿único global o por plan/año? ¿Formato (`AAAA-NNNN`)? ¿Se conserva al
    cambiar de plan?
 9. **Dos entradas del mismo plan:** el mapa por código no permite dos planes iguales
@@ -885,16 +925,20 @@ Verificado el 30/10/2026 contra `public/planes/`:
 2. `708` no tiene materias de año 0 → **sin pregrado**, como esperabas. La detección por
    ausencia de año 0 funciona.
 3. `662` tiene 11 materias de pregrado (`662-0.1` a `662-0.6.3`).
-4. **`662G` es una excepción:** su `Plan` interno es `62G` (no `662G`), sus códigos no
-   llevan prefijo de plan y **no tiene año 0**, aunque `planes.json` lo describe como una
-   orientación del 662 (que sí tiene pregrado). Se considera **no disponible** hasta que se
-   revise y normalice.
+4. **`662G` es una excepción:** su `Plan` interno es `62G`, que es un **alias legacy** de
+   `662G`, no un código canónico. Sus códigos no llevan prefijo de plan y **no tiene año 0**,
+   aunque `planes.json` lo describe como una orientación del 662 (que sí tiene pregrado). Se
+   considera **no disponible** hasta que se revise y normalice a `662G`.
 5. `planes.json` lista **37 planes**; solo **3** tienen JSON. Faltan 34, entre ellos
    `662A`–`662X`, `663`–`666`, `709`, `389`–`393`.
 6. Hay inconsistencias de nombres entre `planes.json`, `docs/importar-usuarios.md` y
    `scripts/import-usuarios.js` (por ejemplo, `662B`: "Clarinete" en `planes.json`,
    "Canto" en el script; `662E`, `662I`, `662O` figuran con orientaciones distintas).
    Conviene unificar la fuente en `planes.json` y borrar el mapa hardcodeado (E2).
+7. **Código canónico (D11):** se mantiene el código oficial de `planes.json` como string
+   (`662G`, `662A`, …). No se trunca a `62G`. Las 24 orientaciones comparten entre sí un
+   tronco común (no son idénticas al `662` sin orientación) y solo cambian la materia de
+   instrumento; si se quiere evitar duplicar JSON, se compone `tronco común + instrumento`.
 
 ---
 

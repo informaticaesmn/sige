@@ -151,7 +151,7 @@ estable con el legajo y **no cambia** con esa migración.
 | v1 (implementado) | v2 (objetivo) |
 |---|---|
 | `estado: "pendiente_registro"` | `estadoRegistro: "pendiente_registro"` |
-| `planes: ["662 Profesorado de Música"]` (array de nombres) | `planes: { "662": { id, nombre, estado, ... } }` |
+| `planes: ["662 Profesorado de Música"]` (array de nombres o de códigos) | `planes: { "662": { id, nombre, estado, ... } }` |
 | `plan` (singular, leído por algunas vistas) | `planes` (mapa; las vistas se unifican en E3) |
 | `carrera`, `legajo` (leídos por `PerfilCard`, nunca escritos) | `planes` + `legajos.numeroLegajo` |
 | Sin `personaId` | `personaId` obligatorio |
@@ -361,6 +361,28 @@ de `public/planes/`.
   `0` (`plan-0.N`), no `AA=00`. Un plan sin materias de año `0` es “sin pregrado” y su estado
   inicial es `activo`.
 
+### 9.1 Códigos de plan
+
+- El **código canónico** es el que figura en `planes.json`, tratado siempre como **string**:
+  `662`, `708`, `662G`, `662A`, `662Ñ`, etc.
+- No se trunca ni se deriva el código. En particular, `62G` **no** es un código canónico: es
+  un alias legacy de `662G` que puede aparecer en JSON viejos. En E2, `resolverCodigoPlan` lo
+  acepta al leer y devuelve `662G`.
+- En CSV v2 y en el mapa `planes` de Firestore se guarda el **código**, no el nombre. El nombre
+  se resuelve desde `planes.json`; en v2 se puede guardar como snapshot
+  (`planes["662"].nombre`) para mostrarlo sin leer el catálogo.
+- Los arrays v1 (`planes: ["662 Profesorado de Música"]`) pueden traer nombres completos o
+  códigos. La migración de E3 resuelve ambos: si el string contiene un espacio, el código es el
+  primer token; si no, se usa tal cual. Nunca se escribe un array de nombres en v2.
+- Los planes de orientación (`662A`…`662X`) comparten entre sí un **tronco común** y solo
+  cambian la materia de instrumento fundamental. **No son idénticos al `662` sin orientación**,
+  aunque tengan mucho en común. Para no mantener 24 JSON casi idénticos, el cargador puede
+  componer `tronco común de orientaciones + instrumento`; la identidad del plan sigue siendo el
+  código oficial (`662G`, `662A`, …).
+- Google Sheets: el apóstrofo o el formato “texto” es una solución de la planilla, no del
+  modelo. El CSV debe exportar el código entre comillas (`"662G"`) y el parser debe tratarlo
+  como string.
+
 ### Disponibilidad actual (30/10/2026)
 
 | Archivo | Plan interno | Materias | ¿Pregrado? | Estado |
@@ -370,8 +392,10 @@ de `public/planes/`.
 | `662G.json` | `62G` ⚠️ | 58 | **No** | **No disponible** hasta revisar/normalizar |
 | Otros 34 planes de `planes.json` | — | — | — | **Bloqueados**: no tienen JSON |
 
-`662G` es una excepción: su `Plan` interno es `62G`, usa un array legacy y códigos sin prefijo
-de plan. Se considera no disponible y bloquea cualquier carga que lo referencie.
+`662G` es una excepción: su `Plan` interno es `62G`, usa un array legacy, códigos sin prefijo
+de plan, no tiene año 0 (pregrado), tiene 4 códigos duplicados (`62G.1.1` a `62G.4.1`) y sus
+equivalencias/correlativas con `662` todavía no están revisadas. Se considera no disponible y
+bloquea cualquier carga que lo referencie.
 
 ## 10. Permisos (objetivo E4)
 
