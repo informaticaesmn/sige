@@ -1,6 +1,6 @@
 # SIGE — Sistema Interno de Gestión Educativa
 
-<!--VERSION-->Versión actual: dev v0.8.13<!--/VERSION-->
+<!--VERSION-->Versión actual: dev v0.8.14<!--/VERSION-->
 
 **S.I.G.E.** es el _Sistema Interno de Gestión Educativa de la Escuela Superior de Música de Neuquén (ESMN)_.
 Nace para tener los datos del estudiantado en un repositorio único y ordenado, y ser la fuente de datos de
