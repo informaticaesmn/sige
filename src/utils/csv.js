@@ -97,3 +97,25 @@ export function parsearArray(valor) {
     return texto.includes(',') ? texto.split(',').map((v) => v.trim()) : [texto]
   }
 }
+
+/**
+ * Parsea un CSV de usuarios v2 (columnas: dni, nombre, apellido, email, plan, fecha_inscripcion, numero_legajo).
+ * Devuelve un array de objetos de fila.
+ * @param {string} texto
+ * @returns {Object[]}
+ */
+export function parsearCSVUsuarios(texto) {
+  if (!texto || texto.trim() === '') return []
+
+  const filas = parsearFilasCSV(texto)
+  if (filas.length < 2) return []
+
+  const encabezados = filas[0].map((h) => h.trim())
+  return filas.slice(1).map((valores) => {
+    const fila = {}
+    encabezados.forEach((col, idx) => {
+      fila[col] = (valores[idx] ?? '').trim()
+    })
+    return fila
+  })
+}

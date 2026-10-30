@@ -347,3 +347,39 @@ export function catalogoDePlanes() {
 export function esPlanDisponible(codigo) {
   return PLANES_CON_JSON.includes(String(codigo ?? '').trim())
 }
+
+/**
+ * Resuelve un valor de plan a su código canónico y nombre desde `planes.json`.
+ * Acepta:
+ * - código canónico (`"662"`, `"708"`, `"662G"`)
+ * - alias legacy (`"62G"` → `"662G"`)
+ * - nombre completo v1 (`"662 Profesorado de Música"` → `"662"`)
+ * @param {string} valor
+ * @param {Record<string, string>} nombresDePlanes mapa codigo → nombre completo
+ * @returns {{ codigo: string, nombre: string }|null} null si no se puede resolver
+ */
+export function resolverCodigoPlan(valor, nombresDePlanes) {
+  if (!valor) return null
+  const str = String(valor).trim()
+
+  // 1) Si ya es un código canónico (existe en el catálogo)
+  if (esPlanDisponible(str)) {
+    return { codigo: str, nombre: nombresDePlanes[str] || str }
+  }
+
+  // 2) Alias legacy: "62G" → "662G"
+  if (str === '62G') {
+    const destino = '662G'
+    return { codigo: destino, nombre: nombresDePlanes[destino] || destino }
+  }
+
+  // 3) Buscar por nombre completo (v1) en el mapa de nombres
+  for (const [codigo, nombre] of Object.entries(nombresDePlanes)) {
+    if (nombre.toLowerCase() === str.toLowerCase()) {
+      return { codigo, nombre }
+    }
+  }
+
+  // No se pudo resolver
+  return null
+}
