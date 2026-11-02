@@ -60,14 +60,15 @@ const routes = [
     ]
   },
 
-  // CON LAYOUT (coordinacion) — carga masiva de usuarios y oferta académica
+  // CON LAYOUT (coordinacion) — carga masiva de usuarios, oferta académica y editor de planes
   {
     path: '/coordinacion',
     component: () => import('@/layouts/CoordinacionLayout.vue'),
     meta: { requiresAuth: true, role: 'coordinacion' },
     children: [
       { path: '', name: 'CoordinacionTablero', component: () => import('@/views/coordinacion/TableroC.vue') },
-      { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaMasiva.vue') }
+      { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaMasiva.vue') },
+      { path: 'editor-planes', name: 'CoordinacionEditorPlanes', component: () => import('@/views/coordinacion/EditorPlanes.vue') }
     ]
   },
 

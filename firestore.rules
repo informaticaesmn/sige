@@ -89,6 +89,24 @@ service cloud.firestore {
       allow write: if esCoordinacion() || esAdmin();
     }
 
+    // --- CSV de planes en revisión (editor de planes) ---
+    // Un documento por plan, ID = código canónico (`663`, `662G`, ...).
+    // Solo coordinación y admin. La validación profunda del CSV es del cliente;
+    // las rules solo garantizan el shape mínimo y el límite de tamaño.
+    match /planesPendientes/{codigo} {
+      function shapeValido() {
+        return request.resource.data.codigo is string &&
+               request.resource.data.codigo == codigo &&
+               request.resource.data.nombre is string &&
+               request.resource.data.csvTexto is string &&
+               request.resource.data.csvTexto.size() <= 1000000 &&
+               request.resource.data.actualizadoPor == request.auth.uid;
+      }
+      allow read: if esCoordinacion() || esAdmin();
+      allow create, update: if (esCoordinacion() || esAdmin()) && shapeValido();
+      allow delete: if esCoordinacion() || esAdmin();
+    }
+
     // --- Inscripciones de un usuario (subcolección por ciclo) ---
     // La subcolección se llama `inscripciones` + ciclo sin guiones:
     //   ciclo "2026-1" -> usuarios/{uid}/inscripciones20261/{materiaId}

@@ -164,7 +164,8 @@ const menuLinks = {
   ],
   coordinacion: [
     { to: '/coordinacion', text: 'Tablero Coordinación', icon: WindowIcon },
-    { to: '/coordinacion/carga', text: 'Carga Masiva', icon: ArrowUpTrayIcon }
+    { to: '/coordinacion/carga', text: 'Carga Masiva', icon: ArrowUpTrayIcon },
+    { to: '/coordinacion/editor-planes', text: 'Editor de Planes', icon: AcademicCapIcon }
   ],
   docente: [
     { to: '/docente', text: 'Tablero Docente', icon: WindowIcon },
