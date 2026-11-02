@@ -118,7 +118,6 @@ export function useImportarUsuarios() {
         error: null
       }
     } catch (e) {
-      console.error('Error en la carga masiva de usuarios:', e)
       error.value = e
       return { exito: false, datos: { errores: [] }, error: e }
     } finally {
