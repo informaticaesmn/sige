@@ -1,20 +1,52 @@
 import 'dotenv/config'
 import { readFileSync } from 'fs'
-import { parse } from 'csv-parse/sync'
 
-// ✅ Reutilizamos tu firebaseNode.js
+// ✅ Reutilizamos firebaseNode.js (Firebase Admin SDK para service account)
 import { db } from './firebaseNode.js'
 
-// Leer el archivo CSV (los datos NO se versionan: ver data/README.md)
-const csv = readFileSync('./data/usuarios.csv', 'utf8')
-const records = parse(csv, { columns: true, skip_empty_lines: true })
+// Núcleo compartido de validación (src/utils) — evita duplicar lógica
+import {
+  validarCSVUsuarios,
+  construirDocumentoUsuario,
+  construirLegajo
+} from '../src/utils/validacionUsuarios.js'
 
-// Contador para el seguimiento
-let contador = 0
-let errores = 0
+import {
+  catalogoDePlanes,
+  normalizarPlanJson
+} from '../src/utils/planes.js'
 
-// Cargar el catálogo de planes desde planes.json
-const planesJson = JSON.parse(readFileSync('./public/planes/planes.json', 'utf8'))
+import { parsearCSVUsuarios } from '../src/utils/csv.js'
+
+// ---------------------------------------------------------------------------
+// Configuración
+// ---------------------------------------------------------------------------
+const LIMITE_BATCH = 500
+const CSV_PATH = './data/usuarios.csv'
+const PLANES_JSON_PATH = './public/planes/planes.json'
+
+// Parsear argumentos CLI: --apply para escribir, por defecto es --dry-run
+const args = process.argv.slice(2)
+const APLICAR = args.includes('--apply')
+const DRY_RUN = !APLICAR
+
+if (DRY_RUN) {
+  console.log('🔍 Modo dry-run (no se escribe en Firestore). Usa --apply para confirmar.')
+} else {
+  console.log('⚠️  Modo apply (se escribirá en Firestore).')
+}
+
+// ---------------------------------------------------------------------------
+// Cargar catálogo de planes desde planes.json
+// ---------------------------------------------------------------------------
+let planesJson
+try {
+  planesJson = JSON.parse(readFileSync(PLANES_JSON_PATH, 'utf8'))
+} catch (error) {
+  console.error(`❌ No se pudo leer ${PLANES_JSON_PATH}:`, error.message)
+  process.exit(1)
+}
+
 const nombresDePlanes = {}
 if (Array.isArray(planesJson.planes)) {
   planesJson.planes.forEach((plan) => {
@@ -24,237 +56,190 @@ if (Array.isArray(planesJson.planes)) {
   Object.assign(nombresDePlanes, planesJson.planes || {})
 }
 
-// Función para parsear campos que pueden ser arrays (reutilizada de validacionUsuarios.js)
-function parsearArray(valor) {
-  if (!valor || valor.trim() === '') {
-    return []
-  }
-
-  // Si ya es un array, devolverlo
-  if (Array.isArray(valor)) {
-    return valor
-  }
-
-  const valorTrim = valor.trim()
-
-  // Intentar parsear como JSON array
+// Códigos con JSON disponible (para validación D8: solo planes con JSON revisado)
+const planesConJsonDisponible = new Set()
+for (const codigo of catalogoDePlanes()) {
   try {
-    const parsed = JSON.parse(valorTrim)
-    if (Array.isArray(parsed)) {
-      return parsed
+    const ruta = `./public/planes/${codigo}.json`
+    const json = JSON.parse(readFileSync(ruta, 'utf8'))
+    const normalizado = normalizarPlanJson(json, codigo)
+    if (normalizado.disponible) {
+      planesConJsonDisponible.add(codigo)
     }
-    return [parsed]
-  } catch (e) {
-    // Si no se puede parsear como JSON, tratar como string separado por comas
-    if (valorTrim.includes(',')) {
-      return valorTrim.split(',').map((item) => item.trim())
-    }
-    // Si es un solo valor, devolverlo como array de un elemento
-    return [valorTrim]
+  } catch {
+    // Archivo no existe o no se puede leer → no disponible
   }
 }
 
-// Función para normalizar un email
-function normalizarEmail(email) {
-  return String(email).trim().toLowerCase()
+// ---------------------------------------------------------------------------
+// Leer y parsear CSV
+// ---------------------------------------------------------------------------
+let csvText
+try {
+  csvText = readFileSync(CSV_PATH, 'utf8')
+} catch (error) {
+  console.error(`❌ No se pudo leer ${CSV_PATH}:`, error.message)
+  process.exit(1)
 }
 
-// Función para normalizar un DNI
-function normalizarDni(dni) {
-  return String(dni).replace(/[^\d]/g, '')
-}
+// Usar parsearCSVUsuarios (util propio, sin dependencias) para obtener filas
+const filasCSV = parsearCSVUsuarios(csvText)
 
-// Función para normalizar roles
-function normalizarRoles(valor) {
-  const array = Array.isArray(valor) ? valor : String(valor).split(',').map((r) => r.trim())
-  return [...new Set(array.map((r) => r.toLowerCase()))]
-}
+// Validar filas con el núcleo compartido
+const { filas: filasValidas, errores: erroresValidacion } =
+  validarCSVUsuarios(filasCSV, nombresDePlanes, [...planesConJsonDisponible])
 
-// Función para resolver un código de plan
-function resolverCodigoPlan(valor) {
-  if (!valor) return null
-  const str = String(valor).trim()
+// ---------------------------------------------------------------------------
+// Validación D8: filtrar planes sin JSON disponible
+// ---------------------------------------------------------------------------
+const filasConErroresJson = []
+const filasFinales = []
 
-  // 1) Si ya es un código canónico (existe en el catálogo)
-  if (['662', '708'].includes(str)) {
-    return { codigo: str, nombre: nombresDePlanes[str] || str }
-  }
-
-  // 2) Alias legacy: "62G" → "662G"
-  if (str === '62G') {
-    const destino = '662G'
-    return { codigo: destino, nombre: nombresDePlanes[destino] || destino }
-  }
-
-  // 3) Buscar por nombre completo (v1) en el mapa de nombres
-  for (const [codigo, nombre] of Object.entries(nombresDePlanes)) {
-    if (nombre.toLowerCase() === str.toLowerCase()) {
-      return { codigo, nombre }
-    }
-  }
-
-  // No se pudo resolver
-  return null
-}
-
-// Función para validar los datos del usuario
-function validarUsuario(usuario) {
-  const errores = []
-
-  // Validar campos requeridos
-  if (!usuario.dni || usuario.dni.trim() === '') {
-    errores.push('El DNI es requerido')
-  }
-
-  if (!usuario.nombre || usuario.nombre.trim() === '') {
-    errores.push('El nombre es requerido')
-  }
-
-  if (!usuario.apellido || usuario.apellido.trim() === '') {
-    errores.push('El apellido es requerido')
-  }
-
-  if (!usuario.email || usuario.email.trim() === '') {
-    errores.push('El email es requerido')
-  }
-
-  // Validar formato de email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (usuario.email && !emailRegex.test(usuario.email)) {
-    errores.push('El email tiene un formato inválido')
-  }
-
-  // Parsear roles
-  let roles = parsearArray(usuario.roles)
-
-  // Normalizar roles a minúsculas
-  roles = roles.map((r) => typeof r === 'string' ? r.toLowerCase() : String(r).toLowerCase())
-
-  // Validar que los roles sean válidos
-  const rolesValidos = ['estudiante', 'docente', 'bedel', 'coordinacion', 'admin']
-  const rolesInvalidos = roles.filter((r) => !rolesValidos.includes(r))
-  if (rolesInvalidos.length > 0) {
-    errores.push(`Roles inválidos: ${rolesInvalidos.join(', ')}`)
-  }
-
-  // Parsear planes
-  let planes = parsearArray(usuario.plan)
-
-  // Validar plan según roles
-  const esEstudiante = roles.includes('estudiante')
-  if (esEstudiante && (!planes || planes.length === 0)) {
-    errores.push('Los estudiantes deben tener al menos un plan asignado')
-  }
-
-  if (!esEstudiante && planes && planes.length > 0) {
-    console.warn(`Advertencia: El usuario ${usuario.email} no es estudiante pero tiene planes asignados`)
-  }
-
-  // Validar que los códigos de plan sean válidos si se proporcionan
-  if (planes && planes.length > 0) {
-    for (const planCodigo of planes) {
-      if (planCodigo && planCodigo.trim() !== '') {
-        const codigo = planCodigo.trim()
-        const res = resolverCodigoPlan(codigo)
-        if (!res) {
-          errores.push(`Código de plan inválido: ${codigo}`)
-        } else if (!['662', '708'].includes(res.codigo)) {
-          errores.push(`El plan "${codigo}" no está disponible (no tiene JSON revisado)`)
-        }
-      }
-    }
-  }
-
-  return {
-    errores,
-    roles,
-    planes,
-    esValido: errores.length === 0
+for (const fila of filasValidas) {
+  const planesSinJson = fila.planes.filter((c) => !planesConJsonDisponible.has(c))
+  if (planesSinJson.length > 0) {
+    filasConErroresJson.push({
+      fila: fila.email,
+      detalle: planesSinJson.map((c) => `El plan "${c}" no tiene JSON revisado y no se puede dar de alta`)
+    })
+  } else {
+    filasFinales.push(fila)
   }
 }
 
-console.log('Iniciando importación de usuarios...')
+// ---------------------------------------------------------------------------
+// Deduplicar en memoria (email y DNI dentro del archivo)
+// ---------------------------------------------------------------------------
+const emailsVistos = new Set()
+const dnisVistos = new Set()
+const filasDeduplicadas = []
+const filasDuplicadas = []
 
-for (const row of records) {
+for (const fila of filasFinales) {
+  if (emailsVistos.has(fila.email)) {
+    filasDuplicadas.push({ fila: fila.email, detalle: ['Email duplicado dentro del archivo'] })
+    continue
+  }
+  if (dnisVistos.has(fila.dni)) {
+    filasDuplicadas.push({ fila: fila.email, detalle: ['DNI duplicado dentro del archivo'] })
+    continue
+  }
+  emailsVistos.add(fila.email)
+  dnisVistos.add(fila.dni)
+  filasDeduplicadas.push(fila)
+}
+
+// ---------------------------------------------------------------------------
+// Reporte de errores antes de escribir
+// ---------------------------------------------------------------------------
+const todosErrores = [
+  ...erroresValidacion,
+  ...filasConErroresJson,
+  ...filasDuplicadas
+]
+
+if (todosErrores.length > 0) {
+  console.log('\n❌ Errores de validación (abortando carga):')
+  for (const err of todosErrores) {
+    console.log(`   - ${err.fila || 'desconocido'}: ${Array.isArray(err.detalle) ? err.detalle.join(', ') : err.detalle}`)
+  }
+  process.exit(1)
+}
+
+if (filasDeduplicadas.length === 0) {
+  console.log('\n⚠️  No hay filas válidas para importar.')
+  process.exit(0)
+}
+
+console.log(`\n📋 Filas válidas para importar: ${filasDeduplicadas.length}`)
+
+// ---------------------------------------------------------------------------
+// Construir documentos (usuario v2 + legajo) en memoria
+// ---------------------------------------------------------------------------
+const operaciones = [] // { tipo: 'usuario' | 'legajo', ref, data }
+
+for (const fila of filasDeduplicadas) {
+  const personaId = crypto.randomUUID()
+
+  const docUsuario = construirDocumentoUsuario(
+    {
+      email: fila.email,
+      dni: fila.dni,
+      nombre: fila.nombre,
+      apellido: fila.apellido,
+      roles: fila.roles,
+      planes: fila.planes,
+      fechaInscripcion: fila.fechaInscripcion,
+      numeroLegajo: fila.numeroLegajo || null,
+      nombresDePlanes,
+      origen: 'script',
+      estadoPorPlan: {},
+      fechaInscripcionPorPlan: {}
+    },
+    personaId
+  )
+
+  const docLegajo = construirLegajo({
+    personaId,
+    numeroLegajo: fila.numeroLegajo || null,
+    email: fila.email,
+    dni: fila.dni,
+    nombre: fila.nombre,
+    apellido: fila.apellido
+  })
+
+  const emailNormalizado = fila.email.toLowerCase().trim()
+
+  operaciones.push({
+    tipo: 'usuario',
+    ref: db.collection('usuarios').doc(emailNormalizado),
+    data: docUsuario
+  })
+
+  operaciones.push({
+    tipo: 'legajo',
+    ref: db.collection('legajos').doc(personaId),
+    data: docLegajo
+  })
+}
+
+console.log(`📦 Documentos a escribir: ${operaciones.length} (${filasDeduplicadas.length} usuarios + ${filasDeduplicadas.length} legajos)`)
+
+// ---------------------------------------------------------------------------
+// Dry-run: solo reporte, no se escribe
+// ---------------------------------------------------------------------------
+if (DRY_RUN) {
+  console.log('\n🔍 Dry-run completo. No se escribió nada en Firestore.')
+  console.log('   Ejecuta con --apply para confirmar la importación.')
+  process.exit(0)
+}
+
+// ---------------------------------------------------------------------------
+// Apply: escribir en Firestore por lotes de ≤500
+// ---------------------------------------------------------------------------
+let contador = 0
+let erroresEscritura = 0
+
+for (let i = 0; i < operaciones.length; i += LIMITE_BATCH) {
+  const lote = operaciones.slice(i, i + LIMITE_BATCH)
+  const batch = db.batch()
+
+  for (const op of lote) {
+    batch.set(op.ref, op.data)
+  }
+
   try {
-    // Validar usuario
-    const validacion = validarUsuario(row)
-
-    if (!validacion.esValido) {
-      console.error(`❌ Error en usuario ${row.email || 'desconocido'}:`, validacion.errores.join(', '))
-      errores++
-      continue
-    }
-
-    // Formatear los planes con los nombres completos
-    let planesFormateados = []
-    if (validacion.planes && validacion.planes.length > 0) {
-      planesFormateados = validacion.planes.map((planCodigo) => {
-        if (!planCodigo || planCodigo.trim() === '') {
-          return ''
-        }
-
-        const codigo = planCodigo.trim()
-        const res = resolverCodigoPlan(codigo)
-        if (!res) {
-          return ''
-        }
-
-        return res.nombre || `${codigo} Profesorado de Música`
-      }).filter((plan) => plan !== '') // Filtrar planes vacíos
-    }
-
-    // Crear documento de usuario con el email como ID
-    const email = normalizarEmail(row.email)
-
-    // Usar el email como ID del documento
-    await db.collection('usuarios').doc(email).set({
-      personaId: crypto.randomUUID(),
-      dni: normalizarDni(row.dni.trim()),
-      nombre: row.nombre.trim(),
-      apellido: row.apellido.trim(),
-      email: email,
-      roles: validacion.roles, // Roles ya validados y normalizados
-      planes: planesFormateados, // Planes formateados como array (v1)
-      estadoRegistro: 'pendiente_registro', // Estado inicial para registro
-      estadoUsuario: 'activo',
-      numeroLegajo: null,
-      creadoEl: new Date().toISOString(),
-      actualizadoEn: new Date().toISOString()
-    })
-
-    // Crear legajo
-    await db.collection('legajos').doc(email).set({
-      personaId: email,
-      numeroLegajo: null,
-      usuarioDocId: email,
-      dni: normalizarDni(row.dni.trim()),
-      nombre: row.nombre.trim(),
-      apellido: row.apellido.trim(),
-      fechaNacimiento: null,
-      domicilios: [],
-      telefonos: [],
-      datosAdministrativos: {},
-      documentacion: [],
-      creadoEl: new Date().toISOString(),
-      actualizadoEn: new Date().toISOString(),
-      actualizadoPor: null
-    })
-
-    contador++
-    console.log(`✅ Usuario ${row.email} importado correctamente con ${planesFormateados.length} plan(es)`)
-
+    await batch.commit()
+    contador += lote.length
+    console.log(`   ✅ Lote ${Math.floor(i / LIMITE_BATCH) + 1}: ${lote.length} documentos escritos`)
   } catch (error) {
-    console.error(`❌ Error al importar usuario ${row.email}:`, error.message)
-    if (error.code === 'permission-denied') {
-      console.error('   Esto indica un problema de permisos. Verifica que las credenciales tengan acceso de escritura a Firestore.')
-    }
-    errores++
+    erroresEscritura += lote.length
+    console.error(`   ❌ Error en lote ${Math.floor(i / LIMITE_BATCH) + 1}:`, error.message)
   }
 }
 
-console.log(`\n🏁 Importación finalizada. ${contador} usuarios importados correctamente, ${errores} errores.`)
-if (errores > 0) {
-    console.log('⚠️  Revisa los errores e intenta corregirlos antes de continuar.')
-    process.exit(1)
+console.log(`\n🏁 Importación finalizada. ${contador} documentos escritos, ${erroresEscritura} errores.`)
+
+if (erroresEscritura > 0) {
+  process.exit(1)
 }

@@ -15,13 +15,29 @@
 // `62G` es un alias legacy de `662G`, no un código válido para escribir.
 
 /**
- * Códigos de plan con JSON revisado y utilizable.
+ * Códigos de plan listados en `public/planes/planes.json` (catálogo oficial).
  *
- * `662G` queda fuera a propósito: su JSON es legacy (`Plan: "62G"`), no tiene
- * materias de año 0 (pregrado) y sus equivalencias/correlativas con `662`
- * todavía no están revisadas. Se incorporará cuando esté normalizado.
+ * Estos son todos los códigos canónicos que aparecen en el catálogo, siempre
+ * como strings (`662`, `662A`, `662B`, `663`, `708`, etc.). Un código estar
+ * en esta lista significa que existe en `planes.json`, no que tenga JSON de
+ * materias revisado. Para dar de alta un plan hace falta además que su
+ * `{codigo}.json` se pueda normalizar (`normalizarPlanJson` → `disponible`).
+ *
+ * `662G` está incluido porque aparece en `planes.json`, pero su JSON es
+ * legacy (`Plan: "62G"`), no tiene materias de año 0 (pregrado) y sus
+ * equivalencias/correlativas con `662` todavía no están revisadas.
+ * `esPlanDisponible('662G')` devuelve `true`, pero `normalizarPlanJson`
+ * reporta `disponible: false`, por lo que no se puede dar de alta.
  */
-export const PLANES_CON_JSON = Object.freeze(['662', '708'])
+export const PLANES_CON_JSON = Object.freeze([
+  '662',
+  '662A', '662B', '662C', '662D', '662E', '662F', '662G', '662H', '662I',
+  '662J', '662K', '662L', '662M', '662N', '662Ñ', '662O', '662P', '662Q',
+  '662R', '662S', '662T', '662U', '662V', '662W', '662X',
+  '663', '664', '665', '666',
+  '708', '709',
+  '389', '390', '391', '392', '393'
+])
 
 /** Formatos de JSON que sabe leer el normalizador. */
 export const FORMATOS_PLAN = Object.freeze({
@@ -327,20 +343,21 @@ export function estadoInicialDePlan(plan) {
 }
 
 /**
- * Códigos de plan que hoy tienen JSON revisado y pueden usarse en altas.
+ * Códigos de plan listados en `public/planes/planes.json` (catálogo oficial).
  *
- * El catálogo es deliberadamente chico y explícito: `662G` no está porque su
- * JSON todavía no está normalizado (ver `PLANES_CON_JSON`). Para incorporar un
- * plan nuevo hay que revisar su JSON y agregarlo a esa constante.
+ * Un código estar en esta lista significa que existe en `planes.json`, no que
+ * tenga JSON de materias revisado. Para dar de alta un plan hace falta además
+ * que su `{codigo}.json` se pueda normalizar (`normalizarPlanJson` →
+ * `disponible`).
  *
- * @returns {string[]} copia de los códigos disponibles
+ * @returns {string[]} copia de los códigos del catálogo
  */
 export function catalogoDePlanes() {
   return [...PLANES_CON_JSON]
 }
 
 /**
- * Indica si un código de plan está en el catálogo de disponibles.
+ * Indica si un código de plan existe en el catálogo oficial de `planes.json`.
  * @param {string} codigo
  * @returns {boolean}
  */

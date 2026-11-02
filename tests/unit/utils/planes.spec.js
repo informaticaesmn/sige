@@ -149,12 +149,27 @@ describe('normalizarPlanJson', () => {
 })
 
 describe('catalogoDePlanes', () => {
-  it('incluye solo los planes con JSON revisado y excluye 662G', () => {
-    expect(catalogoDePlanes()).toEqual(['662', '708'])
-    expect(catalogoDePlanes()).not.toContain('662G')
+  it('incluye todos los códigos listados en planes.json (catálogo oficial)', () => {
+    const catalogo = catalogoDePlanes()
+    expect(catalogo).toContain('662')
+    expect(catalogo).toContain('708')
+    expect(catalogo).toContain('662A')
+    expect(catalogo).toContain('662B')
+    expect(catalogo).toContain('666')
+    expect(catalogo).toContain('389')
+    expect(catalogo).toHaveLength(37)
+  })
+
+  it('incluye 662G porque aparece en planes.json (aunque su JSON no sea usable)', () => {
+    expect(catalogoDePlanes()).toContain('662G')
+    expect(esPlanDisponible('662G')).toBe(true)
+  })
+
+  it('esPlanDisponible devuelve true para códigos del catálogo y false para los que no están', () => {
     expect(esPlanDisponible('662')).toBe(true)
     expect(esPlanDisponible('708')).toBe(true)
-    expect(esPlanDisponible('662G')).toBe(false)
-    expect(esPlanDisponible('666')).toBe(false)
+    expect(esPlanDisponible('666')).toBe(true)
+    expect(esPlanDisponible('999')).toBe(false)
+    expect(esPlanDisponible('000')).toBe(false)
   })
 })

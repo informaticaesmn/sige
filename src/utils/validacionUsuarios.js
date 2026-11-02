@@ -7,6 +7,7 @@
 // El estado global (ref/computed) debe declararse a nivel de módulo (singleton), no dentro de la función factory.
 
 import { catalogoDePlanes, esPlanDisponible } from './planes.js'
+import { parsearArray } from './csv.js'
 
 /**
  * Normaliza un email: lowercase, sin espacios, sin duplicados.
@@ -184,7 +185,7 @@ export function validarDatosUsuario(datos, opciones = {}) {
   const nombre = String(datos.nombre).trim()
   const apellido = String(datos.apellido).trim()
   const roles = normalizarRoles(datos.roles)
-  const planes = Array.isArray(datos.planes) ? datos.planes : []
+  const planes = parsearArray(datos.planes)
 
   // Validar email
   if (!email) errores.push('Falta el email')
@@ -270,14 +271,15 @@ export function validarDatosUsuario(datos, opciones = {}) {
  * @param {Record<string, string>} nombresDePlanes mapa codigo → nombre completo
  * @returns {{ filas: Object[], errores: Object[] }}
  */
-export function validarCSVUsuarios(filas, nombresDePlanes = {}) {
+export function validarCSVUsuarios(filas, nombresDePlanes = {}, catalogoPlanes = null) {
   const filasValidas = []
   const errores = []
+
+  const catalogoValido = catalogoPlanes || catalogoDePlanes()
 
   for (let i = 0; i < filas.length; i++) {
     const fila = filas[i]
     const erroresFila = []
-    const advertenciasFila = []
 
     // Normalizar campos
     const dni = normalizarDni(fila.dni)
@@ -295,8 +297,8 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}) {
     // Validar roles (siempre estudiante para carga masiva in-app)
     const roles = ['estudiante']
 
-    // Validar planes
-    const planes = Array.isArray(fila.plan) ? fila.plan : []
+    // Validar planes (parsearArray acepta string JSON, lista separada por comas o array)
+    const planes = parsearArray(fila.plan)
     const planesValidados = []
     for (const plan of planes) {
       const res = resolverCodigoPlan(plan, nombresDePlanes)
@@ -305,7 +307,7 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}) {
         continue
       }
       const codigo = res.codigo
-      if (!esPlanDisponible(codigo)) {
+      if (!catalogoValido.includes(codigo)) {
         erroresFila.push(`El plan "${codigo}" no está disponible (no tiene JSON revisado)`)
       } else {
         planesValidados.push(codigo)
