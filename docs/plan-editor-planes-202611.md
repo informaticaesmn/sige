@@ -1,41 +1,120 @@
 # Plan: Editor/Revisor de Planes de Estudio (Rol Coordinación)
 
-> **Estado:** borrador (02/11/2026). Sin código escrito aún.
-> **Objetivo:** que los coordinadores revisen, validen y exporten planes de estudio desde CSV de Google Sheets antes de incluirlos como archivos JSON estáticos en `public/planes/`.
+> **Estado:** aprobado para implementación (02/11/2026).
+> **Objetivo:** que los coordinadores importen el JSON que genera el Apps Script de la planilla, revisen y editen materias y correlatividades, validen, y publiquen `public/planes/{codigo}.json` + `planes.json`.
 > **Producción:** febrero 2027, con foco en año 0 (pregrado) y listado completo de materias. Correlatividades y equivalencias pueden quedar incompletas inicialmente y completarse durante 2027.
 
 ---
 
 ## 0. Contexto y decisiones de diseño
 
-### CSV de Google Sheets: problemas conocidos
+### 0.1 De CSV a JSON
 
-El CSV adjunto (ejemplo de plan `663`) tiene las siguientes limitaciones, ya identificadas:
+La planilla de Google Sheets sigue siendo la herramienta de edición humana, pero el **Apps Script `exportPlanJSONCore`** pasa a ser el productor del insumo del editor. Ese script ya resuelve:
 
-| Problema | Origen | Cómo lo resuelve el editor |
+- el código canónico de cada materia (`materia_id`);
+- el nombre y el nombre corto;
+- la cursada;
+- las correlatividades estructuradas (`{and}`, `{or}`, materia suelta);
+- las equivalencias con el plan madre (`equivale_a`).
+
+Por eso el editor deja de parsear CSV y consume directamente ese JSON. Ventajas:
+
+1. Una sola fuente de verdad entre la planilla y SIGE.
+2. No se duplican columnas ni se parsea texto libre.
+3. El JSON de entrada ya tiene el mismo shape que consume la app, así que el round-trip (importar → exportar) es posible sin pérdida.
+4. Menos código de parseo que mantener.
+
+**Decisión:** se elimina la importación CSV. El editor solo acepta JSON.
+
+### 0.2 Formato de entrada (salida del Apps Script)
+
+El script genera un objeto con este shape:
+
+```json
+{
+  "plan": "663",
+  "nombre": "Plan 663",
+  "materias": {
+    "663-0.1": {
+      "nombre": "Audioperceptiva",
+      "nombre_c": "Audio Pre",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "663-0.2",
+            { "or": ["663-0.3.1", "663-0.3.2"] }
+          ]
+        },
+        "aprobar": "663-0.1"
+      },
+      "equivale_a": ["662-0.1"]
+    }
+  }
+}
+```
+
+Particularidades que el editor debe tolerar:
+
+| Campo | Qué trae el script | Implicancia |
 |---|---|---|
-| Columnas duplicadas al final | Las primeras columnas son para edición humana; las finales (no visibles) traen los códigos ya resueltos | El editor prioriza las columnas finales (`materia_id`, `nombre`, `nombre_c`, `cursada`, `correlativas_cursar`, `correlativas_aprobar`) como fuente de verdad. Las primeras se ignoran o se usan solo como referencia visual. |
-| `Cod` corto vs `materia_id` largo | `Cod`=`0.1`, `materia_id`=`662-00-01`. No siempre coinciden | El código canónico del JSON de SIGE es `materia_id` (formato largo con prefijo de plan). Si falta `materia_id`, se construye como `{plan}-{Cod}`. |
-| Correlativas por nombre, no por código | `CodC`/`CodA` contienen nombres (`GUITARRA I`), no códigos | **No se escriben a mano.** El editor provee un desplegable/autocomplete que lista todas las materias del propio plan. Al seleccionar, se completa automáticamente código y nombre. |
-| Condiciones complejas en texto libre | `ELEMENTOS DEL ANALISIS MUSICAL I-MUSICA DE CAMARA I - EXPRESION CORPORAL` | El formato de SIGE usa objetos estructurados (`{and: [...]}`, `{or: [...]}`, `{anio_completo: N}`). El editor no intenta parsear el texto libre; el coordinador arma la condición desde la UI seleccionando materias del desplegable y eligiendo el tipo de condición (AND/OR/año completo). |
-| Filas sin código | `anual,663,,,,...` | Se detectan como errores de validación. El plan no se exporta mientras existan filas sin código. |
-| `cursada` inconsistente | `anual`, `1C`, `2C`, vacío | Se normaliza a los valores válidos de SIGE (`anual`, `1C`, `2C`). Vacío se deja como `null`. |
-| `equivale_a` con código de plan madre | `662-00-01` | Campo informativo en la UI; no es obligatorio para la exportación inicial (foco año 0). Se guarda como campo opcional en el JSON detalle. |
+| `plan` | `hoja.getName()` (puede incluir el nombre completo) | El editor deriva el código del primer token (`plan.split(' ')[0]`). |
+| `nombre` | `"Plan " + hoja.getName()` | Se usa como nombre editable; se limpia el prefijo `"Plan "`. |
+| `materias` | Mapa `{ [materia_id]: { ... } }` | La clave es el código canónico. |
+| `id` | **No viene** dentro de la materia | Se deriva de la clave. |
+| `anio` | **No viene** dentro de la materia | Se deriva con `anioDeMateria(id)`. |
+| `nombre_c` | Opcional | Si falta, se guarda `null`. |
+| `cursada` | Texto crudo (`anual`, `1C`, `2C`, vacío) | Se normaliza a `anual` / `1C` / `2C` / `null`. |
+| `correlativas` | Opcional; string, `{and}` o `{or}` | Se preserva como árbol editable. |
+| `equivale_a` | Opcional; **array** de códigos | El editor lo trata siempre como `string[]`. |
+| `formato` | **No viene** | El editor lo agrega al exportar (`"objeto"`). |
+| `disponible` | **No viene** | Lo define el catálogo al publicar (§6). |
+| `propia`, `cSiuned` | **No vienen** | No se inventan; se conservan solo si un JSON los trae. |
 
-### ¿CSV en revisión o JSON directo?
+### 0.3 Normalizaciones que aplica el editor
 
-**Sí, es conveniente y necesario hostear CSVs "en revisión".**
+| Dato | Regla |
+|---|---|
+| Código de plan | Primer token de `plan`, o el valor que el coordinador escriba en “Código del plan”. |
+| Nombre del plan | `nombre` sin el prefijo `"Plan "`; editable. |
+| Código de materia | La clave del mapa `materias` (`materia_id`). |
+| Año | `anioDeMateria(codigo)` de `src/utils/planes.js`. Si devuelve `null`, es error de validación. |
+| Cursada | `anual` / `1C` / `2C`; vacío → `null`. |
+| Correlativas | Se convierten a un árbol normalizado (§2.3) y se vuelven a serializar al exportar. |
+| `equivale_a` | Siempre `string[]`; se acepta string por compatibilidad. |
+| Campos desconocidos | Se conservan a nivel materia si son conocidos (`propia`, `cSiuned`); el resto se descarta. |
 
-Razones:
-1. Varios planes tienen correlatividades complejas que requerirán varias sesiones de revisión.
-2. La producción es febrero 2027; no es realista revisar todos los años de todos los planes antes de esa fecha.
-3. El foco inicial es año 0 (pregrado) + listado completo de materias por plan. Las correlativas de años superiores pueden completarse durante 2027.
+### 0.4 Persistencia de borradores
 
-**Estrategia:**
-- `public/planes/pendientes/`: carpeta temporal para CSVs de planos en revisión (no se leen desde la app de estudiante, solo desde el editor).
-- `public/planes/{codigo}.json`: solo se publica cuando el coordinador marca el plan como "revisado y exportado".
-- `public/planes/planes.json`: catálogo oficial. Un plan aparece aquí solo cuando su JSON detalle existe y está marcado como disponible.
-- El editor lee el CSV desde `pendientes/`, permite editar, valida, y exporta a `public/planes/{codigo}.json` + actualiza `planes.json`.
+Los JSON en revisión se guardan en **Firestore**, no en `public/planes/pendientes/`:
+
+- Colección: `planesPendientes/{codigo}` (ID = código canónico del plan).
+- Campos: `codigo`, `nombre`, `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`.
+- Motivo: un coordinador sube el JSON una sola vez y cualquier coordinador puede reabrirlo sin volver a elegir el archivo.
+- `jsonTexto` reemplaza al viejo `csvTexto`. La lectura acepta `csvTexto` como fallback para documentos viejos, pero la escritura siempre usa `jsonTexto`.
+- Límite: 1.000.000 bytes (mismo límite que Firestore menos margen).
+- Las reglas de `firestore.rules` deben validar `jsonTexto` (no `csvTexto`).
+
+La fuente de verdad del plan **publicado** sigue siendo `public/planes/{codigo}.json`.
+
+### 0.5 Publicación
+
+- `public/planes/{codigo}.json`: detalle del plan publicado.
+- `public/planes/planes.json`: catálogo con `codigo`, `nombre` y `disponible`.
+- El editor descarga ambos archivos; el coordinador los commitea.
+- Un push a `main` publica hosting y `firestore.rules` (GitHub Action).
+- Un plan se considera publicado cuando **ambos** archivos están actualizados y `planes.json` lo marca con `disponible: true`.
+
+### 0.6 Observaciones sobre el Apps Script (no bloqueantes)
+
+No son parte del repo, pero conviene corregirlas en la planilla:
+
+1. `planData.plan = hoja.getName()` y el archivo se llama `${planData.plan}.json`. Si la hoja se llama `663 Dirección Coral`, el archivo queda con espacios y `normalizarPlanJson` lo rechaza. Recomendación: `plan: planId` y `${planId}.json`.
+2. `processPrerequisites()` agrupa por `id.split('.')`. Si `materia_id` usa guiones (`663-00-01`), la expansión de “año completo” puede agrupar mal. Recomendación: estandarizar `materia_id` al formato con punto (`663-0.1`) o corregir el script.
+3. `saveJsonToDriveWithPrompt()` guarda con `MimeType.PLAIN_TEXT`; usar `MimeType.APPLICATION_JSON` es más correcto.
+
+El editor debe funcionar igual con el script actual; estas mejoras solo reducen fricción.
 
 ---
 
@@ -43,218 +122,416 @@ Razones:
 
 | Archivo | Acción | Propósito |
 |---|---|---|
-| `src/views/coordinacion/EditorPlanes.vue` | **Crear** | Vista principal: importar CSV, editar materias, validar, exportar JSON. |
-| `src/composables/academico/useEditorPlanes.js` | **Crear** | Lógica pura: parsear CSV, normalizar, validar, generar JSON, estado de edición. |
-| `src/components/ui/SelectMateria.vue` | **Crear** | Desplegable/autocomplete para seleccionar correlativas (muestra "código - nombre"). |
-| `src/utils/validacionPlanes.js` | **Crear** | Funciones puras de validación: códigos duplicados, correlativas inexistentes, año 0, filas sin código. |
-| `src/router/index.js` | **Editar** | Agregar ruta hija `/coordinacion/editor-planes` con meta `role: 'coordinacion'`. |
-| `src/components/BarraApp.vue` o `src/layouts/CoordinacionLayout.vue` | **Editar** | Agregar ítem de menú "Editor de Planes" visible solo para rol coordinación. |
-| `docs/modelo-datos.md` | **Editar** | Agregar sección sobre formato de JSON de planes, campos `correlativas` estructurados, campo opcional `equivale_a`, y estado de disponibilidad del plan. |
+| `src/views/coordinacion/EditorPlanes.vue` | **Editar** | Vista principal: importar JSON, editar materias y condiciones, validar, exportar. |
+| `src/composables/academico/useEditorPlanes.js` | **Reescribir** | Lógica pura: parsear JSON, normalizar, validar, generar JSON, estado de edición. |
+| `src/composables/academico/usePlanesPendientes.js` | **Editar** | Persistir `jsonTexto` en `planesPendientes` (reemplaza `csvTexto`). |
+| `src/composables/academico/useCatalogoPlanes.js` | **Crear** | Cargar y cachear `planes.json`; exponer planes disponibles. |
+| `src/components/ui/EditorCondicion.vue` | **Crear** | Editor recursivo de condiciones AND/OR/año completo. |
+| `src/components/ui/SelectMateria.vue` | **Mantener** | Autocomplete de materias para las hojas de la condición. |
+| `src/utils/condiciones.js` | **Crear** | Conversión, recorrido y validación pura de condiciones. |
+| `src/utils/validacionPlanes.js` | **Editar** | Validaciones adaptadas a condiciones estructuradas. |
+| `src/utils/planes.js` | **Editar** | Catálogo desde `planes.json`, `planesDisponibles()`, `validarPlanDetalle()`. |
+| `src/utils/validacionUsuarios.js` | **Editar** | Gate de planes disponibles en el alta. |
+| `src/composables/usuarios/useImportarUsuarios.js` | **Editar** | Validar detalle de planes y calcular estado inicial. |
+| `src/views/coordinacion/CargaMasiva.vue` | **Editar** | Usar `useCatalogoPlanes` antes de importar. |
+| `src/router/index.js` | **Hecho** | Ruta `/coordinacion/editor-planes`. |
+| `src/components/BarraApp.vue` | **Hecho** | Ítem “Editor de Planes”. |
+| `firestore.rules` | **Editar** | `planesPendientes`: `csvTexto` → `jsonTexto`. |
+| `public/planes/planes.json` | **Editar** | Agregar `disponible` a cada plan. |
+| `tests/unit/utils/condiciones.spec.js` | **Crear** | Conversión y validación de condiciones. |
+| `tests/unit/utils/validacionPlanes.spec.js` | **Crear** | Validaciones del editor. |
+| `tests/unit/composables/useEditorPlanes.spec.js` | **Crear** | Importación, edición y round-trip. |
+| `tests/unit/composables/useCatalogoPlanes.spec.js` | **Crear** | Fetch, cache y fallback del catálogo. |
+| `tests/unit/composables/usePlanesPendientes.spec.js` | **Editar** | `jsonTexto` y compatibilidad con `csvTexto`. |
+| `tests/unit/utils/planes.spec.js` | **Editar** | `planesDisponibles`, resolución sin gate y `validarPlanDetalle`. |
+| `tests/unit/utils/validacionUsuarios.spec.js` | **Editar** | Plan no disponible → error. |
+| `tests/unit/composables/useImportarUsuarios.spec.js` | **Editar** | Fetch de detalle, estado inicial y aborto. |
 
-No se crean carpetas nuevas en `src/`. La vista vive en `src/views/coordinacion/` junto a `CargaMasiva.vue` y `TableroC.vue`.
+No se crean carpetas nuevas en `src/`. La vista vive en `src/views/coordinacion/` y los componentes en `src/components/ui/`.
 
 ---
 
 ## 2. Composable `useEditorPlanes.js`
 
-Estado reactivo:
-- `csvTexto` (string): texto crudo del CSV importado.
-- `materias` (mapa por código): objeto interno de edición `{ [codigo]: MateriaEdit }`.
+### 2.1 Estado reactivo
+
+- `jsonTexto` (string): texto crudo del JSON importado (reemplaza `csvTexto` y `filasCSV`).
+- `materias` (mapa por código): `{ [codigo]: MateriaEdit }`.
 - `planCodigo`, `planNombre` (string): metadatos del plan.
+- `disponible` (boolean): estado del checkbox de publicación.
 - `errores` (array): lista de errores de validación.
 - `valido` (boolean): resultado de la última validación.
-- `jsonCatalogo` (object): `{ planes: [{codigo, nombre}] }` listo para `planes.json`.
-- `jsonDetalle` (object): `{ plan, nombre, materias: {...} }` listo para `{codigo}.json`.
+- `hayPregrado` (boolean): si existe alguna materia de año 0.
 
-Funciones principales:
+### 2.2 Funciones principales
 
-1. `importarCSV(texto)` → parsea el CSV, prioriza columnas finales (`materia_id...`), construye `materias` como mapa, detecta `planCodigo` de la columna `Plan`.
-2. `normalizarMateria(fila)` → convierte una fila del CSV a `MateriaEdit`:
-   - `id`: código canónico (`materia_id` o construido `{plan}-{Cod}`).
-   - `anio`: extraído del código (`00`/`0` = pregrado).
-   - `nombre`, `nombre_c`, `cursada`, `equivale_a`, `propia`, `cSiuned`.
-   - `correlativas`: `{ cursar: [], aprobar: [] }` (arrays de códigos, llenados desde el desplegable).
-3. `agruparPorAnio()` → devuelve `{ 0: [...], 1: [...], 2: [...], ... }`.
-4. `tienePregrado()` → true si existe alguna materia con `anio === 0`.
-5. `validar()` → retorna `{ exito, errores }`: códigos duplicados, correlativas que referencian códigos inexistentes, filas sin código.
-6. `generarJSONCatalogo()` → array para `planes.json`.
-7. `generarJSONDetalle()` → objeto para `{codigo}.json` con formato exacto de SIGE.
-8. `exportarJSON(nombreArchivo)` → descarga archivo JSON o copia al portapapeles.
+1. `importarJSONPlan(texto, { planCodigo, planNombre })` → `JSON.parse`, valida shape, deriva metadatos y construye `materias`.
+2. `normalizarMateriaJSON(codigo, datos)` → convierte una materia del JSON a `MateriaEdit`.
+3. `agruparPorAnio()` → `{ 0: [...], 1: [...], ... }`.
+4. `agregarMateria(anio)` → fila vacía con código `{plan}-{anio}.{n}` (ej. `663-0.1`).
+5. `eliminarMateria(codigo)`.
+6. `actualizarMateria(codigo, campo, valor)` → nombre, nombre corto, cursada, `equivale_a`.
+7. `actualizarCondicion(codigo, 'cursar' | 'aprobar', condicion)`.
+8. `validar()` → `{ exito, errores }`.
+9. `generarJSONDetalle()` → objeto SIGE.
+10. `generarJSONCatalogo()` → **async**; hace merge con `planes.json` existente.
+11. `descargarJSON(datos, nombreArchivo)` y `copiarJSON(datos)`.
 
-Formato `MateriaEdit` (interno del editor):
+### 2.3 Modelo de condiciones
+
+Para no perder las condiciones del script, el editor **no** aplana a `string[]`. Usa un árbol normalizado:
+
+```js
+// Condición
+{ tipo: 'materia', codigo: '663-0.1' }
+{ tipo: 'and', hijos: [Condicion, ...] }
+{ tipo: 'or',  hijos: [Condicion, ...] }
+{ tipo: 'anio', anio: 0 }   // equivale a { anio_completo: 0 }
+```
+
+Conversión desde JSON (`condicionDesdeJson`):
+
+| Entrada | Resultado |
+|---|---|
+| `null` / `undefined` / `''` | `null` |
+| `"663-0.1"` | `{ tipo: 'materia', codigo: '663-0.1' }` |
+| `["663-0.1", "663-0.2"]` | `{ tipo: 'and', hijos: [...] }` (legacy) |
+| `{ and: [...] }` | `{ tipo: 'and', hijos: [...] }` |
+| `{ or: [...] }` | `{ tipo: 'or', hijos: [...] }` |
+| `{ anio_completo: 1 }` | `{ tipo: 'anio', anio: 1 }` |
+
+Conversión al exportar (`condicionAJson`):
+
+| Entrada | Resultado |
+|---|---|
+| `{ tipo: 'materia' }` | `"663-0.1"` |
+| `{ tipo: 'anio' }` | `{ anio_completo: N }` |
+| `and`/`or` con 1 hijo | Se serializa el hijo (se colapsa el grupo). |
+| `and`/`or` con más de 1 hijo | `{ and: [...] }` / `{ or: [...] }` |
+| `and`/`or` vacío | `null` + error de validación. |
+
+### 2.4 Formato `MateriaEdit`
+
 ```js
 {
-  id: "663-00-01",           // código canónico
-  anio: 0,                   // 0 = pregrado
-  nombre: "Audioperceptiva (orientaciones)",
-  nombre_c: "Audio orientaciones",
-  cursada: "anual",          // anual | 1C | 2C | null
-  correlativas: {            // estructurado, no texto libre
-    cursar: ["663-00-02"],   // array de códigos
-    aprobar: []
+  id: "663-0.1",
+  anio: 0,
+  nombre: "Audioperceptiva",
+  nombre_c: "Audio Pre",
+  cursada: "anual",
+  correlativas: {
+    cursar: {
+      tipo: "and",
+      hijos: [
+        { tipo: "materia", codigo: "663-0.2" },
+        { tipo: "or", hijos: [
+          { tipo: "materia", codigo: "663-0.3.1" },
+          { tipo: "materia", codigo: "663-0.3.2" }
+        ] }
+      ]
+    },
+    aprobar: { tipo: "materia", codigo: "663-0.1" }
   },
-  equivale_a: "662-00-01",   // opcional, código del plan madre
-  propia: false,
-  cSiuned: false
+  equivale_a: ["662-0.1"]
 }
 ```
 
-Formato de exportación `{codigo}.json` (formato SIGE, objeto):
-```js
+Los campos `propia` y `cSiuned` se agregan solo si el JSON de origen los trae.
+
+### 2.5 Formato de exportación `{codigo}.json`
+
+```json
 {
-  plan: "663",
-  nombre: "663 Profesorado de Música con orientación en Dirección Coral",
-  formato: "objeto",
-  materias: {
-    "663-00-01": {
-      id: "663-00-01",
-      anio: 0,
-      nombre: "Audioperceptiva (orientaciones)",
-      nombre_c: "Audio orientaciones",
-      cursada: "anual",
-      correlativas: {
-        cursar: ["663-00-02"],
-        aprobar: []
+  "plan": "663",
+  "nombre": "663 Profesorado de Música con orientación en Dirección Coral",
+  "formato": "objeto",
+  "materias": {
+    "663-0.1": {
+      "id": "663-0.1",
+      "anio": 0,
+      "nombre": "Audioperceptiva",
+      "nombre_c": "Audio Pre",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "663-0.2",
+            { "or": ["663-0.3.1", "663-0.3.2"] }
+          ]
+        },
+        "aprobar": "663-0.1"
       },
-      equivale_a: "662-00-01",
-      propia: false,
-      cSiuned: false
+      "equivale_a": ["662-0.1"]
     }
   },
-  disponible: false,         // se marca true solo cuando el coordinador lo revisa
-  revisadoEn: null,          // Timestamp
-  revisadoPor: null          // uid
+  "disponible": true,
+  "revisadoEn": "2026-11-02T12:00:00.000Z",
+  "revisadoPor": "uid-del-coordinador"
 }
 ```
+
+- `disponible` es un **espejo** de auditoría; el gate real está en `planes.json` (§6).
+- `formato: "objeto"` es informativo; `normalizarPlanJson` no lo exige.
+- `revisadoEn` / `revisadoPor` se completan al marcar el plan como disponible.
 
 ---
 
-## 3. Componente `SelectMateria.vue`
+## 3. Componentes
 
-- Props: `valor` (código seleccionado), `materiasDisponibles` (array de `{ codigo, nombre }`), `emit`.
-- Template: `<select>` con `<option>` para cada materia, mostrando `"código - nombre"`.
-- Opcional: `<input>` con `<datalist>` para autocomplete si hay muchas materias.
-- Al seleccionar, emite `update:modelValue` con el código limpio.
-- Usado en el editor para elegir `correlativas.cursar` y `correlativas.aprobar` de cada materia.
-- Evita errores de tipeo y códigos inexistentes.
+### 3.1 `SelectMateria.vue` (se mantiene)
+
+- Props: `materiasDisponibles`, `excluir`, `placeholder`.
+- Emite `select` con el código elegido.
+- Se usa como hoja del árbol de condiciones.
+- No cambia su comportamiento actual.
+
+### 3.2 `EditorCondicion.vue` (nuevo)
+
+Componente recursivo para editar una condición completa.
+
+**Props:**
+
+- `modelValue` (`Condicion|null`).
+- `materiasDisponibles` (`{ codigo, nombre }[]`).
+- `tiposPermitidos` (`['materia','and','or','anio']`).
+- `profundidad` (number, para el límite visual).
+
+**UI:**
+
+- Nodo `materia`: chip con `código - nombre` + botón quitar.
+- Nodo `and`/`or`: caja con borde, etiqueta “Y”/“O”, hijos y botones:
+  - `+ Materia`
+  - `+ Grupo Y`
+  - `+ Grupo O`
+  - `+ Año completo`
+- Nodo `anio`: selector 0–4 + quitar.
+- Acción “Convertir en grupo” sobre una hoja.
+- Límite de profundidad: 4 niveles.
+- Emite `update:modelValue` con el árbol completo; no muta props.
+
+**Uso en `EditorPlanes.vue`:**
+
+- Dos instancias por materia: `correlativas.cursar` y `correlativas.aprobar`.
 
 ---
 
 ## 4. Vista `EditorPlanes.vue`
 
-Secciones (de arriba a abajo):
+Secciones de arriba a abajo:
 
-### 4.1 Importar CSV
-- `<input type="file" accept=".csv">` o área de texto para pegar CSV.
-- Botón "Cargar plan desde CSV".
-- Mensaje de éxito: "CSV cargado: X materias detectadas, plan Y".
+### 4.1 Planes guardados
 
-### 4.2 Metadatos del plan
-- Campo `Código de plan` (texto, ej. `663`). Validar que no exista ya en `planes.json` o que esté marcado para sobrescribir.
-- Campo `Nombre del plan` (texto, ej. `663 Profesorado de Música con orientación en Dirección Coral`).
+- Lista los JSON de `planesPendientes` (Firestore).
+- “Abrir” carga `jsonTexto` en el editor sin volver a subir el archivo.
+- “Eliminar” borra el borrador (no el plan publicado).
 
-### 4.3 Tabla de materias
-- Agrupadas por año (0 = pregrado, 1, 2, 3, 4...).
-- Cada fila: código, nombre, nombre corto, cursada, correlativas de cursar (SelectMateria), correlativas de aprobar (SelectMateria), equivalente en plan madre.
-- Botón "Agregar materia" (fila vacía con código autogenerado `{plan}-{anio}.{n}`).
-- Botón "Eliminar materia" por fila.
+### 4.2 Importar JSON
 
-### 4.4 Validaciones
-- Lista de errores (códigos duplicados, correlativas inexistentes, filas sin código).
-- Botón "Validar".
-- Indicador visual: "Plan válido para exportar" / "Plan con errores".
+- `<input type="file" accept=".json">`.
+- Área de texto opcional para pegar JSON.
+- Botón “Cargar plan desde JSON”.
+- Mensaje: “JSON cargado: X materias, plan Y, Z condiciones complejas”.
+- Si el JSON es inválido, se muestra el error de parseo y no se toca el estado actual.
 
-### 4.5 Exportar
-- Botón "Descargar `planes.json`" (actualiza el catálogo).
-- Botón "Descargar `{codigo}.json`" (detalle del plan).
-- Botón "Copiar al portapapeles".
-- Checkbox "Marcar plan como disponible" (establece `disponible: true` en el JSON detalle y agrega a `planes.json`).
+### 4.3 Metadatos del plan
+
+- `Código del plan` (texto, ej. `663`).
+- `Nombre del plan` (texto).
+- Aviso si el código editado no coincide con el `plan` del JSON importado.
+
+### 4.4 Tabla de materias
+
+- Agrupadas por año (`0` = pregrado).
+- Cada fila: código, nombre, nombre corto, cursada, condiciones de cursar y aprobar (`EditorCondicion`), `equivale_a`.
+- Botón “Agregar materia” con código autogenerado `{plan}-{anio}.{n}`.
+- Botón “Eliminar materia”.
+
+### 4.5 Validaciones
+
+- Códigos de materia sin año reconocible.
+- Materias con nombre vacío.
+- Condiciones vacías (`and`/`or` sin hijos).
+- Correlativas que referencian códigos inexistentes.
+- Auto-referencia (una materia que se exige a sí misma).
+- Año completo sin materias de ese año.
+- `equivale_a` fuera del plan: **warning**, no error (puede ser del plan madre).
+
+### 4.6 Exportar
+
+- “Descargar `planes.json` (catálogo)” → hace merge con el catálogo existente.
+- “Descargar `{codigo}.json` (detalle)”.
+- “Copiar detalle al portapapeles”.
+- Checkbox “Marcar plan como disponible” (`disponible`), con efecto real en el catálogo.
+
+### 4.7 Publicación
+
+Texto de ayuda: “Para publicar, commiteá juntos `{codigo}.json` y `planes.json`. Un push a `main` despliega hosting y reglas.”
 
 ---
 
-## 5. Ruta en `src/router/index.js`
+## 5. Ruta y navegación (hecho)
 
-Dentro del bloque `/coordinacion` (ruta padre con `meta: { requiresAuth: true, role: 'coordinacion' }`):
+La ruta ya existe:
 
 ```js
 {
-  path: '/coordinacion',
-  component: () => import('@/layouts/CoordinacionLayout.vue'),
-  meta: { requiresAuth: true, role: 'coordinacion' },
-  children: [
-    { path: '', name: 'CoordinacionTablero', component: () => import('@/views/coordinacion/TableroC.vue') },
-    { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaMasiva.vue') },
-    { path: 'editor-planes', name: 'CoordinacionEditorPlanes', component: () => import('@/views/coordinacion/EditorPlanes.vue') }
+  path: 'editor-planes',
+  name: 'CoordinacionEditorPlanes',
+  component: () => import('@/views/coordinacion/EditorPlanes.vue')
+}
+```
+
+El ítem “Editor de Planes” ya está en `src/components/BarraApp.vue`. No hay cambios pendientes en esta sección.
+
+---
+
+## 6. Catálogo y gating real
+
+### 6.1 `planes.json` como fuente de disponibilidad
+
+```json
+{
+  "planes": [
+    { "codigo": "662", "nombre": "662 Profesorado de Música", "disponible": true },
+    { "codigo": "708", "nombre": "708 Técnico Superior en Sonido", "disponible": true },
+    { "codigo": "662G", "nombre": "662G Profesorado de Música con orientación en Guitarra", "disponible": false },
+    { "codigo": "663", "nombre": "663 Profesorado de Música con orientación en Dirección Coral", "disponible": false }
   ]
 }
 ```
 
-La meta de auth y role se hereda del padre; no es necesario repetirla en la hija.
+- `disponible: true` solo para planes con detalle revisado y normalizable.
+- Migración inicial: `662` y `708` → `true`; `662G` y los 34 restantes → `false`.
+- El editor actualiza este archivo al publicar (merge por código).
 
----
+### 6.2 `useCatalogoPlanes.js`
 
-## 6. Navegación
+Singleton con:
 
-Revisar `src/components/BarraApp.vue` y `src/layouts/CoordinacionLayout.vue`:
-- Si `BarraApp.vue` renderiza un menú dinámico según el rol activo, agregar ítem "Editor de Planes" que enlace a `CoordinacionEditorPlanes` (ruta `/coordinacion/editor-planes`), visible solo cuando `rolActivo === 'coordinacion'`.
-- Si el menú está en `CoordinacionLayout.vue`, agregar el ítem ahí.
+- `catalogo` (ref): mapa `{ [codigo]: { codigo, nombre, disponible } }`.
+- `cargado` (ref), `error` (ref).
+- `cargarCatalogoPlanes()` → `fetch('/planes/planes.json')`, normaliza y llama a `setCatalogoPlanes()` de `src/utils/planes.js`.
+- `asegurarCatalogo()` → idempotente; si falla, devuelve error explícito (no se asume disponibilidad).
+- `planesDisponibles` (computed): solo `disponible === true`.
 
----
+Se invoca antes de importar usuarios (`CargaMasiva.vue`) y en `EditorPlanes.vue`. Puede calentarse desde `main.js` sin bloquear el montaje.
 
-## 7. Cambios en `docs/modelo-datos.md`
+### 6.3 Semántica nueva en `src/utils/planes.js`
 
-Agregar sección sobre el formato de los JSON de planes y el flujo de revisión:
-
-### Nuevos campos en `public/planes/{codigo}.json`
-
-| Campo | Tipo | Descripción |
+| Función | Hoy | Nueva |
 |---|---|---|
-| `disponible` | boolean | `true` solo cuando el coordinador ha revisado y exportado el plan. `false` = en revisión o bloqueado. |
-| `revisadoEn` | Timestamp | Fecha de la última revisión. |
-| `revisadoPor` | string | uid del coordinador que revisó. |
-| `materias[].correlativas.cursar` | string[] | Códigos de materias que deben cursarse simultáneamente (AND por defecto). |
-| `materias[].correlativas.aprobar` | string[] | Códigos de materias que deben aprobarse antes. |
-| `materias[].equivale_a` | string | Código de materia equivalente en el plan madre (opcional). |
-| `materias[].propia` | boolean | Indica si la materia es propia del plan o compartida. |
-| `materias[].cSiuned` | boolean | Campo de la planilla original, se conserva por referencia. |
+| `catalogoDePlanes()` | Array hardcodeado `PLANES_CON_JSON` | Todos los códigos del catálogo cargado; fallback hardcodeado solo para resolución. |
+| `planesDisponibles()` | No existe | Códigos con `disponible: true`; vacío si el catálogo no cargó. |
+| `esPlanDisponible(codigo)` | `PLANES_CON_JSON.includes` | `planesDisponibles().includes(codigo)`. |
+| `resolverCodigoPlan()` | Resuelve **y** gatea | Solo resuelve contra todos los códigos; el gate se hace aparte. |
+| `normalizarPlanJson()` | Valida shape | Igual; no decide disponibilidad. |
+| `validarPlanDetalle(codigo)` | No existe | Combina catálogo + detalle → `{ disponible, motivo, plan }`. |
 
-### Estado de disponibilidad de planes
+Separar `resolverCodigoPlan` del gate es obligatorio: hoy usa `esPlanDisponible`, así que si se gatea ahí, un usuario existente con `662G` dejaría de normalizarse.
 
-Un plan está **disponible** para alta de usuarios solo cuando:
-1. Existe `public/planes/{codigo}.json`.
-2. `normalizarPlanJson` retorna `disponible: true`.
-3. El código está en `public/planes/planes.json` (catálogo).
-4. `disponible: true` en el JSON detalle (marcado por el coordinador).
+### 6.4 `validarPlanDetalle(codigo)`
 
-Hoy (30/10/2026): solo `662` y `708` cumplen todo. `662G` está en el catálogo pero su JSON no es usable. Los 34 planes restantes no tienen JSON.
+1. Verifica que el código esté en `planesDisponibles()`.
+2. Hace `fetch('/planes/{codigo}.json')` (con cache en memoria por código).
+3. Normaliza con `normalizarPlanJson(json, codigo)`.
+4. Devuelve `{ disponible, motivo, plan }`.
+5. Si el catálogo dice disponible pero el detalle no normaliza, gana el detalle y se reporta el motivo.
+
+### 6.5 Alta de usuarios
+
+En `src/utils/validacionUsuarios.js`:
+
+- `validarDatosUsuario` y `validarCSVUsuarios` reciben `planesDisponibles` (o usan `planesDisponibles()`).
+- `resolverCodigoPlan` resuelve contra todos los códigos.
+- Después de resolver, se exige `esPlanDisponible(codigo)`.
+- Mensaje: `El plan "X" no está disponible (revisar en el editor de planes)`.
+
+En `src/composables/usuarios/useImportarUsuarios.js`:
+
+1. `await asegurarCatalogo()`.
+2. Validar filas contra `planesDisponibles()`.
+3. Obtener códigos únicos de plan y `await Promise.all(codigos.map(validarPlanDetalle))` (cacheado).
+4. Si un detalle no existe o no normaliza → abortar todo (todo-o-nada).
+5. Calcular `estadoPorPlan[codigo] = estadoInicialDePlan(planNormalizado)`:
+   - con año 0 → `ingresante`;
+   - sin año 0 → `activo`.
+6. Pasar `estadoPorPlan` a `construirDocumentoUsuario`.
+
+`construirDocumentoUsuario` deja de hardcodear `'ingresante'`: usa `estadoPorPlan` y cae a `'activo'` solo si no se pasó (con warning).
+
+### 6.6 Migración y riesgos
+
+- `planes.json` debe actualizarse con `disponible` en el **mismo release** que el código de gating. Si el código sale antes, todos los planes quedan bloqueados.
+- `662G` sigue no disponible porque su detalle es legacy (`plan: "62G"`).
+- La carga masiva hace un fetch por plan único, no por fila; cachear.
+- `useUsuarios.js` sigue usando `catalogoDePlanes()` para normalizar usuarios existentes; no se debe gatear ahí.
+- Si `planes.json` no carga, `planesDisponibles()` devuelve vacío y el alta falla con error explícito. No se asume disponibilidad.
+- Los flujos sincrónicos (`validarDatosUsuario`) deben llamar a `asegurarCatalogo()` antes. Si el catálogo no está cargado, el error debe ser `catálogo de planes no disponible`, no `plan inválido`.
+
+---
+
+## 7. Cambios en la documentación
+
+### 7.1 `docs/modelo-datos.md`
+
+- Agregar `planesPendientes/{codigo}` en “Colecciones implementadas”.
+- Documentar:
+  - `planes.json` con `disponible`;
+  - `validarPlanDetalle()` y el flujo de gating;
+  - `correlativas` como string u objeto (`{and}`, `{or}`, `{anio_completo}`);
+  - `equivale_a` como `string[]`;
+  - `anio` derivado del código si no viene.
+- Corregir la afirmación de que `normalizarPlanJson` devuelve `disponible: true` solo cuando el coordinador lo marca: eso ahora lo decide el catálogo.
+
+### 7.2 `docs/contexto.md`
+
+- Agregar `planesPendientes` a las colecciones de soporte.
+- Actualizar “Datos estáticos” para mencionar `disponible` y el gate por catálogo.
+- Mantener el estado de implementación existente; este plan no cambia E1–E11.
 
 ---
 
 ## 8. Alcance para febrero 2027 (producción)
 
 ### Dentro de alcance (MVP)
+
 - Editor de planes para rol coordinación.
-- Importar CSV desde `public/planes/pendientes/`.
-- Validar: códigos duplicados, correlativas inexistentes, filas sin código, año 0 detectado.
-- Exportar `planes.json` y `{codigo}.json`.
+- Importar el JSON del Apps Script.
+- Persistir borradores en `planesPendientes` con `jsonTexto`.
+- Editar materias y condiciones AND/OR/año completo.
+- Validar: año reconocible, nombre, condiciones vacías, referencias inexistentes, auto-referencia.
+- Exportar `planes.json` (merge) y `{codigo}.json`.
 - Marcar plan como `disponible: true`.
-- Desplegable para seleccionar correlativas (no escritura manual).
+- Gating real en el alta de usuarios.
+- Cálculo del estado inicial (`ingresante` / `activo`).
 - Agrupar materias por año (0 = pregrado).
 
-### Fuera de alcance (post-febrero 2027, durante 2027)
-- Chequeo completo de correlatividades de años 1-4 (se hará gradualmente).
-- Equivalencias con plan madre (`equivale_a` se guarda pero no se usa para cálculo).
-- Cálculo automático de `por_vencer`/`vencido`/`ingresante → activo` (ya fuera de alcance del plan de usuarios).
-- Parseo automático de condiciones complejas (AND/OR/año completo) desde texto libre del CSV.
+### Fuera de alcance (post-febrero 2027)
+
+- Chequeo completo de correlatividades de años 1–4 (se hará gradualmente).
+- Uso de `equivale_a` para cálculo automático.
+- Cálculo de `por_vencer` / `vencido` / `ingresante → activo`.
+- Parseo de texto libre (ya no aplica: el script entrega JSON estructurado).
+- Editor visual de condiciones fuera del árbol AND/OR/año.
 
 ---
 
 ## 9. Preguntas abiertas
 
-1. **¿Dónde se hostean los CSV en revisión?** ¿`public/planes/pendientes/` o un bucket de Storage privado? Recomendación: `public/planes/pendientes/` por simplicidad durante el desarrollo, mover a Storage si hay datos sensibles.
-2. **¿El código canónico es `materia_id` o `Cod`?** Recomendación: `materia_id` (formato largo `662-00-01`) porque es el que usa el formato actual de los JSON (`662-0.1`, `662-00-01`).
-3. **¿Sobrescribir un plan ya publicado?** Si un plan ya está en `planes.json` y disponible, ¿se permite reexportar desde CSV? Recomendación: sí, pero con confirmación y versión de respaldo.
-4. **¿`disponible: false` bloquea la carga de usuarios?** Sí, `esPlanDisponible` en `planes.js` ya lo impide. El editor es quien pasa un plan de `false` a `true`.
+### Resueltas
+
+1. **¿Dónde se guardan los borradores?** Firestore `planesPendientes` con `jsonTexto`.
+2. **¿Se mantiene CSV?** No. Solo JSON.
+3. **¿Cómo se editan las correlativas complejas?** Editor AND/OR completo, con árbol normalizado.
+4. **¿Se implementa `disponible`?** Sí, con `planes.json` como fuente de verdad.
+5. **¿El código canónico es `materia_id` o `Cod`?** `materia_id` (clave del mapa).
+6. **¿Sobrescribir un plan ya publicado?** Sí, con confirmación y merge del catálogo.
+
+### Pendientes menores
+
+1. ¿El editor debe permitir crear un plan nuevo sin JSON previo? Recomendación: sí, con “Agregar materia” y metadatos manuales.
+2. ¿Se guarda un historial de versiones del JSON en Firestore? Recomendación: no por ahora; el historial es git.
+3. ¿`revisadoPor` guarda uid o email? Recomendación: uid + email en `planesPendientes`; en el detalle publicado, uid.
 
 ---
 
@@ -262,9 +539,13 @@ Hoy (30/10/2026): solo `662` y `708` cumplen todo. `662G` está en el catálogo 
 
 | Etapa | Comando / prueba |
 |---|---|
-| EditorPlanes.vue + useEditorPlanes.js | `npm run test:unit` (nuevos tests del editor), `npm run build` |
-| SelectMateria.vue | Prueba manual: seleccionar materia, se completa código y nombre |
-| Router | Navegar a `/coordinacion/editor-planes` como coordinador; acceso denegado para otros roles |
-| BarraApp / CoordinacionLayout | Ítem "Editor de Planes" visible solo para coordinación |
-| Exportar JSON | Archivo descargable con formato exacto de SIGE; `normalizarPlanJson` lo lee sin errores |
-| modelo-datos.md | Sección de formato JSON y disponibilidad agregada |
+| Docs actualizados | Revisar `plan-editor-planes-202611.md`, `modelo-datos.md`, `contexto.md` |
+| `condiciones.js` + `EditorCondicion.vue` | `npm run test:unit` (tests de condiciones) y prueba manual del árbol |
+| `useEditorPlanes.js` | `npm run test:unit` (importación, round-trip, export) |
+| `usePlanesPendientes.js` + rules | Guardar/abrir un JSON; verificar `jsonTexto` y reglas |
+| `useCatalogoPlanes.js` + `planes.js` | Catálogo carga, `planesDisponibles()` correcto |
+| Gating en alta | Importar CSV con plan disponible y con plan no disponible |
+| Estado inicial | Plan con año 0 → `ingresante`; sin año 0 → `activo` |
+| Exportar JSON | `normalizarPlanJson` lee el archivo sin errores; round-trip conserva `{and}`/`{or}` |
+| Catálogo | Descargar `planes.json` y verificar merge sin perder planes |
+| Build | `npm run build` |

@@ -40,6 +40,8 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 **Colecciones de soporte (nuevas)**
 - `importaciones/{id}`: auditoría de cargas masivas (hash, usuario, totales, errores).
 - `contadores/legajos`: secuencia transaccional para `numeroLegajo` (formato previsto `AAAA-NNNN`, a confirmar en E5).
+- `planesPendientes/{codigo}`: borradores JSON del editor de planes (`codigo`, `nombre`,
+  `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`).
 
 **Colección: `ofertaAcademica`**
 - Documento por ciclo (ej: `2026-1`).
@@ -51,10 +53,12 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
   `fechaInscripcion`, `ciclo`.
 
 **Datos estáticos: `/public/planes/{planId}.json`**
-- `planes.json` es la única fuente de códigos y nombres; cada `{planId}.json` tiene materias,
-  años y correlatividades.
-- Solo se puede dar de alta un plan con JSON disponible y normalizable. Hoy: `662` y `708`.
+- `planes.json` es la única fuente de códigos, nombres y disponibilidad (`disponible`); cada
+  `{planId}.json` tiene materias, años y correlatividades.
+- El catálogo se carga en runtime y `planesDisponibles()` es el gate real del alta: solo se puede
+  dar de alta un plan con `disponible: true` y detalle normalizable. Hoy: `662` y `708`.
   `662G` está bloqueado hasta revisión; faltan 34 JSON.
+- Los borradores del editor viven en `planesPendientes/{codigo}` con el JSON crudo en `jsonTexto`.
 
 ## Estado de implementación (30/10/2026)
 

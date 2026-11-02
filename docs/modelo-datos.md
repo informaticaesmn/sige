@@ -333,6 +333,17 @@ contador es la forma de evitar números repetidos cuando hay cargas concurrentes
 - Las reglas usan un wildcard de segmento completo + `matches('^inscripciones[0-9]+$')`; las
   reglas no soportan comodines parciales.
 
+### `planesPendientes/{codigo}`
+
+- Borradores de planes en revisión (editor de planes). ID = código canónico (`663`, `662G`, ...).
+- Campos: `codigo`, `nombre`, `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`,
+  `actualizadoPorEmail`.
+- `jsonTexto` guarda el JSON crudo importado (máx. 1.000.000 bytes). Reemplaza al viejo
+  `csvTexto`; la lectura acepta `csvTexto` como fallback para documentos viejos, pero la
+  escritura siempre usa `jsonTexto`.
+- Solo coordinación y admin. La fuente de verdad del plan publicado sigue siendo
+  `public/planes/{codigo}.json`.
+
 ## 8. Diseño futuro (no implementado)
 
 Estas colecciones están documentadas como diseño, pero **no existen** en Firestore:
@@ -351,12 +362,12 @@ Estas colecciones están documentadas como diseño, pero **no existen** en Fires
 `planesDeEstudio` **no** se implementa: la fuente de verdad de los planes son los archivos JSON
 de `public/planes/`.
 
-## 9. Planes: JSON y detección de pregrado
+## 9. Planes: JSON, disponibilidad y detección de pregrado
 
-- `public/planes/planes.json`: catálogo de códigos y nombres. Es la **única fuente** de nombres;
-  no se hardcodea en scripts ni en la app.
-- `public/planes/{codigo}.json`: materias, años y correlatividades. Solo se puede dar de alta
-  un plan cuyo JSON exista, se pueda normalizar y esté revisado.
+- `public/planes/planes.json`: catálogo de códigos, nombres y **disponibilidad**. Es la única
+  fuente de nombres y de habilitación para el alta de usuarios.
+- `public/planes/{codigo}.json`: materias, años y correlatividades. Solo se puede dar de alta un
+  plan cuyo JSON exista, se pueda normalizar y esté marcado como disponible en el catálogo.
 - **Pregrado:** toda materia con año `0` es de pregrado. En los JSON actuales el año se escribe
   `0` (`plan-0.N`), no `AA=00`. Un plan sin materias de año `0` es “sin pregrado” y su estado
   inicial es `activo`.
@@ -366,9 +377,9 @@ de `public/planes/`.
 - El **código canónico** es el que figura en `planes.json`, tratado siempre como **string**:
   `662`, `708`, `662G`, `662A`, `662Ñ`, etc.
 - No se trunca ni se deriva el código. En particular, `62G` **no** es un código canónico: es
-  un alias legacy de `662G` que puede aparecer en JSON viejos. En E2, `resolverCodigoPlan` lo
-  acepta al leer y devuelve `662G`.
-- En CSV v2 y en el mapa `planes` de Firestore se guarda el **código**, no el nombre. El nombre
+  un alias legacy de `662G` que puede aparecer en JSON viejos. `resolverCodigoPlan` lo acepta al
+  leer y devuelve `662G`.
+- En el mapa `planes` de Firestore y en el editor se guarda el **código**, no el nombre. El nombre
   se resuelve desde `planes.json`; en v2 se puede guardar como snapshot
   (`planes["662"].nombre`) para mostrarlo sin leer el catálogo.
 - Los arrays v1 (`planes: ["662 Profesorado de Música"]`) pueden traer nombres completos o
@@ -380,17 +391,105 @@ de `public/planes/`.
   componer `tronco común de orientaciones + instrumento`; la identidad del plan sigue siendo el
   código oficial (`662G`, `662A`, …).
 - Google Sheets: el apóstrofo o el formato “texto” es una solución de la planilla, no del
-  modelo. El CSV debe exportar el código entre comillas (`"662G"`) y el parser debe tratarlo
-  como string.
+  modelo. El formato de intercambio es el JSON del Apps Script `exportPlanJSONCore`, que ya
+  resuelve el código como string.
 
-### Disponibilidad actual (30/10/2026)
+### 9.2 Catálogo `planes.json` y disponibilidad
 
-| Archivo | Plan interno | Materias | ¿Pregrado? | Estado |
+```json
+{
+  "planes": [
+    { "codigo": "662", "nombre": "662 Profesorado de Música", "disponible": true },
+    { "codigo": "708", "nombre": "708 Técnico Superior en Sonido", "disponible": true },
+    { "codigo": "662G", "nombre": "662G Profesorado de Música con orientación en Guitarra", "disponible": false },
+    { "codigo": "663", "nombre": "663 Profesorado de Música con orientación en Dirección Coral", "disponible": false }
+  ]
+}
+```
+
+- `disponible: true` es el **gate real** del alta de usuarios.
+- El editor de planes actualiza `planes.json` con merge por código al publicar.
+- Un plan puede tener `{codigo}.json` válido y aun así estar `disponible: false` (en revisión).
+- Si `planes.json` no se puede cargar, `planesDisponibles()` devuelve vacío y el alta falla con
+  error explícito; nunca se asume disponibilidad.
+
+### 9.3 Funciones de `src/utils/planes.js`
+
+| Función | Semántica |
+|---|---|
+| `catalogoDePlanes()` | Todos los códigos del catálogo cargado (para resolver nombres y normalizar usuarios existentes). Fallback hardcodeado solo si el catálogo aún no cargó. |
+| `planesDisponibles()` | Solo los códigos con `disponible: true`. |
+| `esPlanDisponible(codigo)` | `planesDisponibles().includes(codigo)`. |
+| `resolverCodigoPlan(valor, nombres)` | Resuelve código/alias/nombre contra **todos** los códigos; no gatea. |
+| `normalizarPlanJson(json, codigo)` | Valida el shape del detalle; no decide disponibilidad. |
+| `validarPlanDetalle(codigo)` | Combina catálogo + detalle: `{ disponible, motivo, plan }`. Hace `fetch('/planes/{codigo}.json')` con cache. |
+| `estadoInicialDePlan(plan)` | `ingresante` si hay año 0; `activo` si no; `null` si el plan no está disponible. |
+
+`resolverCodigoPlan` no debe gatear: un usuario existente con un plan que pasó a
+`disponible: false` tiene que seguir normalizándose. El gate se aplica en la validación de alta
+(`validarDatosUsuario`, `validarCSVUsuarios`, `useImportarUsuarios`).
+
+### 9.4 Formato de `{codigo}.json`
+
+```json
+{
+  "plan": "663",
+  "nombre": "663 Profesorado de Música con orientación en Dirección Coral",
+  "formato": "objeto",
+  "materias": {
+    "663-0.1": {
+      "id": "663-0.1",
+      "anio": 0,
+      "nombre": "Audioperceptiva",
+      "nombre_c": "Audio Pre",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "663-0.2",
+            { "or": ["663-0.3.1", "663-0.3.2"] }
+          ]
+        },
+        "aprobar": "663-0.1"
+      },
+      "equivale_a": ["662-0.1"]
+    }
+  },
+  "disponible": true,
+  "revisadoEn": "2026-11-02T12:00:00.000Z",
+  "revisadoPor": "uid-del-coordinador"
+}
+```
+
+Reglas del formato:
+
+- `anio` es obligatorio en el modelo normalizado; si falta, se deriva de `id` con
+  `anioDeMateria()`.
+- `correlativas.cursar` y `.aprobar` pueden ser:
+  - un string (`"663-0.2"`);
+  - `{ "and": [ ... ] }`;
+  - `{ "or": [ ... ] }`;
+  - `{ "anio_completo": N }`;
+  - `null`/ausente si no hay condición.
+- Los grupos pueden anidarse (`and` dentro de `or` y viceversa), como los genera el Apps Script.
+- `equivale_a` es un **array** de códigos; puede referenciar materias del plan madre, por eso no
+  se valida contra las materias del propio plan.
+- `disponible`, `revisadoEn` y `revisadoPor` son campos de auditoría/espejo. El gate real es
+  `planes.json`; `normalizarPlanJson` no los exige.
+
+### 9.5 Borradores: `planesPendientes/{codigo}`
+
+Ver §7. El editor guarda el JSON crudo en `jsonTexto`; al publicar, descarga
+`{codigo}.json` y `planes.json` para commitearlos juntos.
+
+### 9.6 Disponibilidad actual (02/11/2026)
+
+| Archivo | Plan interno | Materias | ¿Pregrado? | `disponible` |
 |---|---|---|---|---|
-| `662.json` | `662` | 91 | **Sí (11)** | Disponible |
-| `708.json` | `708` | 29 | **No** | Disponible |
-| `662G.json` | `62G` ⚠️ | 58 | **No** | **No disponible** hasta revisar/normalizar |
-| Otros 34 planes de `planes.json` | — | — | — | **Bloqueados**: no tienen JSON |
+| `662.json` | `662` | 91 | **Sí (11)** | `true` |
+| `708.json` | `708` | 29 | **No** | `true` |
+| `662G.json` | `62G` ⚠️ | 58 | **No** | `false` hasta revisar/normalizar |
+| Otros 34 planes de `planes.json` | — | — | — | `false`: no tienen JSON |
 
 `662G` es una excepción: su `Plan` interno es `62G`, usa un array legacy, códigos sin prefijo
 de plan, no tiene año 0 (pregrado), tiene 4 códigos duplicados (`62G.1.1` a `62G.4.1`) y sus
