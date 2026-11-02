@@ -6,7 +6,7 @@
 // El núcleo NO escribe en Firestore; solo valida y construye los documentos.
 // El estado global (ref/computed) debe declararse a nivel de módulo (singleton), no dentro de la función factory.
 
-import { catalogoDePlanes, esPlanDisponible } from './planes.js'
+import { catalogoDePlanes } from './planes.js'
 import { parsearArray } from './csv.js'
 
 /**
@@ -65,8 +65,9 @@ export function resolverCodigoPlan(valor, nombresDePlanes) {
   if (!valor) return null
   const str = String(valor).trim()
 
-  // 1) Si ya es un código canónico (existe en el catálogo)
-  if (esPlanDisponible(str)) {
+  // 1) Si ya es un código canónico (existe en el catálogo, disponible o no).
+  // La disponibilidad se gatea aparte (catálogo con `disponible: true`).
+  if (catalogoDePlanes().includes(str)) {
     return { codigo: str, nombre: nombresDePlanes[str] || str }
   }
 

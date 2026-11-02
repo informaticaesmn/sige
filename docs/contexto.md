@@ -81,6 +81,12 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 > actuales. La carga masiva in-app actual todavía acepta roles y no valida JSON de planes:
 > eso cambia en E5.
 
+> **Editor de planes (02/11/2026):** ya están implementadas las utilidades puras
+> `src/utils/planes.js` (catálogo + gating) y `src/utils/condiciones.js`. Pendiente:
+> `useCatalogoPlanes.js`, migrar `planesPendientes` a `jsonTexto`, agregar `disponible` a
+> `planes.json` y conectar el gate en el alta. Ver
+> [plan-editor-planes-202611.md](plan-editor-planes-202611.md).
+
 ---
 
 ## Flujo de Autenticación
@@ -110,10 +116,16 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - **`useLayout.js`**: Theme + layout singleton (body class switching).
 
 **Utilidades puras compartidas (nuevas):**
-- `src/utils/planes.js` (E1): normalización de JSON (formato actual y legacy), detección de
-  pregrado, `estadoInicialDePlan` y catálogo explícito (`catalogoDePlanes`, `esPlanDisponible`).
-  `662G` no está en el catálogo: su JSON declara `Plan: "62G"` (alias legacy, no código
-  canónico), no tiene año 0 y tiene códigos duplicados.
+- `src/utils/planes.js` (E1, ampliada 02/11/2026): normalización de JSON (formato actual y
+  legacy), detección de pregrado, `estadoInicialDePlan` y catálogo en runtime
+  (`setCatalogoPlanes`, `planesDisponibles`, `esPlanDisponible`, `validarPlanDetalle`).
+  `resolverCodigoPlan` resuelve contra **todos** los códigos y no gatea; el gate de alta es
+  `planesDisponibles()`. `662G` está en `planes.json` pero queda `disponible: false`: su JSON
+  declara `Plan: "62G"` (alias legacy, no código canónico), no tiene año 0 y tiene códigos
+  duplicados.
+- `src/utils/condiciones.js` (02/11/2026): conversión, recorrido y validación puras del árbol
+  de correlatividades AND/OR/año completo (`condicionDesdeJson`, `condicionAJson`,
+  `recorrerCondicion`, `codigosDeCondicion`, `validarCondicion`).
 - `src/utils/validacionUsuarios.js` (E2): normalización y validación de usuarios, planes y fechas; construcción de `usuarios` y `legajos`.
 - `src/utils/csv.js` (E2): parser CSV v2 con columnas y arrays paralelos.
 

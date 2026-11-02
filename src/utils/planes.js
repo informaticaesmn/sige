@@ -15,19 +15,14 @@
 // `62G` es un alias legacy de `662G`, no un código válido para escribir.
 
 /**
- * Códigos de plan listados en `public/planes/planes.json` (catálogo oficial).
+ * Códigos de plan de respaldo (catálogo histórico de `planes.json`).
  *
- * Estos son todos los códigos canónicos que aparecen en el catálogo, siempre
- * como strings (`662`, `662A`, `662B`, `663`, `708`, etc.). Un código estar
- * en esta lista significa que existe en `planes.json`, no que tenga JSON de
- * materias revisado. Para dar de alta un plan hace falta además que su
- * `{codigo}.json` se pueda normalizar (`normalizarPlanJson` → `disponible`).
- *
- * `662G` está incluido porque aparece en `planes.json`, pero su JSON es
- * legacy (`Plan: "62G"`), no tiene materias de año 0 (pregrado) y sus
- * equivalencias/correlativas con `662` todavía no están revisadas.
- * `esPlanDisponible('662G')` devuelve `true`, pero `normalizarPlanJson`
- * reporta `disponible: false`, por lo que no se puede dar de alta.
+ * Se usa solo mientras el catálogo en runtime todavía no se cargó (por ejemplo
+ * antes de que `useCatalogoPlanes` llame a `setCatalogoPlanes`). La fuente de
+ * verdad es el catálogo cargado, que además declara qué planes están
+ * `disponible`. Un código en esta lista significa que existe en `planes.json`,
+ * no que se pueda dar de alta: para eso hace falta `disponible: true` y que su
+ * `{codigo}.json` normalice.
  */
 export const PLANES_CON_JSON = Object.freeze([
   '662',
@@ -44,6 +39,15 @@ export const FORMATOS_PLAN = Object.freeze({
   OBJETO: 'objeto',
   LEGACY: 'legacy'
 })
+
+/**
+ * Catálogo cargado en runtime desde `planes.json` (`null` mientras no cargó).
+ * Es un array de `{ codigo, nombre, disponible }`.
+ */
+let catalogoCargado = null
+
+/** Cache en memoria de detalles de plan resueltos por `validarPlanDetalle`. */
+let cacheDetalle = new Map()
 
 /**
  * Convierte un año de materia a número. Acepta `0`, `00`, etc.
@@ -343,60 +347,215 @@ export function estadoInicialDePlan(plan) {
 }
 
 /**
- * Códigos de plan listados en `public/planes/planes.json` (catálogo oficial).
+ * Normaliza el catálogo crudo de `planes.json` a `[{ codigo, nombre, disponible }]`.
+ * Acepta `{ planes: [...] }` o un array plano. Descarta entradas sin código y
+ * duplicados (se queda con la primera aparición). `disponible` es `true` solo si
+ * vale exactamente `true`; cualquier otro valor se considera no disponible.
  *
- * Un código estar en esta lista significa que existe en `planes.json`, no que
- * tenga JSON de materias revisado. Para dar de alta un plan hace falta además
- * que su `{codigo}.json` se pueda normalizar (`normalizarPlanJson` →
- * `disponible`).
+ * @param {Object|Array} json contenido de `planes.json`
+ * @returns {Array<{ codigo: string, nombre: string, disponible: boolean }>}
+ */
+export function normalizarCatalogoPlanes(json) {
+  const lista = Array.isArray(json) ? json : Array.isArray(json?.planes) ? json.planes : null
+  if (!lista) return []
+
+  const planes = []
+  const vistos = new Set()
+  for (const item of lista) {
+    const codigo = String(item?.codigo ?? '').trim()
+    if (!codigo || vistos.has(codigo)) continue
+    vistos.add(codigo)
+    planes.push({
+      codigo,
+      nombre: String(item?.nombre ?? codigo).trim() || codigo,
+      disponible: item?.disponible === true
+    })
+  }
+  return planes
+}
+
+/**
+ * Carga el catálogo de planes en memoria. Lo llama `useCatalogoPlanes` después
+ * de hacer `fetch('/planes/planes.json')`.
  *
- * @returns {string[]} copia de los códigos del catálogo
+ * @param {Object|Array} json catálogo crudo o normalizado
+ * @returns {Array<{ codigo: string, nombre: string, disponible: boolean }>}
+ */
+export function setCatalogoPlanes(json) {
+  catalogoCargado = normalizarCatalogoPlanes(json)
+  return catalogoCargado
+}
+
+/**
+ * Limpia el catálogo y la cache de detalles. Pensado para tests y para forzar
+ * una recarga del catálogo.
+ * @returns {void}
+ */
+export function resetCatalogoPlanes() {
+  catalogoCargado = null
+  cacheDetalle = new Map()
+}
+
+/**
+ * Todos los códigos canónicos del catálogo cargado. Si el catálogo todavía no
+ * cargó, devuelve el fallback hardcodeado para poder resolver nombres de
+ * usuarios existentes sin bloquear la app.
+ * @returns {string[]}
  */
 export function catalogoDePlanes() {
+  if (catalogoCargado) return catalogoCargado.map((plan) => plan.codigo)
   return [...PLANES_CON_JSON]
 }
 
 /**
- * Indica si un código de plan existe en el catálogo oficial de `planes.json`.
+ * Códigos de plan habilitados para el alta (`disponible: true` en `planes.json`).
+ * Si el catálogo no cargó devuelve `[]`: nunca se asume disponibilidad.
+ * @returns {string[]}
+ */
+export function planesDisponibles() {
+  if (!catalogoCargado) return []
+  return catalogoCargado.filter((plan) => plan.disponible).map((plan) => plan.codigo)
+}
+
+/**
+ * Indica si un código de plan está habilitado para el alta de usuarios.
  * @param {string} codigo
  * @returns {boolean}
  */
 export function esPlanDisponible(codigo) {
-  return PLANES_CON_JSON.includes(String(codigo ?? '').trim())
+  return planesDisponibles().includes(String(codigo ?? '').trim())
 }
 
 /**
- * Resuelve un valor de plan a su código canónico y nombre desde `planes.json`.
+ * Mapa `codigo → nombre` del catálogo cargado (vacío si no cargó).
+ * @returns {Record<string, string>}
+ */
+export function nombresDePlanes() {
+  const mapa = {}
+  if (catalogoCargado) {
+    for (const plan of catalogoCargado) mapa[plan.codigo] = plan.nombre
+  }
+  return mapa
+}
+
+/**
+ * Resuelve un valor de plan a su código canónico y nombre.
+ *
+ * Resuelve **contra todos** los códigos del catálogo, sin gatear por
+ * disponibilidad: un usuario existente con un plan que pasó a `disponible:
+ * false` tiene que seguir normalizándose. El gate se aplica aparte
+ * (`esPlanDisponible` / `validarPlanDetalle`).
+ *
  * Acepta:
  * - código canónico (`"662"`, `"708"`, `"662G"`)
  * - alias legacy (`"62G"` → `"662G"`)
  * - nombre completo v1 (`"662 Profesorado de Música"` → `"662"`)
+ *
  * @param {string} valor
- * @param {Record<string, string>} nombresDePlanes mapa codigo → nombre completo
+ * @param {Record<string, string>} [nombres] mapa codigo → nombre completo
  * @returns {{ codigo: string, nombre: string }|null} null si no se puede resolver
  */
-export function resolverCodigoPlan(valor, nombresDePlanes) {
+export function resolverCodigoPlan(valor, nombres = {}) {
   if (!valor) return null
   const str = String(valor).trim()
+  if (!str) return null
+
+  const nombresPlanes = nombres || {}
 
   // 1) Si ya es un código canónico (existe en el catálogo)
-  if (esPlanDisponible(str)) {
-    return { codigo: str, nombre: nombresDePlanes[str] || str }
+  if (catalogoDePlanes().includes(str)) {
+    return { codigo: str, nombre: nombresPlanes[str] || str }
   }
 
   // 2) Alias legacy: "62G" → "662G"
   if (str === '62G') {
     const destino = '662G'
-    return { codigo: destino, nombre: nombresDePlanes[destino] || destino }
+    return { codigo: destino, nombre: nombresPlanes[destino] || destino }
   }
 
   // 3) Buscar por nombre completo (v1) en el mapa de nombres
-  for (const [codigo, nombre] of Object.entries(nombresDePlanes)) {
-    if (nombre.toLowerCase() === str.toLowerCase()) {
+  for (const [codigo, nombre] of Object.entries(nombresPlanes)) {
+    if (String(nombre).toLowerCase() === str.toLowerCase()) {
       return { codigo, nombre }
     }
   }
 
   // No se pudo resolver
   return null
+}
+
+/**
+ * Valida que un plan se pueda dar de alta combinando catálogo y detalle.
+ *
+ * 1. Verifica que el código esté en `planesDisponibles()`.
+ * 2. Hace `fetch('/planes/{codigo}.json')` (cache en memoria por código).
+ * 3. Normaliza con `normalizarPlanJson`.
+ * 4. Si el detalle no normaliza, gana el detalle y se reporta el motivo.
+ *
+ * Nunca lanza: siempre devuelve `{ disponible, codigo, motivo, plan }`.
+ *
+ * @param {string} codigo
+ * @param {{ fetchImpl?: Function }} [opciones] `fetchImpl` inyectable para tests
+ * @returns {Promise<{ disponible: boolean, codigo: string, motivo: string|null, plan: Object|null }>}
+ */
+export async function validarPlanDetalle(codigo, opciones = {}) {
+  const codigoNormalizado = String(codigo ?? '').trim()
+
+  if (!codigoNormalizado) {
+    return { disponible: false, codigo: '', motivo: 'Falta el código del plan.', plan: null }
+  }
+
+  if (!esPlanDisponible(codigoNormalizado)) {
+    return {
+      disponible: false,
+      codigo: codigoNormalizado,
+      motivo: `El plan "${codigoNormalizado}" no está disponible en el catálogo.`,
+      plan: null
+    }
+  }
+
+  if (cacheDetalle.has(codigoNormalizado)) {
+    return cacheDetalle.get(codigoNormalizado)
+  }
+
+  const fetchImpl =
+    opciones.fetchImpl || (typeof fetch === 'function' ? fetch.bind(globalThis) : null)
+
+  if (!fetchImpl) {
+    return {
+      disponible: false,
+      codigo: codigoNormalizado,
+      motivo: 'No hay un cliente HTTP disponible para leer el detalle del plan.',
+      plan: null
+    }
+  }
+
+  let json
+  try {
+    const respuesta = await fetchImpl(`/planes/${codigoNormalizado}.json`)
+    if (!respuesta || respuesta.ok === false) {
+      return {
+        disponible: false,
+        codigo: codigoNormalizado,
+        motivo: `No se pudo leer el detalle del plan "${codigoNormalizado}".`,
+        plan: null
+      }
+    }
+    json = await respuesta.json()
+  } catch (error) {
+    return {
+      disponible: false,
+      codigo: codigoNormalizado,
+      motivo: `Error al leer el detalle del plan "${codigoNormalizado}": ${error?.message || error}`,
+      plan: null
+    }
+  }
+
+  const plan = normalizarPlanJson(json, codigoNormalizado)
+  const resultado = plan.disponible
+    ? { disponible: true, codigo: codigoNormalizado, motivo: null, plan }
+    : { disponible: false, codigo: codigoNormalizado, motivo: plan.motivo, plan }
+
+  cacheDetalle.set(codigoNormalizado, resultado)
+  return resultado
 }

@@ -6,8 +6,14 @@ import {
   catalogoDePlanes,
   esPlanDisponible,
   estadoInicialDePlan,
+  normalizarCatalogoPlanes,
   normalizarPlanJson,
-  tienePregrado
+  planesDisponibles,
+  resetCatalogoPlanes,
+  resolverCodigoPlan,
+  setCatalogoPlanes,
+  tienePregrado,
+  validarPlanDetalle
 } from '@/utils/planes.js'
 
 /** Lee un JSON real de `public/planes/` desde el filesystem. */
@@ -148,28 +154,172 @@ describe('normalizarPlanJson', () => {
   })
 })
 
-describe('catalogoDePlanes', () => {
-  it('incluye todos los códigos listados en planes.json (catálogo oficial)', () => {
+describe('catálogo de planes', () => {
+  afterEach(() => resetCatalogoPlanes())
+
+  const catalogoDemo = {
+    planes: [
+      { codigo: '662', nombre: '662 Profesorado de Música', disponible: true },
+      { codigo: '708', nombre: '708 Técnico Superior en Sonido', disponible: true },
+      { codigo: '662G', nombre: '662G Guitarra', disponible: false },
+      { codigo: '666', nombre: '666 Composición', disponible: false }
+    ]
+  }
+
+  it('usa el fallback hardcodeado si el catálogo todavía no cargó', () => {
     const catalogo = catalogoDePlanes()
     expect(catalogo).toContain('662')
     expect(catalogo).toContain('708')
     expect(catalogo).toContain('662A')
-    expect(catalogo).toContain('662B')
     expect(catalogo).toContain('666')
     expect(catalogo).toContain('389')
     expect(catalogo).toHaveLength(37)
   })
 
-  it('incluye 662G porque aparece en planes.json (aunque su JSON no sea usable)', () => {
-    expect(catalogoDePlanes()).toContain('662G')
-    expect(esPlanDisponible('662G')).toBe(true)
+  it('planesDisponibles está vacío si el catálogo no cargó (nunca asume disponibilidad)', () => {
+    expect(planesDisponibles()).toEqual([])
+    expect(esPlanDisponible('662')).toBe(false)
+    expect(esPlanDisponible('662G')).toBe(false)
   })
 
-  it('esPlanDisponible devuelve true para códigos del catálogo y false para los que no están', () => {
+  it('setCatalogoPlanes reemplaza el fallback y define los disponibles', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(catalogoDePlanes()).toEqual(['662', '708', '662G', '666'])
+    expect(planesDisponibles()).toEqual(['662', '708'])
     expect(esPlanDisponible('662')).toBe(true)
     expect(esPlanDisponible('708')).toBe(true)
-    expect(esPlanDisponible('666')).toBe(true)
+    expect(esPlanDisponible('662G')).toBe(false)
+    expect(esPlanDisponible('666')).toBe(false)
     expect(esPlanDisponible('999')).toBe(false)
-    expect(esPlanDisponible('000')).toBe(false)
+  })
+
+  it('normalizarCatalogoPlanes acepta un array plano y descarta sin código / duplicados', () => {
+    const planes = normalizarCatalogoPlanes([
+      { codigo: '662', nombre: 'A', disponible: true },
+      { codigo: '662', nombre: 'duplicado', disponible: true },
+      { codigo: '', nombre: 'sin código' },
+      null
+    ])
+    expect(planes).toEqual([{ codigo: '662', nombre: 'A', disponible: true }])
+  })
+
+  it('normalizarCatalogoPlanes solo marca disponible con `true` exacto', () => {
+    const planes = normalizarCatalogoPlanes([
+      { codigo: '662', nombre: 'A', disponible: true },
+      { codigo: '708', nombre: 'B', disponible: 'true' },
+      { codigo: '666', nombre: 'C' }
+    ])
+    expect(planes.map((p) => p.disponible)).toEqual([true, false, false])
+  })
+})
+
+describe('resolverCodigoPlan', () => {
+  afterEach(() => resetCatalogoPlanes())
+
+  const catalogoDemo = {
+    planes: [
+      { codigo: '662', nombre: '662 Profesorado de Música', disponible: true },
+      { codigo: '662G', nombre: '662G Guitarra', disponible: false }
+    ]
+  }
+
+  it('resuelve un código canónico usando el mapa de nombres', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(resolverCodigoPlan('662', { '662': '662 Profesorado de Música' })).toEqual({
+      codigo: '662',
+      nombre: '662 Profesorado de Música'
+    })
+  })
+
+  it('resuelve un plan no disponible: no gatea', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(resolverCodigoPlan('662G', {})).toEqual({ codigo: '662G', nombre: '662G' })
+  })
+
+  it('resuelve el alias legacy "62G" → "662G"', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(resolverCodigoPlan('62G', {})).toEqual({ codigo: '662G', nombre: '662G' })
+  })
+
+  it('resuelve por nombre completo v1', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(resolverCodigoPlan('662 Profesorado de Música', { '662': '662 Profesorado de Música' })).toEqual({
+      codigo: '662',
+      nombre: '662 Profesorado de Música'
+    })
+  })
+
+  it('devuelve null si no se puede resolver', () => {
+    setCatalogoPlanes(catalogoDemo)
+    expect(resolverCodigoPlan('999', {})).toBeNull()
+    expect(resolverCodigoPlan('', {})).toBeNull()
+    expect(resolverCodigoPlan(null, {})).toBeNull()
+  })
+})
+
+describe('validarPlanDetalle', () => {
+  afterEach(() => resetCatalogoPlanes())
+
+  /** Falso `fetch` que resuelve un JSON con `ok: true`. */
+  const fetchJson = (json) => async () => ({ ok: true, json: async () => json })
+
+  const catalogoDemo = {
+    planes: [{ codigo: '999', nombre: '999', disponible: true }]
+  }
+
+  it('devuelve no disponible si el plan no está en el catálogo', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    const res = await validarPlanDetalle('662G', { fetchImpl: fetchJson({}) })
+    expect(res.disponible).toBe(false)
+    expect(res.motivo).toContain('no está disponible')
+    expect(res.plan).toBeNull()
+  })
+
+  it('normaliza el detalle y devuelve el plan', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    const json = { plan: '999', materias: { '999-0.1': { nombre: 'Inicial' } } }
+    const res = await validarPlanDetalle('999', { fetchImpl: fetchJson(json) })
+    expect(res.disponible).toBe(true)
+    expect(res.motivo).toBeNull()
+    expect(res.plan.plan).toBe('999')
+    expect(Object.keys(res.plan.materias)).toEqual(['999-0.1'])
+  })
+
+  it('si el catálogo dice disponible pero el detalle no normaliza, gana el detalle', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    const json = { plan: '888', materias: { '999-0.1': { nombre: 'Inicial' } } }
+    const res = await validarPlanDetalle('999', { fetchImpl: fetchJson(json) })
+    expect(res.disponible).toBe(false)
+    expect(res.motivo).toContain('888')
+  })
+
+  it('cachea el resultado por código (un solo fetch)', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    let llamadas = 0
+    const fetchImpl = async () => {
+      llamadas++
+      return { ok: true, json: async () => ({ plan: '999', materias: { '999-0.1': { nombre: 'X' } } }) }
+    }
+    await validarPlanDetalle('999', { fetchImpl })
+    await validarPlanDetalle('999', { fetchImpl })
+    expect(llamadas).toBe(1)
+  })
+
+  it('reporta error de red sin lanzar', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    const fetchImpl = async () => {
+      throw new Error('boom')
+    }
+    const res = await validarPlanDetalle('999', { fetchImpl })
+    expect(res.disponible).toBe(false)
+    expect(res.motivo).toContain('boom')
+  })
+
+  it('reporta respuesta HTTP fallida', async () => {
+    setCatalogoPlanes(catalogoDemo)
+    const fetchImpl = async () => ({ ok: false, json: async () => ({}) })
+    const res = await validarPlanDetalle('999', { fetchImpl })
+    expect(res.disponible).toBe(false)
+    expect(res.motivo).toContain('999')
   })
 })

@@ -12,6 +12,11 @@
 > **Reglas:** la matriz de permisos de §10 es el **objetivo**. `firestore.rules` se actualiza
 > en E4; hasta entonces rigen las reglas actuales descriptas en
 > [contexto.md](contexto.md#firestore-rules).
+>
+> **Editor de planes (02/11/2026):** ya están implementadas las utilidades puras
+> `src/utils/condiciones.js` (§9.7) y el catálogo/gating de `src/utils/planes.js` (§9.3).
+> Todavía faltan `useCatalogoPlanes.js`, migrar `planesPendientes` a `jsonTexto`, agregar
+> `disponible` a `planes.json` y conectar el gate en el alta de usuarios.
 
 ## 1. Diagrama general
 
@@ -75,6 +80,11 @@ graph TD
 | `ofertaAcademica` | Implementada (un documento por ciclo). | — |
 | `usuarios/{uid}/inscripciones{ciclo}` | Implementada (subcolección por ciclo). | — |
 | `planesDeEstudio` | **No existe**: los planes viven en `public/planes/*.json`. | — |
+| `planesPendientes` | Composable `usePlanesPendientes` con `csvTexto`; pendiente migrar a `jsonTexto` (ver §7, §9.5). | Editor de planes |
+| `src/utils/condiciones.js` | **Implementada (02/11/2026):** conversión, recorrido y validación del árbol AND/OR/año (ver §9.7). | Editor de planes |
+| `src/utils/planes.js` | **Implementada (02/11/2026):** `setCatalogoPlanes`, `planesDisponibles`, `validarPlanDetalle`; `resolverCodigoPlan` ya no gatea (ver §9.3). | Editor de planes |
+| `src/composables/academico/useCatalogoPlanes.js` | **No existe todavía:** falta cargar `planes.json` en runtime; hasta entonces `planesDisponibles()` devuelve `[]`. | Editor de planes |
+| `public/planes/planes.json` | **Sin `disponible`:** hay que agregarlo en el mismo release que el gating, o el alta queda bloqueada. | Editor de planes |
 | `resumenAcademico`, `trayectoriaAcademica`, `periodosInscripcion`, `inscripcionesExamen`, `mesasExamen` | **No existen**: son diseño futuro. | Fuera de alcance |
 | `firestore.rules` | Implementa el modelo v1. Bedel no puede crear usuarios; no existen reglas de `legajos`/`importaciones`. | E4 |
 
@@ -415,19 +425,32 @@ de `public/planes/`.
 
 ### 9.3 Funciones de `src/utils/planes.js`
 
+> **Implementado (02/11/2026).** Todas las funciones de la tabla existen y están cubiertas por
+> `tests/unit/utils/planes.spec.js` (29 tests).
+
 | Función | Semántica |
 |---|---|
+| `normalizarCatalogoPlanes(json)` | Normaliza `planes.json` a `[{ codigo, nombre, disponible }]`; descarta sin código/duplicados y exige `disponible === true`. |
+| `setCatalogoPlanes(json)` | Carga el catálogo en memoria (lo llama `useCatalogoPlanes`). |
+| `resetCatalogoPlanes()` | Limpia catálogo y cache de detalles (tests / recarga). |
 | `catalogoDePlanes()` | Todos los códigos del catálogo cargado (para resolver nombres y normalizar usuarios existentes). Fallback hardcodeado solo si el catálogo aún no cargó. |
-| `planesDisponibles()` | Solo los códigos con `disponible: true`. |
+| `planesDisponibles()` | Solo los códigos con `disponible: true`. `[]` si el catálogo no cargó. |
 | `esPlanDisponible(codigo)` | `planesDisponibles().includes(codigo)`. |
+| `nombresDePlanes()` | Mapa `codigo → nombre` del catálogo cargado. |
 | `resolverCodigoPlan(valor, nombres)` | Resuelve código/alias/nombre contra **todos** los códigos; no gatea. |
 | `normalizarPlanJson(json, codigo)` | Valida el shape del detalle; no decide disponibilidad. |
-| `validarPlanDetalle(codigo)` | Combina catálogo + detalle: `{ disponible, motivo, plan }`. Hace `fetch('/planes/{codigo}.json')` con cache. |
+| `validarPlanDetalle(codigo, { fetchImpl })` | Combina catálogo + detalle: `{ disponible, codigo, motivo, plan }`. Hace `fetch('/planes/{codigo}.json')` con cache por código; `fetchImpl` es inyectable para tests. Nunca lanza. |
+| `anioDeMateria(id)` | Año (`0` = pregrado) derivado del código, o `null`. |
+| `tienePregrado(plan)` | `true` si hay alguna materia de año 0. |
 | `estadoInicialDePlan(plan)` | `ingresante` si hay año 0; `activo` si no; `null` si el plan no está disponible. |
 
 `resolverCodigoPlan` no debe gatear: un usuario existente con un plan que pasó a
 `disponible: false` tiene que seguir normalizándose. El gate se aplica en la validación de alta
 (`validarDatosUsuario`, `validarCSVUsuarios`, `useImportarUsuarios`).
+
+Estado del gating en el alta (transición): `validacionUsuarios.js` ya **desacopló** su
+`resolverCodigoPlan` del gate, pero todavía gatea contra `catalogoDePlanes()` (fallback
+hardcodeado). Falta migrarlo a `planesDisponibles()` y agregar `disponible` a `planes.json`.
 
 ### 9.4 Formato de `{codigo}.json`
 
@@ -482,9 +505,16 @@ Reglas del formato:
 Ver §7. El editor guarda el JSON crudo en `jsonTexto`; al publicar, descarga
 `{codigo}.json` y `planes.json` para commitearlos juntos.
 
+Estado: el composable `usePlanesPendientes` todavía escribe/lee `csvTexto`; la migración a
+`jsonTexto` (con lectura tolerante de `csvTexto`) y las reglas de Firestore están pendientes.
+
 ### 9.6 Disponibilidad actual (02/11/2026)
 
-| Archivo | Plan interno | Materias | ¿Pregrado? | `disponible` |
+La columna `disponible` es el **objetivo**. Hoy `public/planes/planes.json` todavía no tiene
+el campo, así que `planesDisponibles()` devuelve `[]` hasta agregarlo. Debe agregarse en el
+mismo release que conecta el gate en el alta.
+
+| Archivo | Plan interno | Materias | ¿Pregrado? | `disponible` (objetivo) |
 |---|---|---|---|---|
 | `662.json` | `662` | 91 | **Sí (11)** | `true` |
 | `708.json` | `708` | 29 | **No** | `true` |
@@ -495,6 +525,32 @@ Ver §7. El editor guarda el JSON crudo en `jsonTexto`; al publicar, descarga
 de plan, no tiene año 0 (pregrado), tiene 4 códigos duplicados (`62G.1.1` a `62G.4.1`) y sus
 equivalencias/correlativas con `662` todavía no están revisadas. Se considera no disponible y
 bloquea cualquier carga que lo referencie.
+
+### 9.7 Condiciones de correlatividad: `src/utils/condiciones.js`
+
+> **Implementado (02/11/2026)**, cubierto por `tests/unit/utils/condiciones.spec.js`
+> (23 tests). Utilidades puras, sin Vue ni red.
+
+Las correlatividades del JSON se representan como un árbol normalizado para poder editarlas sin
+perder los grupos `{and}`/`{or}`:
+
+```js
+{ tipo: 'materia', codigo: '663-0.1' }
+{ tipo: 'and', hijos: [Condicion, ...] }
+{ tipo: 'or',  hijos: [Condicion, ...] }
+{ tipo: 'anio', anio: 0 }        // equivale a { anio_completo: 0 }
+```
+
+| Función | Semántica |
+|---|---|
+| `condicionDesdeJson(json)` | JSON del plan → árbol. Acepta `null`/`''`, string, array legacy (= `and`), `{and}`/`{or}`, `{anio_completo}` y nodos ya normalizados. Colapsa grupos de un hijo; conserva grupos vacíos. |
+| `condicionAJson(condicion)` | Árbol → JSON del plan. `materia` → string, `anio` → `{anio_completo}`, grupo de 1 hijo → hijo, grupo vacío → `null`. |
+| `recorrerCondicion(condicion, visitante)` | Recorre el árbol en profundidad. |
+| `codigosDeCondicion(condicion)` | Códigos de materia referenciados. |
+| `validarCondicion(condicion, opciones)` | `{ exito, errores }`. Detecta grupos vacíos, materias sin código/inexistentes (`codigosValidos`), auto-referencia (`autoReferencia`) y "año completo" sin materias (`aniosValidos`). |
+
+Los grupos de un solo hijo se colapsan en ambos sentidos, de modo que el editor nunca muestra
+un grupo trivial y el round-trip conserva el significado.
 
 ## 10. Permisos (objetivo E4)
 
