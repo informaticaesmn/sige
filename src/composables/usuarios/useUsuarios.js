@@ -6,6 +6,7 @@ import {
   updateDoc,
   writeBatch
 } from 'firebase/firestore/lite'
+import { catalogoDePlanes } from '@/utils/planes.js'
 
 /**
  * Verifica si un email corresponde a un usuario pre-aprobado.
@@ -71,6 +72,48 @@ export async function obtenerUsuario(uid) {
     data.roles = [...new Set(rolesArray.map(r => r.toLowerCase()))]
     // Eliminar el campo viejo si existe
     if (data.rol) delete data.rol
+  }
+
+  // NORMALIZAR: estado → estadoRegistro (compatibilidad v1)
+  if (data.estado && !data.estadoRegistro) {
+    data.estadoRegistro = data.estado
+    delete data.estado
+  }
+  if (!data.estadoRegistro) {
+    data.estadoRegistro = 'pendiente_registro'
+  }
+
+  // NORMALIZAR: planes array → mapa mínimo (compatibilidad v1)
+  // El array puede traer códigos ("662"), nombres completos ("662 Profesorado de Música")
+  // o el alias legacy ("62G"). Siempre se escribe el código canónico como clave.
+  if (Array.isArray(data.planes)) {
+    const mapaPlanes = {}
+    const codigosValidos = catalogoDePlanes()
+    for (const plan of data.planes) {
+      let codigo = plan
+      if (typeof plan === 'string') {
+        // Alias legacy: "62G" → "662G"
+        if (plan === '62G') codigo = '662G'
+        // Nombre completo v1: extraer primera palabra como código ("662 Profesorado..." → "662")
+        else if (plan.includes(' ')) codigo = plan.split(' ')[0]
+        // Si no es un código del catálogo, saltar esta entrada
+        if (!codigosValidos.includes(codigo)) continue
+      } else if (typeof plan === 'object' && plan.id) {
+        codigo = plan.id
+        mapaPlanes[codigo] = plan
+        continue
+      }
+      mapaPlanes[codigo] = {
+        id: codigo,
+        nombre: `Plan ${codigo}`,
+        estado: 'ingresante',
+        vigente: true,
+        origen: 'migracion_v1'
+      }
+    }
+    data.planes = mapaPlanes
+  } else if (!data.planes) {
+    data.planes = {}
   }
   
   return data

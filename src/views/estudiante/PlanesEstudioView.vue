@@ -101,15 +101,14 @@ const {
 
 const planId = ref('662')
 
-// Planes disponibles basados en el usuario
+// Planes disponibles basados en el usuario (user.planes es un mapa por código)
 const planesDisponibles = computed(() => {
-  if (!user.value?.plan) return [{ codigo: '662', nombre: 'Plan 662' }]
+  if (!user.value?.planes || Object.keys(user.value.planes).length === 0) {
+    return [{ codigo: '662', nombre: 'Plan 662' }]
+  }
   
-  // Si es un string, lo convertimos a array
-  const userPlanes = Array.isArray(user.value.plan) 
-    ? user.value.plan 
-    : [user.value.plan]
-    
+  const userPlanes = Object.keys(user.value.planes)
+  
   return userPlanes.map(plan => ({
     codigo: plan,
     nombre: `Plan ${plan}`
@@ -174,11 +173,10 @@ onMounted(async () => {
     if (planFromQuery) {
       planId.value = planFromQuery
     } else {
-      // Cargar los planes del usuario o el plan por defecto
-      const userPlanes = user.value?.plan 
-        ? (Array.isArray(user.value.plan) ? user.value.plan : [user.value.plan])
-        : ['662']
-        
+      // Cargar los planes del usuario o el plan por defecto (user.planes es un mapa)
+      const userPlanes = Object.keys(user.value?.planes || {})
+      if (userPlanes.length === 0) userPlanes.push('662')
+          
       planId.value = userPlanes[0]
       
       // Actualizar la URL con el plan seleccionado

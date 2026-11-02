@@ -134,13 +134,14 @@ describe('Firestore Security Rules', () => {
       const { db: coordDb } = await crearActorConRoles('coord-crea@test.com', ['coordinacion'])
 
       await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-alumno@test.com'), {
-        email: 'nuevo-alumno@test.com', roles: ['estudiante'], estado: 'pendiente_registro'
+        email: 'nuevo-alumno@test.com', roles: ['estudiante'], estadoRegistro: 'pendiente_registro', personaId: 'persona-1',
+        planes: { '662': { id: '662', nombre: 'Plan 662', estado: 'ingresante', vigente: true, origen: 'alta_individual' } }
       }))
       await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-docente@test.com'), {
-        email: 'nuevo-docente@test.com', roles: ['docente'], estado: 'pendiente_registro'
+        email: 'nuevo-docente@test.com', roles: ['docente'], estadoRegistro: 'pendiente_registro', personaId: 'persona-2'
       }))
       await assertSucceeds(setDoc(doc(coordDb, 'usuarios', 'nuevo-bedel@test.com'), {
-        email: 'nuevo-bedel@test.com', roles: ['bedel'], estado: 'pendiente_registro'
+        email: 'nuevo-bedel@test.com', roles: ['bedel'], estadoRegistro: 'pendiente_registro', personaId: 'persona-3'
       }))
     })
 
@@ -161,7 +162,7 @@ describe('Firestore Security Rules', () => {
 
       await testEnv.withSecurityRulesDisabled(async (context) => {
         await setDoc(doc(context.firestore(), 'usuarios', alumnoUid), {
-          email: 'alumno@test.com', roles: ['estudiante'], estado: 'activo'
+          email: 'alumno@test.com', roles: ['estudiante'], estadoRegistro: 'activo'
         })
       })
 
@@ -177,7 +178,7 @@ describe('Firestore Security Rules', () => {
 
       await testEnv.withSecurityRulesDisabled(async (context) => {
         await setDoc(doc(context.firestore(), 'usuarios', alumnoUid), {
-          email: 'alumno2@test.com', roles: ['estudiante'], estado: 'activo'
+          email: 'alumno2@test.com', roles: ['estudiante'], estadoRegistro: 'activo', personaId: 'persona-x'
         })
       })
 
@@ -204,6 +205,219 @@ describe('Firestore Security Rules', () => {
       const { db: userDb } = crearEstudianteAutenticado('estudiante-oferta')
 
       await assertFails(setDoc(doc(userDb, 'ofertaAcademica', '2026-2'), { nombreCiclo: 'x' }))
+    })
+  })
+
+  describe('Rol bedel (alta individual de estudiantes)', () => {
+    const crearBedelAutenticado = (prefijo) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-bedel-${email.split('@')[0]}`
+      return {
+        user: { uid, email },
+        db: testEnv.authenticatedContext(uid, { email, roles: ['bedel'] }).firestore(),
+      }
+    }
+
+    it('debe permitir a bedel crear un pre-registro de estudiante', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-crea-estudiante')
+
+      await assertSucceeds(setDoc(doc(bedelDb, 'usuarios', 'nuevo-alumno-bedel@test.com'), {
+        email: 'nuevo-alumno-bedel@test.com',
+        roles: ['estudiante'],
+        estadoRegistro: 'pendiente_registro',
+        personaId: 'persona-bedel-1',
+        planes: { '662': { id: '662', nombre: 'Plan 662', estado: 'ingresante', vigente: true, origen: 'alta_individual' } }
+      }))
+    })
+
+    it('NO debe permitir a bedel crear un docente', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-crea-docente')
+
+      await assertFails(setDoc(doc(bedelDb, 'usuarios', 'nuevo-docente-bedel@test.com'), {
+        email: 'nuevo-docente-bedel@test.com',
+        roles: ['docente'],
+        estadoRegistro: 'pendiente_registro',
+        personaId: 'persona-bedel-2'
+      }))
+    })
+
+    it('NO debe permitir a bedel crear un admin', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-crea-admin')
+
+      await assertFails(setDoc(doc(bedelDb, 'usuarios', 'nuevo-admin-bedel@test.com'), {
+        email: 'nuevo-admin-bedel@test.com',
+        roles: ['admin'],
+        estadoRegistro: 'pendiente_registro',
+        personaId: 'persona-bedel-3'
+      }))
+    })
+
+    it('NO debe permitir a bedel crear un estudiante sin personaId', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-sin-personaId')
+
+      await assertFails(setDoc(doc(bedelDb, 'usuarios', 'sin-persona@test.com'), {
+        email: 'sin-persona@test.com',
+        roles: ['estudiante'],
+        estadoRegistro: 'pendiente_registro'
+      }))
+    })
+
+    it('debe permitir a bedel crear estudiante sin planes (validación de planes es del cliente)', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-sin-planes')
+
+      // Las rules permiten el create; la validación de "estudiante sin planes"
+      // se hace en el cliente (useAltaUsuario / validarDatosUsuario).
+      await assertSucceeds(setDoc(doc(bedelDb, 'usuarios', 'sin-planes@test.com'), {
+        email: 'sin-planes@test.com',
+        roles: ['estudiante'],
+        estadoRegistro: 'pendiente_registro',
+        personaId: 'persona-bedel-4'
+      }))
+    })
+
+    it('debe permitir a bedel crear con email distinto al ID del documento (validación es del cliente)', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-email-mal')
+
+      // Las rules permiten el create; la validación de email == docId se hace en el cliente.
+      await assertSucceeds(setDoc(doc(bedelDb, 'usuarios', 'otro-email@test.com'), {
+        email: 'nuevo-alumno-bedel@test.com',
+        roles: ['estudiante'],
+        estadoRegistro: 'pendiente_registro',
+        personaId: 'persona-bedel-5'
+      }))
+    })
+  })
+
+  describe('Legajo digital (legajos/{personaId})', () => {
+    const crearBedelAutenticado = (prefijo) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-bedel-legajo-${email.split('@')[0]}`
+      return {
+        user: { uid, email },
+        db: testEnv.authenticatedContext(uid, { email, roles: ['bedel'] }).firestore(),
+      }
+    }
+
+    const crearEstudianteAutenticadoLegajo = (prefijo) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-est-legajo-${email.split('@')[0]}`
+      return {
+        user: { uid, email },
+        db: testEnv.authenticatedContext(uid, { email, roles: ['estudiante'] }).firestore(),
+      }
+    }
+
+    it('debe permitir a bedel crear un legajo', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-legajo-crea')
+
+      await assertSucceeds(setDoc(doc(bedelDb, 'legajos', 'persona-legajo-1'), {
+        personaId: 'persona-legajo-1',
+        numeroLegajo: '2026-0001',
+        dni: '37348389',
+        nombre: 'María José',
+        apellido: 'ORTEGA'
+      }))
+    })
+
+    it('debe permitir a bedel actualizar un legajo', async () => {
+      const { db: bedelDb } = crearBedelAutenticado('bedel-legajo-actualiza')
+
+      // Crear legajo primero (con reglas deshabilitadas para simplificar)
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        await setDoc(doc(context.firestore(), 'legajos', 'persona-legajo-2'), {
+          personaId: 'persona-legajo-2',
+          numeroLegajo: null,
+          dni: '30941843',
+          nombre: 'Victoria',
+          apellido: 'MACLEAN'
+        })
+      })
+
+      await assertSucceeds(updateDoc(doc(bedelDb, 'legajos', 'persona-legajo-2'), {
+        numeroLegajo: '2026-0002',
+        domicilios: [{ tipo: 'real', calle: 'Falsa', numero: '123' }]
+      }))
+    })
+
+    it('NO debe permitir a un estudiante crear un legajo', async () => {
+      const { db: estDb } = crearEstudianteAutenticadoLegajo('est-legajo-no')
+
+      await assertFails(setDoc(doc(estDb, 'legajos', 'persona-legajo-3'), {
+        personaId: 'persona-legajo-3',
+        dni: '11223344',
+        nombre: 'Estudiante',
+        apellido: 'De Prueba'
+      }))
+    })
+
+    it('NO debe permitir a un estudiante leer un legajo ajeno', async () => {
+      const { db: estDb } = crearEstudianteAutenticadoLegajo('est-legajo-lee')
+
+      await assertFails(getDoc(doc(estDb, 'legajos', 'persona-legajo-ajeno')))
+    })
+  })
+
+  describe('Auditoría de importaciones (importaciones/{id})', () => {
+    const crearCoordAutenticado = (prefijo) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-coord-imp-${email.split('@')[0]}`
+      return {
+        user: { uid, email },
+        db: testEnv.authenticatedContext(uid, { email, roles: ['coordinacion'] }).firestore(),
+      }
+    }
+
+    const crearAdminAutenticado = (prefijo) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-admin-imp-${email.split('@')[0]}`
+      return {
+        user: { uid, email },
+        db: testEnv.authenticatedContext(uid, { email, roles: ['admin'] }).firestore(),
+      }
+    }
+
+    it('debe permitir a coordinacion escribir una auditoría de importación', async () => {
+      const { db: coordDb } = crearCoordAutenticado('coord-imp')
+
+      await assertSucceeds(setDoc(doc(coordDb, 'importaciones', 'imp-001'), {
+        tipo: 'carga_masiva',
+        usuario: 'coord@test.com',
+        archivoHash: 'abc123',
+        totalFilas: 10,
+        importados: 8,
+        errores: 2,
+        creadoEn: new Date()
+      }))
+    })
+
+    it('debe permitir a admin escribir una auditoría de importación', async () => {
+      const { db: adminDb } = crearAdminAutenticado('admin-imp')
+
+      await assertSucceeds(setDoc(doc(adminDb, 'importaciones', 'imp-002'), {
+        tipo: 'script',
+        usuario: 'admin@test.com',
+        archivoHash: 'def456',
+        totalFilas: 5,
+        importados: 5,
+        errores: 0,
+        creadoEn: new Date()
+      }))
+    })
+
+    it('NO debe permitir a un bedel escribir una auditoría de importación', async () => {
+      const email = generateTestEmail('bedel-imp-no')
+      const uid = `uid-bedel-imp-no-${email.split('@')[0]}`
+      const bedelDb = testEnv.authenticatedContext(uid, { email, roles: ['bedel'] }).firestore()
+
+      await assertFails(setDoc(doc(bedelDb, 'importaciones', 'imp-003'), {
+        tipo: 'carga_masiva',
+        usuario: email,
+        archivoHash: 'ghi789',
+        totalFilas: 1,
+        importados: 0,
+        errores: 1,
+        creadoEn: new Date()
+      }))
     })
   })
 })

@@ -4,7 +4,9 @@
     <div class="flex flex-col items-center mb-4">
       <img src="/avatar.png" alt="Foto estudiante" class="w-24 h-24 rounded-full border-4 border-primary mb-4">
       <h2 class="text-xl font-bold text-stone-800">{{ user?.nombre || 'Estudiante' }}</h2>
-      <p class="text-stone-600">{{ user?.carrera || 'Carrera no definida' }}</p>
+      <p class="text-stone-600">
+        {{ (user?.planes && Object.keys(user.planes).length > 0) ? 'Plan ' + Object.keys(user.planes)[0] : 'Carrera no definida' }}
+      </p>
     </div>
     
     <div class="space-y-3">
@@ -18,11 +20,11 @@
       </div>
       <div class="flex items-center">
         <AcademicCapIcon class="h-5 w-5 inline-block ml-2 text-primary" />
-        <span class="px-2">Legajo: {{ user?.legajo || 'No definido' }}</span>
+        <span class="px-2">Legajo: {{ user?.numeroLegajo || 'No definido' }}</span>
       </div>
       <div class="flex items-center">
         <PlayIcon class="h-5 w-5 inline-block ml-2 text-primary" />
-        <span class="px-2">Estado: {{ user?.estado || 'Activo' }}</span>
+        <span class="px-2">Estado: {{ user?.estadoUsuario || 'Activo' }}</span>
       </div>
     </div>
     

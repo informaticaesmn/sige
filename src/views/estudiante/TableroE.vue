@@ -14,7 +14,7 @@
           <PerfilCard :user="user" />
 
           <!-- Componente de Planes de Estudio (simplificado) -->
-          <PlanesEstudioCard :planes="user?.plan" />
+          <PlanesEstudioCard :planes="user?.planes" />
         </div>
 
         <!-- Columna Derecha -->

@@ -647,8 +647,12 @@ planes; dry-run con diff impreso.
 2. Validaciones mínimas de §5 (`personaId`, `planes` mapa, `email` = docId).
 3. Nueva regla `legajos/{personaId}`: read/write para bedel, coordinación y admin.
 4. Nueva regla `importaciones/{id}`: write para coordinación y admin.
-5. Tests de integración: bedel crea estudiante ✅ / docente ❌ / admin ❌; coordinación crea
-   docente ✅; admin crea admin ✅; bedel actualiza legajo ✅; estudiante no ✅.
+5. Tests de integración: 
+      bedel crea estudiante ✅ / docente ❌ / admin ❌; 
+      coordinación crea docente ✅ / bedel ✅;
+      admin crea admin ✅;
+      bedel actualiza legajo ✅;
+      estudiante no ✅.
 
 **Archivos:** `firestore.rules`, `tests/integration/firestore-rules.spec.js`.
 **Colecciones:** `usuarios`, `legajos`, `importaciones`.

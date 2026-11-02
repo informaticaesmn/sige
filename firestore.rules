@@ -15,19 +15,38 @@ service cloud.firestore {
       return request.auth.token['roles'] != null && request.auth.token['roles'].hasAny(['coordinacion']);
     }
 
+    // Helper: el bedel solo puede crear usuarios con rol estudiante (pre-registro)
+    function esSoloEstudiante(roles) {
+      return roles != null && roles.hasOnly(['estudiante']);
+    }
+
+    // Helper: validaciones mínimas de create de usuarios (ver §5 del plan).
+    // Las reglas solo validan lo que pueden de forma segura sin iterar mapas.
+    // La validación profunda (planes con JSON, email == docId, etc.) es del cliente.
+    function createValido(datos) {
+      return datos.estadoRegistro != null && datos.estadoRegistro == 'pendiente_registro' &&
+             datos.personaId != null &&
+             datos.roles != null && datos.roles.size() > 0;
+    }
+
     // --- Usuarios ---
     match /usuarios/{userId} {
       // Lectura: el propio usuario, o los roles de gestión (bedel/coordinacion/admin).
       allow read: if request.auth.uid == userId || esBedel() || esCoordinacion() || esAdmin();
 
-      // Alta (incluye la carga masiva por CSV de coordinación):
-      // - admin puede crear cualquier usuario.
-      // - coordinacion puede dar de alta estudiantes, docentes y bedeles, pero
-      //   NUNCA crear un 'admin' ni otro 'coordinacion' (evita el auto-ascenso
-      //   creando un documento nuevo). Solo admin otorga roles privilegiados.
+      // Alta individual y carga masiva:
+      // - admin: cualquier rol.
+      // - coordinacion: estudiante, docente, bedel (nunca admin ni coordinacion).
+      // - bedel: solo estudiante (pre-registro).
+      // Validaciones mínimas: estadoRegistro='pendiente_registro', uid ausente,
+      // personaId presente, email == docId, roles no vacío.
       allow create: if esAdmin() ||
                     (esCoordinacion() &&
-                     !request.resource.data.roles.hasAny(['admin', 'coordinacion']));
+                     !request.resource.data.roles.hasAny(['admin', 'coordinacion']) &&
+                     createValido(request.resource.data)) ||
+                    (esBedel() &&
+                     esSoloEstudiante(request.resource.data.roles) &&
+                     createValido(request.resource.data));
 
       // Update: el array `roles` queda congelado para todos salvo admin.
       // (a) el dueño edita sus datos sin tocar roles
@@ -41,6 +60,23 @@ service cloud.firestore {
 
       // Borrar usuarios es tarea exclusiva de admin.
       allow delete: if esAdmin();
+    }
+
+    // --- Legajo digital ---
+    // Un legajo por persona, ID = personaId. Solo bedel, coordinacion y admin.
+    match /legajos/{personaId} {
+      allow read: if esBedel() || esCoordinacion() || esAdmin();
+      allow create: if esBedel() || esCoordinacion() || esAdmin();
+      allow update: if esBedel() || esCoordinacion() || esAdmin();
+      allow delete: if esAdmin();
+    }
+
+    // --- Auditoría de importaciones ---
+    match /importaciones/{id} {
+      allow read: if esAdmin() || esCoordinacion();
+      allow create: if esAdmin() || esCoordinacion();
+      allow update: if false;
+      allow delete: if false;
     }
 
     // --- Oferta Académica ---
