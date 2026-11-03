@@ -45,7 +45,8 @@ npm run dev
 
 Versionado y publicación: `update-dev.ps1` (rama `dev`) y `update-main.ps1` (rama `main`) corren `test:unit` + `build` y
 abortan si fallan; `update-dev` además hace el `npm version` del ciclo. Un push a `main` dispara el deploy a Firebase
-Hosting **y de las reglas de `firestore.rules`** (paso `Deploy Firestore Rules`).
+Hosting **y de las reglas de `firestore.rules`** (paso `Deploy Firestore Rules`). Ese paso es un *gate*: si las reglas
+fallan, el workflow corta y **no** se publica el hosting (evita un front nuevo contra reglas viejas).
 
 ## Estado del proyecto
 

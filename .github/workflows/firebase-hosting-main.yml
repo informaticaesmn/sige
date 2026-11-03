@@ -84,11 +84,13 @@ jobs:
       # 7. Desplegar las reglas de Firestore
       # El deploy de hosting NO publica las reglas: sin este paso `firestore.rules` queda
       # desincronizado del código (así se coló el bug de inscripciones, ver docs/contexto.md #3).
-      # `continue-on-error` a propósito: si las reglas fallan (ej. a la cuenta de servicio le
-      # falta el rol de Rules Admin), el hosting igual se publica y el error del CLI queda como
-      # anotación `::error` en el run.
+      # `continue-on-error: false` a propósito: las reglas son un gate. Si fallan (ej. a la
+      # cuenta de servicio le falta el rol de Rules Admin, o el ruleset no compila), el job
+      # corta acá y NO se publica el hosting. Preferimos un deploy incompleto y visible a un
+      # front nuevo corriendo contra reglas viejas (nos pasó en v0.8.27 y el error quedaba
+      # solo como anotación, fácil de pasar por alto).
       - name: Deploy Firestore Rules
-        continue-on-error: true
+        continue-on-error: false
         run: bash .github/scripts/deploy-firebase.sh firestore:rules
         env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
