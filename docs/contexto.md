@@ -284,3 +284,6 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - Modelo de datos y diagrama: [`modelo-datos.md`](modelo-datos.md)
 - Plan de carga de usuarios y legajo digital: [`plan-carga-usuarios-202610.md`](plan-carga-usuarios-202610.md)
 - Importaciones: [`importar-usuarios.md`](importar-usuarios.md), [`importar-oferta.md`](importar-oferta.md)
+- Editor de planes (base): [`plan-editor-planes-202611.md`](plan-editor-planes-202611.md)
+- Editor de planes compacto (lista + detalle por materia): [`plan-editor-planes-compacto-202611.md`](plan-editor-planes-compacto-202611.md)
+- Separación de entornos dev/producción: [`plan-entornos-dev-prod-202611.md`](plan-entornos-dev-prod-202611.md)

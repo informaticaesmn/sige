@@ -3,6 +3,10 @@
 > **Estado:** aprobado para implementación (02/11/2026).
 > **Objetivo:** que los coordinadores importen el JSON que genera el Apps Script de la planilla, revisen y editen materias y correlatividades, validen, y publiquen `public/planes/{codigo}.json` + `planes.json`.
 > **Producción:** febrero 2027, con foco en año 0 (pregrado) y listado completo de materias. Correlatividades y equivalencias pueden quedar incompletas inicialmente y completarse durante 2027.
+>
+> **Vista (03/11/2026):** la disposición de la vista cambia — plan resumido arriba, lista
+> de materias a la izquierda y detalle de una sola materia a la derecha. Ver
+> [`plan-editor-planes-compacto-202611.md`](plan-editor-planes-compacto-202611.md).
 
 ---
 
