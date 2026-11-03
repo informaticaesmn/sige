@@ -20,7 +20,10 @@
         </div>
 
         <!-- Acciones rápidas cuando hay materias cargadas -->
-        <div v-if="materiasCount > 0" class="flex items-center gap-2">
+        <div
+          v-if="materiasCount > 0"
+          class="flex items-center gap-2"
+        >
           <button
             class="btn btn-secondary text-sm"
             :disabled="!planCodigo || guardandoNube"
@@ -38,24 +41,36 @@
       </div>
 
       <!-- Guardia de rol -->
-      <div v-if="!esCoordinacion" class="alert alert-danger mb-6">
+      <div
+        v-if="!esCoordinacion"
+        class="alert alert-danger mb-6"
+      >
         Esta sección está reservada al rol de Coordinación.
       </div>
 
       <template v-else>
         <!-- Selector de planes provisorios -->
-        <section class="card mb-6">
+        <section class="card mb-4 sticky top-0 z-20">
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex-1 min-w-[16rem]">
-              <label class="form-label text-xs" for="plan-selector">Plan provisorio</label>
+              <label
+                class="form-label text-xs"
+                for="plan-selector"
+              >Plan provisorio</label>
               <select
                 id="plan-selector"
                 class="form-input text-sm w-full"
                 :value="planCodigo"
-                @change="onSeleccionarPlan($event.target.value)"
+                @change="onSeleccionarPlan($event.target.value, $event)"
               >
-                <option value="">— Elegí un plan para editar —</option>
-                <option v-for="p in planesGuardados" :key="p.codigo" :value="p.codigo">
+                <option value="">
+                  — Elegí un plan para editar —
+                </option>
+                <option
+                  v-for="p in planesGuardados"
+                  :key="p.codigo"
+                  :value="p.codigo"
+                >
                   {{ p.codigo }} · {{ ETIQUETAS_ESTADO_REVISION[p.estadoRevision] || 'En edición' }} · {{ formatearFechaHora(p.actualizadoEn) }}
                 </option>
               </select>
@@ -75,19 +90,93 @@
             >
               Eliminar borrador
             </button>
-            <router-link :to="{ name: 'CoordinacionCarga' }" class="btn-link text-xs pb-2">
+            <router-link
+              :to="{ name: 'CoordinacionCarga' }"
+              class="btn-link text-xs pb-2"
+            >
               Importar nuevo JSON
             </router-link>
           </div>
+        </section>
 
-          <!-- Estado de revisión del plan abierto -->
-          <div
-            v-if="materiasCount > 0"
-            class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-stone-200"
+        <!-- Mensajes de la apertura de un borrador -->
+        <div
+          v-if="erroresImport.length > 0"
+          class="alert alert-danger text-xs mb-4"
+        >
+          <ul class="list-disc list-inside space-y-0.5">
+            <li
+              v-for="(e, i) in erroresImport"
+              :key="i"
+            >
+              {{ e }}
+            </li>
+          </ul>
+        </div>
+        <div
+          v-if="mensajeGuardado"
+          class="alert alert-info text-xs mb-4"
+        >
+          {{ mensajeGuardado }}
+        </div>
+
+        <!-- Sin plan abierto -->
+        <div
+          v-if="materiasCount === 0"
+          class="card text-center py-10"
+        >
+          <h2 class="text-lg font-semibold text-stone-700 mb-2">
+            No hay ningún plan abierto
+          </h2>
+          <p class="text-sm text-stone-500 mb-4">
+            Elegí un plan provisorio en el selector de arriba, o importá un JSON desde Carga de Datos.
+          </p>
+          <router-link
+            :to="{ name: 'CoordinacionCarga' }"
+            class="btn btn-primary text-sm"
           >
-            <span class="text-xs font-semibold" :class="claseEstadoRevision">
-              {{ ETIQUETAS_ESTADO_REVISION[estadoRevisionActual] || 'En edición' }}
-            </span>
+            Ir a Carga de Datos
+          </router-link>
+        </div>
+
+        <!-- ==================== 1. RESUMEN DEL PLAN ==================== -->
+        <section
+          v-if="materiasCount > 0"
+          class="card mb-4"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+              <span class="font-mono text-sm font-bold bg-white border border-stone-300 px-2 py-1 rounded">
+                {{ planCodigo }}
+              </span>
+              <span class="text-sm font-semibold text-stone-800 truncate max-w-[24rem]">
+                {{ planNombre || '(sin nombre)' }}
+              </span>
+              <span
+                class="text-xs font-semibold"
+                :class="claseEstadoRevision"
+              >
+                {{ ETIQUETAS_ESTADO_REVISION[estadoRevisionActual] || 'En edición' }}
+              </span>
+              <span class="text-xs text-stone-500">
+                {{ materiasCount }} materias · {{ aniosCount }} años
+              </span>
+              <span
+                v-if="faltantesCount > 0"
+                class="text-xs text-amber-700"
+                :title="`${faltantesCount} materia(s) sin nombre o sin cursada`"
+              >
+                ⚠ {{ faltantesCount }} incompleta(s)
+              </span>
+              <span
+                v-if="comentariosAbiertos > 0"
+                class="text-xs text-stone-600"
+                :title="`${comentariosAbiertos} comentario(s) sin resolver`"
+              >
+                💬 {{ comentariosAbiertos }} abierto(s)
+              </span>
+            </div>
+
             <button
               v-if="estadoRevisionActual !== 'listo_para_publicar'"
               class="btn btn-secondary text-xs"
@@ -105,344 +194,310 @@
               Volver a revisión
             </button>
           </div>
-        </section>
 
-        <!-- Mensajes de la apertura de un borrador -->
-        <div v-if="erroresImport.length > 0" class="alert alert-danger text-xs mb-4">
-          <ul class="list-disc list-inside space-y-0.5">
-            <li v-for="(e, i) in erroresImport" :key="i">{{ e }}</li>
-          </ul>
-        </div>
-        <div v-if="mensajeGuardado" class="alert alert-info text-xs mb-4">
-          {{ mensajeGuardado }}
-        </div>
-
-        <!-- Sin plan abierto -->
-        <div v-if="materiasCount === 0" class="card text-center py-10">
-          <h2 class="text-lg font-semibold text-stone-700 mb-2">
-            No hay ningún plan abierto
-          </h2>
-          <p class="text-sm text-stone-500 mb-4">
-            Elegí un plan provisorio en el selector de arriba, o importá un JSON desde Carga de Datos.
-          </p>
-          <router-link
-            :to="{ name: 'CoordinacionCarga' }"
-            class="btn btn-primary text-sm"
-          >
-            Ir a Carga de Datos
-          </router-link>
-        </div>
-
-        <!-- ==================== 1. METADATOS Y ESTADO DEL PLAN ==================== -->
-        <section v-if="materiasCount > 0" class="card mb-6">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-              <div>
-                <label class="form-label text-xs" for="plan-codigo">Código del plan</label>
-                <input
-                  id="plan-codigo"
-                  v-model="planCodigo"
-                  type="text"
-                  class="form-input font-mono font-semibold text-sm w-full"
-                  placeholder="Ej. 663"
-                >
+          <details class="mt-3">
+            <summary class="text-xs font-medium text-stone-600 cursor-pointer select-none">
+              Editar datos del plan
+            </summary>
+            <div class="mt-3 pt-3 border-t border-stone-200">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label
+                    class="form-label text-xs"
+                    for="plan-codigo"
+                  >Código del plan</label>
+                  <input
+                    id="plan-codigo"
+                    v-model="planCodigo"
+                    type="text"
+                    class="form-input font-mono font-semibold text-sm w-full"
+                    placeholder="Ej. 663"
+                  >
+                </div>
+                <div class="md:col-span-2">
+                  <label
+                    class="form-label text-xs"
+                    for="plan-nombre"
+                  >Nombre del plan</label>
+                  <input
+                    id="plan-nombre"
+                    v-model="planNombre"
+                    type="text"
+                    class="form-input text-sm w-full"
+                    placeholder="Ej. 663 Profesorado de Música"
+                  >
+                </div>
               </div>
-              <div class="md:col-span-2">
-                <label class="form-label text-xs" for="plan-nombre">Nombre del plan</label>
+
+              <div class="flex items-center gap-2 bg-stone-100 p-2.5 rounded border border-stone-200 mt-3">
                 <input
-                  id="plan-nombre"
-                  v-model="planNombre"
-                  type="text"
-                  class="form-input text-sm w-full"
-                  placeholder="Ej. 663 Profesorado de Música"
+                  id="plan-disponible"
+                  v-model="disponible"
+                  type="checkbox"
+                  class="rounded text-primary focus:ring-primary h-4 w-4"
                 >
+                <label
+                  for="plan-disponible"
+                  class="text-xs font-semibold text-stone-700 cursor-pointer"
+                >
+                  Disponible para alta de usuarios
+                </label>
               </div>
-            </div>
 
-            <!-- Aviso si el código editado no coincide con el JSON importado -->
-            <p
-              v-if="planCodigoOrigen && planCodigo !== planCodigoOrigen"
-              class="w-full text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1"
-            >
-              ⚠ El JSON importado declara el plan <strong>{{ planCodigoOrigen }}</strong>.
-              Al exportar se guardará como <strong>{{ planCodigo || '(sin código)' }}</strong>.
-            </p>
-
-            <!-- Flag de disponibilidad -->
-            <div class="flex items-center gap-2 bg-stone-100 p-2.5 rounded border border-stone-200">
-              <input
-                id="plan-disponible"
-                v-model="disponible"
-                type="checkbox"
-                class="rounded text-primary focus:ring-primary h-4 w-4"
+              <p
+                v-if="planCodigoOrigen && planCodigo !== planCodigoOrigen"
+                class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1"
               >
-              <label for="plan-disponible" class="text-xs font-semibold text-stone-700 cursor-pointer">
-                Disponible para alta de usuarios
-              </label>
+                ⚠ El JSON importado declara el plan <strong>{{ planCodigoOrigen }}</strong>.
+                Al exportar se guardará como <strong>{{ planCodigo || '(sin código)' }}</strong>.
+              </p>
             </div>
-          </div>
+          </details>
         </section>
 
-        <!-- ==================== 2. EDITOR DE MATERIAS Y CONDICIONES ==================== -->
-        <section v-if="materiasCount > 0" class="card mb-6">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-stone-200">
+        <!-- ==================== 2. LISTA DE MATERIAS + DETALLE ==================== -->
+        <section
+          v-if="materiasCount > 0"
+          class="mb-4"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-3">
               <h2 class="card-header mb-0">
                 Materias ({{ materiasCount }})
               </h2>
-              <span v-if="hayPregrado" class="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">
+              <span
+                v-if="hayPregrado"
+                class="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded"
+              >
                 Tiene año 0 (pregrado)
               </span>
             </div>
 
             <div class="flex items-center gap-2">
-              <button class="btn btn-secondary text-xs" @click="agregarMateriaEn('0')">
+              <button
+                class="btn btn-secondary text-xs"
+                @click="agregarMateriaEn('0')"
+              >
                 + Materia (Año 0)
               </button>
-              <button class="btn btn-secondary text-xs" @click="agregarMateriaEn('1')">
+              <button
+                class="btn btn-secondary text-xs"
+                @click="agregarMateriaEn('1')"
+              >
                 + Materia (Año 1)
               </button>
             </div>
           </div>
 
-          <!-- Listado por año -->
-          <div
-            v-for="anio in Object.keys(materiasPorAnio).sort()"
-            :key="anio"
-            class="mb-8"
-          >
-            <h3 class="text-sm font-semibold text-stone-700 mb-3 flex items-center gap-2 bg-stone-100 p-2 rounded">
-              <span>Año {{ anio === '-1' ? 'sin código' : anio }} {{ anio === '0' ? '(Pregrado / Ciclo de Formación)' : '' }}</span>
-              <span class="text-xs font-normal text-stone-500">({{ materiasPorAnio[anio].length }} materias)</span>
-            </h3>
+          <div class="grid grid-cols-1 lg:grid-cols-[18rem_minmax(0,1fr)] gap-4 items-start">
+            <!-- Lista navegable -->
+            <aside
+              class="card p-0 overflow-hidden h-[60vh] lg:h-[70vh] lg:sticky lg:top-4"
+              :class="vistaMobile === 'detalle' ? 'hidden lg:block' : ''"
+            >
+              <ListaMaterias
+                :materias="materiasOrdenadas"
+                :seleccionado="codigoSeleccionado"
+                :comentarios="comentarios"
+                @seleccionar="onSeleccionarMateria"
+              />
+            </aside>
 
-            <div class="space-y-3">
-              <div
-                v-for="m in materiasPorAnio[anio]"
-                :key="m.codigo"
-                class="border border-stone-200 rounded-lg p-3 bg-stone-50/50 hover:bg-stone-50 transition-colors"
+            <!-- Detalle de una sola materia -->
+            <div
+              class="min-w-0"
+              :class="vistaMobile === 'lista' ? 'hidden lg:block' : ''"
+            >
+              <button
+                type="button"
+                class="btn btn-secondary text-xs mb-2 lg:hidden"
+                @click="volverAListaMobile"
               >
-                <!-- Cabecera de materia -->
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                  <div class="flex items-center gap-2 flex-1">
-                    <span class="font-mono text-xs font-bold text-stone-700 bg-white border border-stone-300 px-2 py-1 rounded">
-                      {{ m.codigo }}
-                    </span>
-                    <input
-                      v-model="materias[m.codigo].nombre"
-                      type="text"
-                      class="form-input text-sm font-medium flex-1 bg-white"
-                      placeholder="Nombre completo de la materia"
-                    >
-                    <input
-                      v-model="materias[m.codigo].nombre_c"
-                      type="text"
-                      class="form-input text-xs w-36 bg-white"
-                      placeholder="Nombre corto"
-                    >
-                  </div>
-
-                  <div class="flex items-center gap-2">
-                    <select
-                      v-model="materias[m.codigo].cursada"
-                      class="form-input text-xs bg-white w-24"
-                    >
-                      <option :value="null">— Cursada —</option>
-                      <option value="anual">Anual</option>
-                      <option value="1C">1C</option>
-                      <option value="2C">2C</option>
-                    </select>
-
-                    <button
-                      type="button"
-                      class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1"
-                      title="Eliminar materia"
-                      @click="eliminarMateria(m.codigo)"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Bloque de Correlatividades (Árbol) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-stone-200/60">
-                  <!-- Cursar -->
-                  <div>
-                    <label class="block text-xs font-semibold text-stone-600 mb-1">
-                      Correlativas para CURSAR:
-                    </label>
-                    <EditorCondicion
-                      :model-value="m.correlativas.cursar"
-                      :materias-disponibles="materiasLista"
-                      @update:model-value="actualizarCondicion(m.codigo, 'cursar', $event)"
-                    />
-                  </div>
-
-                  <!-- Aprobar -->
-                  <div>
-                    <label class="block text-xs font-semibold text-stone-600 mb-1">
-                      Correlativas para APROBAR:
-                    </label>
-                    <EditorCondicion
-                      :model-value="m.correlativas.aprobar"
-                      :materias-disponibles="materiasLista"
-                      @update:model-value="actualizarCondicion(m.codigo, 'aprobar', $event)"
-                    />
-                  </div>
-                </div>
-
-                <!-- Equivalencias con otros planes (plan madre) -->
-                <div class="mt-3 pt-2 border-t border-stone-200/60">
-                  <label
-                    :for="`equivale-${m.codigo}`"
-                    class="block text-xs font-semibold text-stone-600 mb-1"
-                  >
-                    Equivale a (códigos separados por coma):
-                  </label>
-                  <input
-                    :id="`equivale-${m.codigo}`"
-                    :value="(m.equivale_a || []).join(', ')"
-                    type="text"
-                    class="form-input text-xs bg-white"
-                    placeholder="Ej. 662-0.1, 662-0.2"
-                    @change="onEquivalenciasChange(m.codigo, $event.target.value)"
-                  >
-                </div>
-
-                <!-- Comentarios de la materia -->
-                <div class="mt-3 pt-2 border-t border-stone-200/60">
-                  <button
-                    type="button"
-                    class="text-xs font-medium text-stone-600 hover:text-stone-900"
-                    @click="toggleComentariosMateria(m.codigo)"
-                  >
-                    💬 Comentarios{{ contarComentariosMateria(m.codigo) ? ` (${contarComentariosMateria(m.codigo)})` : '' }}
-                  </button>
-                  <PanelComentarios
-                    v-if="materiaComentariosAbierta === m.codigo"
-                    class="mt-2"
-                    :comentarios="comentarios"
-                    :materia-id="m.codigo"
-                    :titulo="`Comentarios de ${m.codigo}`"
-                    :cargando="cargandoComentarios"
-                    :error="errorComentarios"
-                    @agregar="onAgregarComentario"
-                    @resolver="onResolverComentario"
-                    @reabrir="onReabrirComentario"
-                    @eliminar="onEliminarComentario"
-                  />
-                </div>
+                ← Materias
+              </button>
+              <EditorMateria
+                v-if="materiaSeleccionada"
+                :materia="materiaSeleccionada"
+                :materias-disponibles="materiasLista"
+                :comentarios="comentarios"
+                :cargando-comentarios="cargandoComentarios"
+                :error-comentarios="errorComentarios"
+                @actualizar-campo="onActualizarCampo"
+                @actualizar-condicion="onActualizarCondicion"
+                @eliminar="onEliminarMateria"
+                @agregar-comentario="onAgregarComentario"
+                @resolver-comentario="onResolverComentario"
+                @reabrir-comentario="onReabrirComentario"
+                @eliminar-comentario="onEliminarComentario"
+              />
+              <div
+                v-else
+                class="card text-center py-10 text-sm text-stone-500"
+              >
+                Elegí una materia de la lista para editarla.
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ==================== 3. VALIDACIONES ==================== -->
-        <section v-if="materiasCount > 0" class="card mb-6">
-          <div class="flex items-center justify-between gap-3 mb-3">
-            <h2 class="card-header mb-0">
-              3. Validación del Plan
-            </h2>
-            <button class="btn btn-secondary text-xs" @click="ejecutarValidacion">
+        <!-- ==================== 3. VALIDACIÓN ==================== -->
+        <details
+          v-if="materiasCount > 0"
+          :open="errores.length > 0"
+          class="card mb-4"
+        >
+          <summary class="card-header cursor-pointer select-none">
+            Validación del plan
+            <span
+              v-if="errores.length > 0"
+              class="text-red-600"
+            >· ❌ {{ errores.length }}</span>
+            <span
+              v-else-if="valido"
+              class="text-green-700"
+            >· ✅</span>
+            <span
+              v-if="advertencias.length > 0"
+              class="text-amber-700"
+            >· ⚠ {{ advertencias.length }}</span>
+          </summary>
+          <div class="flex justify-end mt-3">
+            <button
+              class="btn btn-secondary text-xs"
+              @click="ejecutarValidacion"
+            >
               Re-validar
             </button>
           </div>
 
-          <div v-if="valido" class="alert bg-green-50 border-green-200 text-green-800 text-sm">
+          <div
+            v-if="valido"
+            class="alert bg-green-50 border-green-200 text-green-800 text-sm"
+          >
             ✅ Plan estructurado correctamente. Listo para exportar o publicar.
           </div>
 
-          <div v-else-if="errores.length > 0" class="alert alert-danger text-sm">
+          <div
+            v-else-if="errores.length > 0"
+            class="alert alert-danger text-sm"
+          >
             <strong>❌ {{ errores.length }} error(es) detectado(s):</strong>
             <ul class="list-disc list-inside mt-1 text-xs space-y-1">
-              <li v-for="(e, i) in errores" :key="i">
+              <li
+                v-for="(e, i) in errores"
+                :key="i"
+              >
                 {{ e }}
               </li>
             </ul>
           </div>
 
           <!-- Advertencias: no bloquean la publicación -->
-          <div v-if="advertencias.length > 0" class="alert bg-amber-50 border-amber-200 text-amber-800 text-sm mt-3">
+          <div
+            v-if="advertencias.length > 0"
+            class="alert bg-amber-50 border-amber-200 text-amber-800 text-sm mt-3"
+          >
             <strong>⚠ {{ advertencias.length }} advertencia(s):</strong>
             <ul class="list-disc list-inside mt-1 text-xs space-y-1">
-              <li v-for="(a, i) in advertencias" :key="i">
+              <li
+                v-for="(a, i) in advertencias"
+                :key="i"
+              >
                 {{ a }}
               </li>
             </ul>
           </div>
-        </section>
+        </details>
 
         <!-- ==================== 4. EXPORTACIÓN ==================== -->
-        <section v-if="materiasCount > 0" class="card mb-6">
-          <h2 class="card-header text-sm mb-3">
-            4. Exportar archivos JSON finales
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button
-              class="btn btn-primary text-xs w-full"
-              :disabled="!planCodigo"
-              @click="exportarDetalle"
+        <details
+          v-if="materiasCount > 0"
+          class="card mb-4"
+        >
+          <summary class="card-header text-sm cursor-pointer select-none">
+            Exportar archivos JSON
+          </summary>
+          <div class="mt-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <button
+                class="btn btn-primary text-xs w-full"
+                :disabled="!planCodigo"
+                @click="exportarDetalle"
+              >
+                Descargar {{ planCodigo || 'plan' }}.json (detalle)
+              </button>
+              <button
+                class="btn btn-secondary text-xs w-full"
+                :disabled="!planCodigo"
+                @click="exportarCatalogo"
+              >
+                Descargar planes.json (catálogo)
+              </button>
+              <button
+                class="btn btn-secondary text-xs w-full"
+                @click="copiarDetalle"
+              >
+                Copiar detalle al portapapeles
+              </button>
+            </div>
+
+            <div
+              v-if="mensajeExport"
+              class="mt-3 alert alert-info text-xs"
             >
-              Descargar {{ planCodigo || 'plan' }}.json (detalle)
-            </button>
-            <button
-              class="btn btn-secondary text-xs w-full"
-              :disabled="!planCodigo"
-              @click="exportarCatalogo"
-            >
-              Descargar planes.json (catálogo)
-            </button>
-            <button
-              class="btn btn-secondary text-xs w-full"
-              @click="copiarDetalle"
-            >
-              Copiar detalle al portapapeles
-            </button>
+              {{ mensajeExport }}
+            </div>
+
+            <p class="text-xs text-stone-500 mt-3">
+              Para publicar, commiteá juntos <code>{{ planCodigo || '{codigo}' }}.json</code> y
+              <code>planes.json</code>. Un push a <code>main</code> despliega hosting y reglas.
+            </p>
           </div>
+        </details>
 
-          <div v-if="mensajeExport" class="mt-3 alert alert-info text-xs">
-            {{ mensajeExport }}
+        <!-- ==================== 5. COMENTARIOS GENERALES ==================== -->
+        <details
+          v-if="materiasCount > 0"
+          class="card mb-4"
+        >
+          <summary class="card-header cursor-pointer select-none">
+            Comentarios generales del plan
+          </summary>
+          <div class="mt-3">
+            <PanelComentarios
+              :comentarios="comentarios"
+              :materia-id="null"
+              titulo="Comentarios generales del plan"
+              :cargando="cargandoComentarios"
+              :error="errorComentarios"
+              @agregar="onAgregarComentario"
+              @resolver="onResolverComentario"
+              @reabrir="onReabrirComentario"
+              @eliminar="onEliminarComentario"
+            />
           </div>
-
-          <p class="text-xs text-stone-500 mt-3">
-            Para publicar, commiteá juntos <code>{{ planCodigo || '{codigo}' }}.json</code> y
-            <code>planes.json</code>. Un push a <code>main</code> despliega hosting y reglas.
-          </p>
-        </section>
-
-        <!-- ==================== 5. COMENTARIOS DEL PLAN ==================== -->
-        <section v-if="materiasCount > 0" class="card mb-6">
-          <PanelComentarios
-            :comentarios="comentarios"
-            :materia-id="null"
-            titulo="Comentarios generales del plan"
-            :cargando="cargandoComentarios"
-            :error="errorComentarios"
-            @agregar="onAgregarComentario"
-            @resolver="onResolverComentario"
-            @reabrir="onReabrirComentario"
-            @eliminar="onEliminarComentario"
-          />
-        </section>
+        </details>
       </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useEditorPlanes } from '@/composables/academico/useEditorPlanes.js'
 import { useGestionPlanes } from '@/composables/academico/useGestionPlanes.js'
 import { useCatalogoPlanes } from '@/composables/academico/useCatalogoPlanes.js'
 import { useComentariosPlanes } from '@/composables/academico/useComentariosPlanes.js'
 import { ETIQUETAS_ESTADO_REVISION } from '@/composables/academico/usePlanesPendientes.js'
-import EditorCondicion from '@/components/ui/EditorCondicion.vue'
+import ListaMaterias from '@/components/ui/ListaMaterias.vue'
+import EditorMateria from '@/components/ui/EditorMateria.vue'
 import PanelComentarios from '@/components/ui/PanelComentarios.vue'
 import { useAuth } from '@/composables/auth/useAuth.js'
 import { formatearFechaHora } from '@/utils/fechas.js'
 
 const route = useRoute()
+const router = useRouter()
 const { user } = useAuth()
 const { catalogo: catalogoActual, asegurarCatalogo } = useCatalogoPlanes()
 
@@ -501,7 +556,9 @@ const cambiandoEstado = ref(false)
 const comentarios = ref([])
 const cargandoComentarios = ref(false)
 const errorComentarios = ref('')
-const materiaComentariosAbierta = ref(null)
+const codigoSeleccionado = ref('')
+const vistaMobile = ref('lista')
+const snapshotGuardado = ref('')
 
 const esCoordinacion = computed(() => {
   return user.value?.roles?.includes('coordinacion') === true
@@ -522,18 +579,126 @@ const claseEstadoRevision = computed(() => {
 })
 
 /**
- * Cantidad de comentarios anclados a una materia.
- * @param {string} codigo
- * @returns {number}
+ * Materias como array plano, ordenadas por año y código natural.
+ * @returns {{ codigo: string }[]}
  */
-function contarComentariosMateria(codigo) {
-  return comentarios.value.filter((c) => c.materiaId === codigo).length
+const materiasOrdenadas = computed(() =>
+  Object.entries(materias.value)
+    .map(([codigo, materia]) => ({ codigo, ...materia }))
+    .sort((a, b) => {
+      const anioA = Number.isFinite(Number(a.anio)) ? Number(a.anio) : -1
+      const anioB = Number.isFinite(Number(b.anio)) ? Number(b.anio) : -1
+      if (anioA !== anioB) return anioA - anioB
+      return String(a.codigo).localeCompare(String(b.codigo), 'es', { numeric: true })
+    })
+)
+
+/** Materia abierta en el detalle, con su código incluido. */
+const materiaSeleccionada = computed(() => {
+  const materia = materias.value[codigoSeleccionado.value]
+  return materia ? { codigo: codigoSeleccionado.value, ...materia } : null
+})
+
+/** Cantidad de años distintos del plan. */
+const aniosCount = computed(() => Object.keys(materiasPorAnio.value).length)
+
+/** Materias a las que les falta nombre o cursada. */
+const faltantesCount = computed(
+  () =>
+    materiasOrdenadas.value.filter(
+      (materia) => !String(materia.nombre || '').trim() || !materia.cursada
+    ).length
+)
+
+/** Comentarios del plan sin resolver. */
+const comentariosAbiertos = computed(
+  () => comentarios.value.filter((comentario) => !comentario.resuelto).length
+)
+
+/** JSON canónico del estado actual (misma forma que el detalle exportado). */
+const jsonActual = computed(() => {
+  if (!planCodigo.value || materiasCount.value === 0) return ''
+  return JSON.stringify(generarJSONDetalle())
+})
+
+/** Indica si hay cambios respecto del último estado importado/guardado. */
+const hayCambiosSinGuardar = computed(
+  () => snapshotGuardado.value !== '' && jsonActual.value !== snapshotGuardado.value
+)
+
+/**
+ * Aplica un cambio de campo sobre la materia seleccionada.
+ * @param {string} campo
+ * @param {*} valor
+ */
+function onActualizarCampo(campo, valor) {
+  if (!materiaSeleccionada.value) return
+  actualizarMateria(materiaSeleccionada.value.codigo, campo, valor)
 }
 
-/** Abre/cierra el panel de comentarios de una materia. */
-function toggleComentariosMateria(codigo) {
-  materiaComentariosAbierta.value =
-    materiaComentariosAbierta.value === codigo ? null : codigo
+/**
+ * Aplica un cambio de correlativa sobre la materia seleccionada.
+ * @param {'cursar'|'aprobar'} tipo
+ * @param {Object|null} condicion
+ */
+function onActualizarCondicion(tipo, condicion) {
+  if (!materiaSeleccionada.value) return
+  actualizarCondicion(materiaSeleccionada.value.codigo, tipo, condicion)
+}
+
+/**
+ * Elimina una materia y selecciona la siguiente (o la anterior si era la última).
+ * @param {string} codigo
+ */
+function onEliminarMateria(codigo) {
+  const lista = materiasOrdenadas.value
+  const indice = lista.findIndex((materia) => materia.codigo === codigo)
+  eliminarMateria(codigo)
+
+  const restantes = lista.filter((materia) => materia.codigo !== codigo)
+  codigoSeleccionado.value = restantes.length
+    ? restantes[Math.min(Math.max(indice, 0), restantes.length - 1)].codigo
+    : ''
+  vistaMobile.value = codigoSeleccionado.value ? 'detalle' : 'lista'
+  actualizarQueryMateria(codigoSeleccionado.value)
+}
+
+/**
+ * Refleja la selección en la URL (`?abrir=...&materia=...`) sin recargar.
+ * @param {string} codigo
+ */
+function actualizarQueryMateria(codigo) {
+  const query = { ...route.query }
+  if (planCodigo.value) query.abrir = planCodigo.value
+  if (codigo) query.materia = codigo
+  else delete query.materia
+  router.replace({ query }).catch(() => {})
+}
+
+/**
+ * Selecciona una materia desde la lista o un enlace compartido.
+ * @param {string} codigo
+ */
+function onSeleccionarMateria(codigo) {
+  codigoSeleccionado.value = codigo
+  vistaMobile.value = 'detalle'
+  actualizarQueryMateria(codigo)
+}
+
+/** Vuelve a la lista de materias en mobile. */
+function volverAListaMobile() {
+  vistaMobile.value = 'lista'
+}
+
+/** Restaura `?materia` si existe en el plan; si no, selecciona la primera. */
+function seleccionarMateriaInicial() {
+  const desdeUrl = String(route.query?.materia || '')
+  const valida = desdeUrl && materias.value[desdeUrl]
+  codigoSeleccionado.value = valida
+    ? desdeUrl
+    : materiasOrdenadas.value[0]?.codigo || ''
+  vistaMobile.value = valida ? 'detalle' : 'lista'
+  actualizarQueryMateria(codigoSeleccionado.value)
 }
 
 /**
@@ -559,9 +724,20 @@ async function cargarComentarios(codigo) {
   cargandoComentarios.value = false
 }
 
-/** Selecciona un plan provisorio del desplegable. */
-function onSeleccionarPlan(codigo) {
+/**
+ * Selecciona un plan provisorio; confirma si hay cambios sin guardar.
+ * @param {string} codigo
+ * @param {Event} [event]
+ */
+function onSeleccionarPlan(codigo, event) {
   if (!codigo) return
+  if (
+    hayCambiosSinGuardar.value &&
+    !window.confirm('Hay cambios sin guardar en el plan actual. ¿Descartarlos y abrir otro?')
+  ) {
+    if (event?.target) event.target.value = planCodigo.value
+    return
+  }
   abrirBorrador(codigo)
 }
 
@@ -588,6 +764,13 @@ async function eliminarPlanAbierto() {
   disponible.value = false
   estadoRevisionActual.value = 'en_edicion'
   comentarios.value = []
+  codigoSeleccionado.value = ''
+  snapshotGuardado.value = ''
+  vistaMobile.value = 'lista'
+  const query = { ...route.query }
+  delete query.abrir
+  delete query.materia
+  router.replace({ query }).catch(() => {})
   mensajeGuardado.value = `Borrador ${codigo} eliminado.`
 }
 
@@ -599,7 +782,8 @@ async function abrirBorrador(codigo) {
   erroresImport.value = []
   mensajeGuardado.value = ''
   mensajeExport.value = ''
-  materiaComentariosAbierta.value = null
+  codigoSeleccionado.value = ''
+  snapshotGuardado.value = ''
 
   const resultado = await cargarBorrador(codigo)
   if (!resultado.exito) {
@@ -617,6 +801,8 @@ async function abrirBorrador(codigo) {
   mensajeGuardado.value = `Borrador ${codigo} cargado desde la nube.`
 
   await cargarComentarios(codigo)
+  seleccionarMateriaInicial()
+  snapshotGuardado.value = jsonActual.value
 }
 
 /** Marca el plan abierto como listo para publicar. */
@@ -735,6 +921,7 @@ async function guardarBorradorEnNube() {
       ? `Borrador del plan ${resultado.datos.codigo} guardado en la nube.`
       : `No se pudo guardar el borrador: ${resultado.error?.message}`
     if (resultado.exito) {
+      snapshotGuardado.value = JSON.stringify(detalleJson)
       await refrescarLista()
     } else {
       erroresImport.value = [resultado.error?.message || 'No se pudo guardar el borrador.']
@@ -751,21 +938,8 @@ function agregarMateriaEn(anio) {
     erroresImport.value = ['Definí el código del plan antes de agregar materias.']
     return
   }
-  agregarMateria(anio)
-}
-
-/**
- * Convierte el texto libre de equivalencias (`"662-0.1, 662-0.2"`) al array
- * canónico que espera el composable y el JSON exportado.
- * @param {string} codigo
- * @param {string} valor
- */
-function onEquivalenciasChange(codigo, valor) {
-  const equivale_a = String(valor || '')
-    .split(',')
-    .map((equivalencia) => equivalencia.trim())
-    .filter(Boolean)
-  actualizarMateria(codigo, 'equivale_a', equivale_a)
+  const nuevoCodigo = agregarMateria(anio)
+  if (nuevoCodigo) codigoSeleccionado.value = nuevoCodigo
 }
 
 async function ejecutarValidacion() {
@@ -798,6 +972,21 @@ async function copiarDetalle() {
     mensajeExport.value = err.message || 'No se pudo copiar al portapapeles.'
   }
 }
+
+/** Avisa al cerrar o recargar la pestaña si hay cambios sin guardar. */
+function onBeforeUnload(event) {
+  if (!hayCambiosSinGuardar.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onBeforeRouteLeave(() => {
+  if (!hayCambiosSinGuardar.value) return true
+  return window.confirm('Hay cambios sin guardar en el plan. ¿Salir igual?')
+})
+
+onMounted(() => window.addEventListener('beforeunload', onBeforeUnload))
+onUnmounted(() => window.removeEventListener('beforeunload', onBeforeUnload))
 
 onMounted(async () => {
   if (!esCoordinacion.value) return

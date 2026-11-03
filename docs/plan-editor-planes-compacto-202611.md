@@ -1,8 +1,8 @@
 # Plan: editor de planes compacto (lista + detalle por materia)
 
-> **Estado:** aprobado (03/11/2026). Implementación en curso: `condicionATexto()`,
-> `ListaMaterias.vue` y `EditorMateria.vue` listos con tests; sigue conectar todo en
-> `EditorPlanes.vue` (§8.4).
+> **Estado:** implementado (03/11/2026). Incluye `condicionATexto()`, `ListaMaterias.vue`,
+> `EditorMateria.vue`, la integración en `EditorPlanes.vue`, selección por URL
+> (`?abrir=...&materia=...`), aviso de cambios sin guardar y vista mobile de una columna.
 > **Objetivo:** que abrir un plan no genere una página de decenas de miles de píxeles.
 > El plan se resume arriba, las materias se navegan en una lista angosta a la izquierda
 > y **el editor completo se aplica a una sola materia a la vez**.
