@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   codigosDeCondicion,
   condicionAJson,
+  condicionATexto,
   condicionDesdeJson,
   recorrerCondicion,
   validarCondicion
@@ -118,6 +119,60 @@ describe('condicionAJson', () => {
   it('hace round-trip sin perder la estructura anidada', () => {
     const json = { and: ['662-0.1', { or: ['662-0.3.1', '662-0.3.2'] }] }
     expect(condicionAJson(condicionDesdeJson(json))).toEqual(json)
+  })
+})
+
+describe('condicionATexto', () => {
+  it('devuelve "Sin correlativas" para condiciones vacías o inválidas', () => {
+    expect(condicionATexto(null)).toBe('Sin correlativas')
+    expect(condicionATexto(undefined)).toBe('Sin correlativas')
+    expect(condicionATexto('662-0.1')).toBe('Sin correlativas')
+    expect(condicionATexto({ tipo: 'and', hijos: [] })).toBe('Sin correlativas')
+  })
+
+  it('muestra el código de una materia', () => {
+    expect(condicionATexto({ tipo: 'materia', codigo: '663-0.1' })).toBe('663-0.1')
+  })
+
+  it('une grupos con "y" / "o"', () => {
+    expect(
+      condicionATexto(condicionDesdeJson({ and: ['663-0.1', '663-0.2'] }))
+    ).toBe('663-0.1 y 663-0.2')
+    expect(
+      condicionATexto(condicionDesdeJson({ or: ['663-0.1', '663-0.2'] }))
+    ).toBe('663-0.1 o 663-0.2')
+  })
+
+  it('escribe los años completos', () => {
+    expect(condicionATexto({ tipo: 'anio', anio: 1 })).toBe('Año 1 completo')
+    expect(
+      condicionATexto(condicionDesdeJson({ and: ['663-0.1', { anio_completo: 0 }] }))
+    ).toBe('663-0.1 y Año 0 completo')
+  })
+
+  it('agrega paréntesis solo cuando cambia el operador', () => {
+    const condicion = condicionDesdeJson({
+      and: ['663-0.1', { or: ['663-0.2', '663-0.3'] }, { and: ['663-0.4', '663-0.5'] }]
+    })
+    expect(condicionATexto(condicion)).toBe(
+      '663-0.1 y (663-0.2 o 663-0.3) y 663-0.4 y 663-0.5'
+    )
+  })
+
+  it('anida paréntesis en varios niveles', () => {
+    const condicion = condicionDesdeJson({
+      or: ['663-0.1', { and: ['663-0.2', { or: ['663-0.3', '663-0.4'] }] }]
+    })
+    expect(condicionATexto(condicion)).toBe('663-0.1 o (663-0.2 y (663-0.3 o 663-0.4))')
+  })
+
+  it('usa nombres cuando se piden y cae al código si falta el nombre', () => {
+    const condicion = condicionDesdeJson({ and: ['663-0.1', '663-0.2'] })
+    const nombres = { '663-0.1': 'Audioperceptiva' }
+    expect(condicionATexto(condicion, { nombres, usarNombres: true })).toBe(
+      'Audioperceptiva y 663-0.2'
+    )
+    expect(condicionATexto(condicion, { nombres })).toBe('663-0.1 y 663-0.2')
   })
 })
 

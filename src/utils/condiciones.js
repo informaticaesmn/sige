@@ -153,6 +153,69 @@ export function condicionAJson(condicion) {
 }
 
 /**
+ * Arma el texto legible de un nodo del árbol.
+ * Devuelve `''` para nodos incompletos o desconocidos, y envuelve entre
+ * paréntesis los grupos cuyo operador difiere del grupo padre.
+ *
+ * @param {Object} nodo
+ * @param {'and'|'or'|null} tipoPadre
+ * @param {{ nombres?: Object<string, string>, usarNombres?: boolean }} opciones
+ * @returns {string}
+ */
+function textoDeNodo(nodo, tipoPadre, opciones) {
+  if (!nodo || typeof nodo !== 'object') return ''
+
+  switch (nodo.tipo) {
+    case 'materia': {
+      const codigo = String(nodo.codigo ?? '').trim()
+      if (!codigo) return ''
+      const nombre = opciones.usarNombres ? String(opciones.nombres?.[codigo] ?? '').trim() : ''
+      return nombre || codigo
+    }
+    case 'anio':
+      return Number.isInteger(nodo.anio) ? `Año ${nodo.anio} completo` : ''
+    case 'and':
+    case 'or': {
+      const hijos = Array.isArray(nodo.hijos) ? nodo.hijos : []
+      const separador = nodo.tipo === 'and' ? ' y ' : ' o '
+      const texto = hijos
+        .map((hijo) => textoDeNodo(hijo, nodo.tipo, opciones))
+        .filter((parte) => parte !== '')
+        .join(separador)
+      if (!texto) return ''
+      return tipoPadre && tipoPadre !== nodo.tipo ? `(${texto})` : texto
+    }
+    default:
+      return ''
+  }
+}
+
+/**
+ * Genera un resumen legible de una condición de correlatividad.
+ *
+ * - `{ tipo: 'materia', codigo: '663-0.1' }` → `'663-0.1'`
+ * - `{ tipo: 'and', hijos: [A, B] }` → `'663-0.1 y 663-0.2'`
+ * - `{ tipo: 'or', hijos: [A, B] }` → `'663-0.1 o 663-0.2'`
+ * - `{ tipo: 'anio', anio: 1 }` → `'Año 1 completo'`
+ * - `null` → `'Sin correlativas'`
+ *
+ * Con `{ nombres, usarNombres: true }` reemplaza el código por el nombre de la
+ * materia cuando existe en el mapa `nombres`; si falta, cae al código.
+ *
+ * @param {Object|null} condicion
+ * @param {{ nombres?: Object<string, string>, usarNombres?: boolean }} [opciones]
+ * @returns {string}
+ */
+export function condicionATexto(condicion, opciones = {}) {
+  if (!condicion || typeof condicion !== 'object') return 'Sin correlativas'
+  const config = {
+    nombres: opciones?.nombres ?? {},
+    usarNombres: opciones?.usarNombres === true
+  }
+  return textoDeNodo(condicion, null, config) || 'Sin correlativas'
+}
+
+/**
  * Recorre el árbol en profundidad y ejecuta `visitante` con cada nodo.
  * @param {Object|null} condicion
  * @param {(nodo: Object) => void} visitante

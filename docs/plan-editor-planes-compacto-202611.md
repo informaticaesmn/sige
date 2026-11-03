@@ -1,6 +1,8 @@
 # Plan: editor de planes compacto (lista + detalle por materia)
 
-> **Estado:** propuesto (03/11/2026). Pendiente de aprobación para implementación.
+> **Estado:** aprobado (03/11/2026). Implementación en curso: `condicionATexto()`,
+> `ListaMaterias.vue` y `EditorMateria.vue` listos con tests; sigue conectar todo en
+> `EditorPlanes.vue` (§8.4).
 > **Objetivo:** que abrir un plan no genere una página de decenas de miles de píxeles.
 > El plan se resume arriba, las materias se navegan en una lista angosta a la izquierda
 > y **el editor completo se aplica a una sola materia a la vez**.
@@ -256,12 +258,3 @@ Cada paso deja el repo verde; se puede cortar en cualquier punto.
 - El JSON exportado es **byte a byte** el mismo que antes del refactor para un plan sin cambios.
 - Validación visible sin scrollear el plan completo.
 - Mobile usable en una columna.
-
----
-
-## 10. Fuera de alcance (ideas para después)
-
-- **Virtual scrolling** en la lista: innecesario con ≤ 100 materias.
-- **Vista diff** entre el borrador y el plan publicado (Fase 2).
-- **Edición inline de correlativas desde la lista** (agregar/quitar sin abrir el detalle).
-- **Duplicar materia** desde el detalle (útil al cargar planes anuales parecidos).
