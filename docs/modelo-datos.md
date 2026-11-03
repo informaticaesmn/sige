@@ -14,9 +14,9 @@
 > [contexto.md](contexto.md#firestore-rules).
 >
 > **Editor de planes (02/11/2026):** ya están implementadas las utilidades puras
-> `src/utils/condiciones.js` (§9.7) y el catálogo/gating de `src/utils/planes.js` (§9.3).
-> Todavía faltan `useCatalogoPlanes.js`, migrar `planesPendientes` a `jsonTexto`, agregar
-> `disponible` a `planes.json` y conectar el gate en el alta de usuarios.
+> `src/utils/condiciones.js` (§9.7), el catálogo/gating de `src/utils/planes.js` (§9.3),
+> `useCatalogoPlanes.js` (§6.2) y `disponible` en `public/planes/planes.json` (§9.6).
+> Todavía faltan migrar `planesPendientes` a `jsonTexto` y conectar el gate en el alta.
 
 ## 1. Diagrama general
 
@@ -83,8 +83,8 @@ graph TD
 | `planesPendientes` | Composable `usePlanesPendientes` con `csvTexto`; pendiente migrar a `jsonTexto` (ver §7, §9.5). | Editor de planes |
 | `src/utils/condiciones.js` | **Implementada (02/11/2026):** conversión, recorrido y validación del árbol AND/OR/año (ver §9.7). | Editor de planes |
 | `src/utils/planes.js` | **Implementada (02/11/2026):** `setCatalogoPlanes`, `planesDisponibles`, `validarPlanDetalle`; `resolverCodigoPlan` ya no gatea (ver §9.3). | Editor de planes |
-| `src/composables/academico/useCatalogoPlanes.js` | **No existe todavía:** falta cargar `planes.json` en runtime; hasta entonces `planesDisponibles()` devuelve `[]`. | Editor de planes |
-| `public/planes/planes.json` | **Sin `disponible`:** hay que agregarlo en el mismo release que el gating, o el alta queda bloqueada. | Editor de planes |
+| `src/composables/academico/useCatalogoPlanes.js` | **Implementado (02/11/2026):** carga `planes.json` con `fetch` (idempotente, deduplicado), lo inyecta en `utils/planes.js` y expone `planesDisponibles`. Se calienta desde `main.js`. | Editor de planes |
+| `public/planes/planes.json` | **Con `disponible` (02/11/2026):** `662` y `708` → `true`; el resto → `false`. | Editor de planes |
 | `resumenAcademico`, `trayectoriaAcademica`, `periodosInscripcion`, `inscripcionesExamen`, `mesasExamen` | **No existen**: son diseño futuro. | Fuera de alcance |
 | `firestore.rules` | Implementa el modelo v1. Bedel no puede crear usuarios; no existen reglas de `legajos`/`importaciones`. | E4 |
 

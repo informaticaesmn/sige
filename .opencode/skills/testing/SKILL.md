@@ -1,5 +1,5 @@
 ---
-name: Tests Unitarios
+name: testing
 description: Usar cuando haya que correr, arreglar o escribir tests unitarios en SIGE (Vitest, tests/unit, mocks de Firebase/composables, vi.mock, cobertura)
 ---
 
