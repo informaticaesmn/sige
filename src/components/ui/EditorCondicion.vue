@@ -12,6 +12,7 @@
         <span>Sin condición</span>
         <div class="flex items-center gap-1 ml-auto">
           <button
+            v-if="permite('materia')"
             type="button"
             class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium"
             @click="emitir({ tipo: 'materia', codigo: '' })"
@@ -19,6 +20,7 @@
             + Materia
           </button>
           <button
+            v-if="permite('and')"
             type="button"
             class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium"
             @click="emitir({ tipo: 'and', hijos: [] })"
@@ -26,6 +28,7 @@
             + Grupo Y (AND)
           </button>
           <button
+            v-if="permite('or')"
             type="button"
             class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium"
             @click="emitir({ tipo: 'or', hijos: [] })"
@@ -33,6 +36,7 @@
             + Grupo O (OR)
           </button>
           <button
+            v-if="permite('anio')"
             type="button"
             class="px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium"
             @click="emitir({ tipo: 'anio', anio: 1 })"
@@ -62,6 +66,15 @@
             {{ mat.codigo }} — {{ mat.nombre }}
           </option>
         </select>
+        <button
+          v-if="puedeAgrupar"
+          type="button"
+          class="text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded px-1.5 py-0.5"
+          title="Convertir esta condición en un grupo"
+          @click="convertirEnGrupo"
+        >
+          Agrupar
+        </button>
         <button
           type="button"
           class="text-stone-400 hover:text-red-600 font-bold px-1.5 py-0.5 rounded"
@@ -93,8 +106,17 @@
           </option>
         </select>
         <button
+          v-if="puedeAgrupar"
           type="button"
-          class="text-stone-400 hover:text-red-600 font-bold px-1.5 py-0.5 rounded ml-auto"
+          class="text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded px-1.5 py-0.5 ml-auto"
+          title="Convertir esta condición en un grupo"
+          @click="convertirEnGrupo"
+        >
+          Agrupar
+        </button>
+        <button
+          type="button"
+          class="text-stone-400 hover:text-red-600 font-bold px-1.5 py-0.5 rounded"
           title="Eliminar condición"
           @click="emitir(null)"
         >
@@ -112,6 +134,7 @@
           </span>
           <div class="flex items-center gap-1">
             <button
+              v-if="permite('materia')"
               type="button"
               class="text-xs text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded"
               @click="agregarHijo('materia')"
@@ -119,6 +142,7 @@
               + Materia
             </button>
             <button
+              v-if="permite('and') && puedeAnidarGrupo"
               type="button"
               class="text-xs text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded"
               @click="agregarHijo('and')"
@@ -126,6 +150,7 @@
               + Y
             </button>
             <button
+              v-if="permite('or') && puedeAnidarGrupo"
               type="button"
               class="text-xs text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded"
               @click="agregarHijo('or')"
@@ -133,6 +158,7 @@
               + O
             </button>
             <button
+              v-if="permite('anio')"
               type="button"
               class="text-xs text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded"
               @click="agregarHijo('anio')"
@@ -166,6 +192,8 @@
             <EditorCondicion
               :model-value="hijo"
               :materias-disponibles="materiasDisponibles"
+              :tipos-permitidos="tiposPermitidos"
+              :profundidad="profundidad + 1"
               @update:model-value="actualizarHijo(index, $event)"
             />
           </div>
@@ -176,6 +204,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   modelValue: {
     type: Object,
@@ -184,13 +214,43 @@ const props = defineProps({
   materiasDisponibles: {
     type: Array,
     default: () => []
+  },
+  /** Tipos de nodo que se pueden crear en este nivel. */
+  tiposPermitidos: {
+    type: Array,
+    default: () => ['materia', 'and', 'or', 'anio']
+  },
+  /** Profundidad del árbol (0 = raíz). Límite visual: 4 niveles. */
+  profundidad: {
+    type: Number,
+    default: 0
   }
 })
 
+/** Límite de anidamiento de grupos para que el árbol siga siendo legible. */
+const MAX_PROFUNDIDAD = 4
+
 const emit = defineEmits(['update:modelValue'])
+
+/** Indica si el tipo de nodo está permitido en este editor. */
+function permite(tipo) {
+  return props.tiposPermitidos.includes(tipo)
+}
+
+/** Solo se pueden anidar grupos por debajo del límite. */
+const puedeAgrupar = computed(
+  () => permite('and') && props.profundidad < MAX_PROFUNDIDAD
+)
+
+const puedeAnidarGrupo = computed(() => props.profundidad + 1 < MAX_PROFUNDIDAD)
 
 function emitir(nuevoValor) {
   emit('update:modelValue', nuevoValor)
+}
+
+/** Envuelve la hoja actual en un grupo AND para poder anidar condiciones. */
+function convertirEnGrupo() {
+  emitir({ tipo: 'and', hijos: [props.modelValue] })
 }
 
 function actualizarMateriaCodigo(codigo) {

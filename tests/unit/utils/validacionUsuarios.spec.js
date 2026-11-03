@@ -453,10 +453,19 @@ describe('construirDocumentoUsuario', () => {
     expect(doc.planes).toHaveProperty('662')
     expect(doc.planes['662'].id).toBe('662')
     expect(doc.planes['662'].nombre).toBe('662 Profesorado de Música')
-    expect(doc.planes['662'].estado).toBe('ingresante')
+    // Sin `estadoPorPlan` cae a 'activo' (nunca asume pregrado).
+    expect(doc.planes['662'].estado).toBe('activo')
     expect(doc.planes['662'].vigente).toBe(true)
     expect(doc.planes['662'].origen).toBe('carga_masiva')
     expect(doc.planes['662'].fechaInscripcion).toBe('2026-03-02')
+  })
+
+  it('usa estadoPorPlan cuando la carga masiva calculó el estado inicial', () => {
+    const doc = construirDocumentoUsuario(
+      { ...datos, estadoPorPlan: { '662': 'ingresante' } },
+      'persona-id'
+    )
+    expect(doc.planes['662'].estado).toBe('ingresante')
   })
 
   it('devuelve null numeroLegajo si no se provee', () => {

@@ -13,10 +13,11 @@
 > en E4; hasta entonces rigen las reglas actuales descriptas en
 > [contexto.md](contexto.md#firestore-rules).
 >
-> **Editor de planes (02/11/2026):** ya están implementadas las utilidades puras
-> `src/utils/condiciones.js` (§9.7), el catálogo/gating de `src/utils/planes.js` (§9.3),
-> `useCatalogoPlanes.js` (§6.2) y `disponible` en `public/planes/planes.json` (§9.6).
-> Todavía faltan migrar `planesPendientes` a `jsonTexto` y conectar el gate en el alta.
+> **Editor de planes (02/11/2026, cerrado 03/11/2026):** implementadas las utilidades
+> `src/utils/condiciones.js` (§9.7) y `src/utils/validacionPlanes.js`, el catálogo/gating de
+> `src/utils/planes.js` (§9.3), `useCatalogoPlanes.js` (§6.2), `disponible` en
+> `public/planes/planes.json` (§9.6), `jsonTexto` en `planesPendientes` (§9.5) y el gate real
+> en el alta de usuarios (`validarDatosUsuario`, `validarCSVUsuarios`, `useImportarUsuarios`).
 
 ## 1. Diagrama general
 
@@ -80,8 +81,9 @@ graph TD
 | `ofertaAcademica` | Implementada (un documento por ciclo). | — |
 | `usuarios/{uid}/inscripciones{ciclo}` | Implementada (subcolección por ciclo). | — |
 | `planesDeEstudio` | **No existe**: los planes viven en `public/planes/*.json`. | — |
-| `planesPendientes` | Composable `usePlanesPendientes` con `csvTexto`; pendiente migrar a `jsonTexto` (ver §7, §9.5). | Editor de planes |
+| `planesPendientes` | Implementada con `jsonTexto` (máx. 1 MB); lectura tolerante de `csvTexto` legacy. Reglas exigiendo `jsonTexto` (ver §7, §9.5). | Editor de planes |
 | `src/utils/condiciones.js` | **Implementada (02/11/2026):** conversión, recorrido y validación del árbol AND/OR/año (ver §9.7). | Editor de planes |
+| `src/utils/validacionPlanes.js` | **Implementada (03/11/2026):** año reconocible, nombre, correlativas, auto-referencia y advertencias de equivalencia. | Editor de planes |
 | `src/utils/planes.js` | **Implementada (02/11/2026):** `setCatalogoPlanes`, `planesDisponibles`, `validarPlanDetalle`; `resolverCodigoPlan` ya no gatea (ver §9.3). | Editor de planes |
 | `src/composables/academico/useCatalogoPlanes.js` | **Implementado (02/11/2026):** carga `planes.json` con `fetch` (idempotente, deduplicado), lo inyecta en `utils/planes.js` y expone `planesDisponibles`. Se calienta desde `main.js`. | Editor de planes |
 | `public/planes/planes.json` | **Con `disponible` (02/11/2026):** `662` y `708` → `true`; el resto → `false`. | Editor de planes |
@@ -452,6 +454,7 @@ de `public/planes/`.
 | `setCatalogoPlanes(json)` | Carga el catálogo en memoria (lo llama `useCatalogoPlanes`). |
 | `resetCatalogoPlanes()` | Limpia catálogo y cache de detalles (tests / recarga). |
 | `catalogoDePlanes()` | Todos los códigos del catálogo cargado (para resolver nombres y normalizar usuarios existentes). Fallback hardcodeado solo si el catálogo aún no cargó. |
+| `hayCatalogoPlanes()` | `true` si el catálogo ya se cargó, aunque no tenga planes disponibles. Distingue “catálogo no cargado” de “ningún plan habilitado”. |
 | `planesDisponibles()` | Solo los códigos con `disponible: true`. `[]` si el catálogo no cargó. |
 | `esPlanDisponible(codigo)` | `planesDisponibles().includes(codigo)`. |
 | `nombresDePlanes()` | Mapa `codigo → nombre` del catálogo cargado. |
@@ -466,9 +469,12 @@ de `public/planes/`.
 `disponible: false` tiene que seguir normalizándose. El gate se aplica en la validación de alta
 (`validarDatosUsuario`, `validarCSVUsuarios`, `useImportarUsuarios`).
 
-Estado del gating en el alta (transición): `validacionUsuarios.js` ya **desacopló** su
-`resolverCodigoPlan` del gate, pero todavía gatea contra `catalogoDePlanes()` (fallback
-hardcodeado). Falta migrarlo a `planesDisponibles()` y agregar `disponible` a `planes.json`.
+Estado del gating en el alta (03/11/2026): implementado. `validarDatosUsuario` y
+`validarCSVUsuarios` reciben `planesDisponibles()` (o una lista explícita), resuelven el código
+contra **todos** los códigos y después exigen disponibilidad. `useImportarUsuarios` llama a
+`asegurarCatalogo()`, valida el detalle de cada plan único con `validarPlanDetalle()` y calcula
+`estadoPorPlan` con `estadoInicialDePlan()`. Si el catálogo no cargó, el error es explícito y no
+se interpreta como “plan inválido”.
 
 ### 9.4 Formato de `{codigo}.json`
 
@@ -523,16 +529,18 @@ Reglas del formato:
 Ver §7. El editor guarda el JSON crudo en `jsonTexto`; al publicar, descarga
 `{codigo}.json` y `planes.json` para commitearlos juntos.
 
-Estado: el composable `usePlanesPendientes` todavía escribe/lee `csvTexto`; la migración a
-`jsonTexto` (con lectura tolerante de `csvTexto`) y las reglas de Firestore están pendientes.
+Estado (03/11/2026): `usePlanesPendientes` escribe y lee `jsonTexto` (con `csvTexto` como
+fallback de lectura para documentos viejos) y `firestore.rules` exige el campo. Los
+comentarios viven en la subcolección `comentarios` (§7).
 
-### 9.6 Disponibilidad actual (02/11/2026)
+### 9.6 Disponibilidad actual (03/11/2026)
 
-La columna `disponible` es el **objetivo**. Hoy `public/planes/planes.json` todavía no tiene
-el campo, así que `planesDisponibles()` devuelve `[]` hasta agregarlo. Debe agregarse en el
-mismo release que conecta el gate en el alta.
+`public/planes/planes.json` ya incluye `disponible` y `planesDisponibles()` lo refleja. El
+catálogo y el detalle deben actualizarse en el **mismo release** que el código de gating: si se
+publica el código sin el catálogo, todos los planes quedan bloqueados.
 
-| Archivo | Plan interno | Materias | ¿Pregrado? | `disponible` (objetivo) |
+| Archivo | Plan interno | Materias | ¿Pregrado? | `disponible` |
+|---|---|---|---|---|
 |---|---|---|---|---|
 | `662.json` | `662` | 91 | **Sí (11)** | `true` |
 | `708.json` | `708` | 29 | **No** | `true` |

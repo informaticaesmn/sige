@@ -408,6 +408,15 @@ export function catalogoDePlanes() {
 }
 
 /**
+ * Indica si el catálogo ya se cargó (aunque no tenga planes disponibles).
+ * Sirve para distinguir "catálogo no cargado" de "ningún plan habilitado".
+ * @returns {boolean}
+ */
+export function hayCatalogoPlanes() {
+  return catalogoCargado !== null
+}
+
+/**
  * Códigos de plan habilitados para el alta (`disponible: true` en `planes.json`).
  * Si el catálogo no cargó devuelve `[]`: nunca se asume disponibilidad.
  * @returns {string[]}
@@ -503,6 +512,15 @@ export async function validarPlanDetalle(codigo, opciones = {}) {
 
   if (!codigoNormalizado) {
     return { disponible: false, codigo: '', motivo: 'Falta el código del plan.', plan: null }
+  }
+
+  if (!hayCatalogoPlanes()) {
+    return {
+      disponible: false,
+      codigo: codigoNormalizado,
+      motivo: 'El catálogo de planes no está cargado; no se puede validar la disponibilidad.',
+      plan: null
+    }
   }
 
   if (!esPlanDisponible(codigoNormalizado)) {

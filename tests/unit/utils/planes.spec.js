@@ -6,6 +6,7 @@ import {
   catalogoDePlanes,
   esPlanDisponible,
   estadoInicialDePlan,
+  hayCatalogoPlanes,
   normalizarCatalogoPlanes,
   normalizarPlanJson,
   planesDisponibles,
@@ -177,9 +178,16 @@ describe('catálogo de planes', () => {
   })
 
   it('planesDisponibles está vacío si el catálogo no cargó (nunca asume disponibilidad)', () => {
+    expect(hayCatalogoPlanes()).toBe(false)
     expect(planesDisponibles()).toEqual([])
     expect(esPlanDisponible('662')).toBe(false)
     expect(esPlanDisponible('662G')).toBe(false)
+  })
+
+  it('hayCatalogoPlanes distingue catálogo cargado sin planes disponibles', () => {
+    setCatalogoPlanes({ planes: [{ codigo: '666', nombre: '666', disponible: false }] })
+    expect(hayCatalogoPlanes()).toBe(true)
+    expect(planesDisponibles()).toEqual([])
   })
 
   it('setCatalogoPlanes reemplaza el fallback y define los disponibles', () => {
@@ -273,6 +281,20 @@ describe('validarPlanDetalle', () => {
     expect(res.disponible).toBe(false)
     expect(res.motivo).toContain('no está disponible')
     expect(res.plan).toBeNull()
+  })
+
+  it('reporta catálogo no cargado sin intentar resolver el plan', async () => {
+    resetCatalogoPlanes()
+    let llamadas = 0
+    const res = await validarPlanDetalle('662', {
+      fetchImpl: async () => {
+        llamadas++
+        return fetchJson({})()
+      }
+    })
+    expect(res.disponible).toBe(false)
+    expect(res.motivo).toContain('catálogo de planes no está cargado')
+    expect(llamadas).toBe(0)
   })
 
   it('normaliza el detalle y devuelve el plan', async () => {

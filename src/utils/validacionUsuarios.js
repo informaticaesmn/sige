@@ -6,7 +6,7 @@
 // El núcleo NO escribe en Firestore; solo valida y construye los documentos.
 // El estado global (ref/computed) debe declararse a nivel de módulo (singleton), no dentro de la función factory.
 
-import { catalogoDePlanes, planesDisponibles } from './planes.js'
+import { catalogoDePlanes, hayCatalogoPlanes, planesDisponibles } from './planes.js'
 import { parsearArray } from './csv.js'
 
 /**
@@ -112,9 +112,10 @@ export function construirDocumentoUsuario(datos, personaId) {
     const codigo = res.codigo
     const nombrePlan = res.nombre
 
-    // Estado inicial por plan (E2: carga masiva = ingresante si tiene pregrado, activo si no)
-    // Para el alta individual el estado lo elige el operador (fuera de alcance)
-    const estado = datos.estadoPorPlan?.[codigo] || 'ingresante' // placeholder
+    // Estado inicial por plan: lo calcula la carga masiva a partir del detalle
+    // del plan (`estadoInicialDePlan`). Si no se pasó, cae a `activo`; el alta
+    // individual define el estado con el operador (fuera de alcance).
+    const estado = datos.estadoPorPlan?.[codigo] || 'activo'
 
     planes[codigo] = {
       id: codigo,
@@ -207,18 +208,26 @@ export function validarDatosUsuario(datos, opciones = {}) {
 
   // Validar planes
   const catalogoPlanes = opciones.catalogoPlanes || planesDisponibles()
+  const catalogoNoCargado = !opciones.catalogoPlanes && !hayCatalogoPlanes()
   const planesValidados = []
-  for (const plan of planes) {
-    const res = resolverCodigoPlan(plan, {}) // sin nombresDePlanes para validación
-    if (!res) {
-      errores.push(`Código de plan inválido: ${plan}`)
-      continue
-    }
-    const codigo = res.codigo
-    if (!catalogoPlanes.includes(codigo)) {
-      errores.push(`El plan "${codigo}" no está disponible.`)
-    } else {
-      planesValidados.push(codigo)
+
+  if (planes.length > 0 && catalogoNoCargado) {
+    errores.push('El catálogo de planes no está disponible; no se puede validar el alta.')
+  } else {
+    for (const plan of planes) {
+      const res = resolverCodigoPlan(plan, {}) // sin nombresDePlanes para validación
+      if (!res) {
+        errores.push(`Código de plan inválido: ${plan}`)
+        continue
+      }
+      const codigo = res.codigo
+      if (!catalogoPlanes.includes(codigo)) {
+        errores.push(
+          `El plan "${codigo}" no está disponible (revisar en el editor de planes).`
+        )
+      } else {
+        planesValidados.push(codigo)
+      }
     }
   }
 
@@ -250,9 +259,9 @@ export function validarDatosUsuario(datos, opciones = {}) {
     roles,
     planes: planesValidados,
     fechaInscripcion: datos.fechaInscripcion,
-    nombresDePlanes: {}, // se llena después con el mapa real
-    estadoPorPlan: {}, // placeholder
-    fechaInscripcionPorPlan: {}, // placeholder
+    nombresDePlanes: datos.nombresDePlanes || {},
+    estadoPorPlan: datos.estadoPorPlan || {},
+    fechaInscripcionPorPlan: datos.fechaInscripcionPorPlan || {},
     origen: datos.origen || 'carga_masiva',
     numeroLegajo: datos.numeroLegajo || null,
     fechaNacimiento: datos.fechaNacimiento || null,
@@ -277,6 +286,7 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}, catalogoPlanes =
   const errores = []
 
   const catalogoValido = catalogoPlanes || planesDisponibles()
+  const catalogoNoCargado = !catalogoPlanes && !hayCatalogoPlanes()
 
   for (let i = 0; i < filas.length; i++) {
     const fila = filas[i]
@@ -301,17 +311,24 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}, catalogoPlanes =
     // Validar planes (parsearArray acepta string JSON, lista separada por comas o array)
     const planes = parsearArray(fila.plan)
     const planesValidados = []
-    for (const plan of planes) {
-      const res = resolverCodigoPlan(plan, nombresDePlanes)
-      if (!res) {
-        erroresFila.push(`Código de plan inválido: ${plan}`)
-        continue
-      }
-      const codigo = res.codigo
-      if (!catalogoValido.includes(codigo)) {
-        erroresFila.push(`El plan "${codigo}" no está disponible.`)
-      } else {
-        planesValidados.push(codigo)
+
+    if (planes.length > 0 && catalogoNoCargado) {
+      erroresFila.push('El catálogo de planes no está disponible; no se puede validar el alta.')
+    } else {
+      for (const plan of planes) {
+        const res = resolverCodigoPlan(plan, nombresDePlanes)
+        if (!res) {
+          erroresFila.push(`Código de plan inválido: ${plan}`)
+          continue
+        }
+        const codigo = res.codigo
+        if (!catalogoValido.includes(codigo)) {
+          erroresFila.push(
+            `El plan "${codigo}" no está disponible (revisar en el editor de planes).`
+          )
+        } else {
+          planesValidados.push(codigo)
+        }
       }
     }
 

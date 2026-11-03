@@ -71,4 +71,52 @@ describe('EditorCondicion.vue', () => {
     expect(wrapper.text()).toContain('Y (Todas las condiciones)')
     expect(wrapper.findComponent(EditorCondicion).exists()).toBe(true)
   })
+
+  it('respeta tiposPermitidos al ofrecer acciones', () => {
+    const wrapper = mount(EditorCondicion, {
+      props: {
+        modelValue: null,
+        materiasDisponibles,
+        tiposPermitidos: ['materia']
+      }
+    })
+
+    expect(wrapper.text()).toContain('+ Materia')
+    expect(wrapper.text()).not.toContain('+ Grupo Y')
+    expect(wrapper.text()).not.toContain('+ Grupo O')
+    expect(wrapper.text()).not.toContain('+ Año completo')
+  })
+
+  it('convierte una hoja en grupo con el botón Agrupar', async () => {
+    const wrapper = mount(EditorCondicion, {
+      props: {
+        modelValue: { tipo: 'materia', codigo: '663-0.1' },
+        materiasDisponibles
+      }
+    })
+
+    const boton = wrapper.findAll('button').find((b) => b.text() === 'Agrupar')
+    expect(boton).toBeTruthy()
+    await boton.trigger('click')
+
+    expect(wrapper.emitted('update:modelValue')[0][0]).toEqual({
+      tipo: 'and',
+      hijos: [{ tipo: 'materia', codigo: '663-0.1' }]
+    })
+  })
+
+  it('no permite anidar grupos por debajo del límite de profundidad', () => {
+    const wrapper = mount(EditorCondicion, {
+      props: {
+        modelValue: { tipo: 'and', hijos: [] },
+        materiasDisponibles,
+        profundidad: 4
+      }
+    })
+
+    const textos = wrapper.findAll('button').map((b) => b.text())
+    expect(textos).toContain('+ Materia')
+    expect(textos).not.toContain('+ Y')
+    expect(textos).not.toContain('+ O')
+  })
 })

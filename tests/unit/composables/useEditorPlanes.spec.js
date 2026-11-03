@@ -67,8 +67,8 @@ describe('useEditorPlanes.js', () => {
 
     const codigos = Object.keys(editor.materias.value)
     expect(codigos).toHaveLength(1)
-    expect(codigos[0]).toBe('663-0.01')
-    expect(editor.materias.value['663-0.01'].anio).toBe(0)
+    expect(codigos[0]).toBe('663-0.1')
+    expect(editor.materias.value['663-0.1'].anio).toBe(0)
   })
 
   it('eliminarMateria borra la materia del mapa', async () => {
@@ -103,10 +103,57 @@ describe('useEditorPlanes.js', () => {
       { codigo: '708', nombre: '708 Sonido', disponible: true }
     ]
 
-    const res = editor.generarJSONCatalogo(catalogoExistente)
+    const res = await editor.generarJSONCatalogo(catalogoExistente)
 
     expect(res.planes).toHaveLength(2)
     expect(res.planes).toContainEqual({ codigo: '708', nombre: '708 Sonido', disponible: true })
     expect(res.planes).toContainEqual({ codigo: '663', nombre: '663 Profesorado de Música', disponible: true })
+  })
+
+  it('generarJSONCatalogo lee planes.json si no recibe catálogo', async () => {
+    await editor.importarJSONPlan(planJsonEjemplo)
+    const fetchImpl = async () => ({
+      ok: true,
+      json: async () => ({
+        planes: [{ codigo: '708', nombre: '708 Sonido', disponible: false }]
+      })
+    })
+
+    const res = await editor.generarJSONCatalogo(null, { fetchImpl })
+
+    expect(res.planes).toContainEqual({ codigo: '708', nombre: '708 Sonido', disponible: false })
+    expect(res.planes).toContainEqual({ codigo: '663', nombre: '663 Profesorado de Música', disponible: true })
+  })
+
+  it('validar detecta errores y advertencias del editor', async () => {
+    await editor.importarJSONPlan({
+      plan: '663',
+      materias: {
+        'sin-anio': { nombre: 'Materia rara', equivale_a: ['662-0.1'] }
+      }
+    })
+    // El importador completa el nombre con el código; lo vaciamos a mano para
+    // simular que el coordinador borró el campo.
+    editor.actualizarMateria('sin-anio', 'nombre', '')
+
+    const res = await editor.validar()
+
+    expect(res.exito).toBe(false)
+    expect(editor.errores.value.some((e) => e.includes('año reconocible'))).toBe(true)
+    expect(editor.errores.value.some((e) => e.includes('no tiene nombre'))).toBe(true)
+    expect(editor.advertencias.value.some((a) => a.includes('plan madre'))).toBe(true)
+  })
+
+  it('generarJSONDetalle solo audita revisión cuando el plan está disponible', async () => {
+    await editor.importarJSONPlan(planJsonEjemplo)
+
+    const detalle = editor.generarJSONDetalle({ revisadoPor: 'uid-coordinador' })
+    expect(detalle.revisadoPor).toBe('uid-coordinador')
+    expect(typeof detalle.revisadoEn).toBe('string')
+
+    editor.disponible.value = false
+    const borrador = editor.generarJSONDetalle({ revisadoPor: 'uid-coordinador' })
+    expect(borrador.revisadoPor).toBeNull()
+    expect(borrador.revisadoEn).toBeNull()
   })
 })

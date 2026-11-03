@@ -83,11 +83,12 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 > actuales. La carga masiva in-app actual todavía acepta roles y no valida JSON de planes:
 > eso cambia en E5.
 
-> **Editor de planes (02/11/2026):** ya están implementadas las utilidades puras
-> `src/utils/planes.js` (catálogo + gating) y `src/utils/condiciones.js`. Pendiente:
-> `useCatalogoPlanes.js`, migrar `planesPendientes` a `jsonTexto`, agregar `disponible` a
-> `planes.json` y conectar el gate en el alta. Ver
-> [plan-editor-planes-202611.md](plan-editor-planes-202611.md).
+> **Editor de planes (02/11/2026, cerrado 03/11/2026):** implementadas las utilidades puras
+> `src/utils/planes.js` (catálogo + gating), `src/utils/condiciones.js`,
+> `src/utils/validacionPlanes.js`, `useCatalogoPlanes.js`, `jsonTexto` en `planesPendientes`,
+> `disponible` en `planes.json` y el gate real en el alta. Ver
+> [plan-editor-planes-202611.md](plan-editor-planes-202611.md). Pendiente de producto: completar
+> correlatividades/equivalencias de los 34 planes sin JSON revisado.
 
 > **Taller editorial de planes (Fase 1, 03/11/2026):** implementado `estadoRevision` en
 > `planesPendientes`, la subcolección `comentarios`, el selector de provisorios y el panel de

@@ -191,12 +191,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/auth/useAuth.js'
-import {
-  useImportarUsuarios,
-  mapaDePlanesDesdeJson
-} from '@/composables/usuarios/useImportarUsuarios.js'
+import { useImportarUsuarios } from '@/composables/usuarios/useImportarUsuarios.js'
 import { useCargaOferta } from '@/composables/inscripciones/useCargaOferta.js'
 import { useGestionPlanes } from '@/composables/academico/useGestionPlanes.js'
+import { useCatalogoPlanes } from '@/composables/academico/useCatalogoPlanes.js'
 import { ETIQUETAS_ESTADO_REVISION } from '@/composables/academico/usePlanesPendientes.js'
 import { formatearFechaHora } from '@/utils/fechas.js'
 
@@ -211,18 +209,16 @@ const { importarUsuariosDesdeCSV, loading: loadingUsuarios } = useImportarUsuari
 const textoUsuarios = ref(null)
 const resultadoUsuarios = ref(null)
 
-// Mapa { código de plan: nombre completo } desde public/planes/planes.json
-const nombresDePlanes = ref({})
+// Catálogo de planes: única fuente de códigos, nombres y disponibilidad.
+const { catalogo, asegurarCatalogo } = useCatalogoPlanes()
+const nombresDePlanes = computed(() =>
+  Object.fromEntries(
+    Object.values(catalogo.value).map((plan) => [plan.codigo, plan.nombre || plan.codigo])
+  )
+)
 
 onMounted(async () => {
-  try {
-    const respuesta = await fetch('/planes/planes.json')
-    if (respuesta.ok) {
-      nombresDePlanes.value = mapaDePlanesDesdeJson(await respuesta.json())
-    }
-  } catch (e) {
-    console.error('No se pudo cargar planes.json (los planes quedarán como códigos):', e)
-  }
+  await asegurarCatalogo()
 })
 
 async function onArchivoUsuarios(event) {

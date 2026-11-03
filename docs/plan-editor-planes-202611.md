@@ -1,6 +1,9 @@
 # Plan: Editor/Revisor de Planes de Estudio (Rol Coordinación)
 
-> **Estado:** aprobado para implementación (02/11/2026).
+> **Estado:** aprobado para implementación (02/11/2026). Implementado en dev (03/11/2026):
+> editor, validaciones, borradores con `jsonTexto`, catálogo con `disponible`, gate de alta y
+> estado inicial. La vista compacta queda en
+> [`plan-editor-planes-compacto-202611.md`](plan-editor-planes-compacto-202611.md).
 > **Objetivo:** que los coordinadores importen el JSON que genera el Apps Script de la planilla, revisen y editen materias y correlatividades, validen, y publiquen `public/planes/{codigo}.json` + `planes.json`.
 > **Producción:** febrero 2027, con foco en año 0 (pregrado) y listado completo de materias. Correlatividades y equivalencias pueden quedar incompletas inicialmente y completarse durante 2027.
 >

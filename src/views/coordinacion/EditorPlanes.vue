@@ -67,6 +67,14 @@
             >
               {{ cargandoLista ? '...' : 'Actualizar lista' }}
             </button>
+            <button
+              v-if="planCodigo"
+              class="btn-link text-xs text-red-600 pb-2"
+              :disabled="cargandoLista"
+              @click="eliminarPlanAbierto"
+            >
+              Eliminar borrador
+            </button>
             <router-link :to="{ name: 'CoordinacionCarga' }" class="btn-link text-xs pb-2">
               Importar nuevo JSON
             </router-link>
@@ -150,6 +158,15 @@
                 >
               </div>
             </div>
+
+            <!-- Aviso si el código editado no coincide con el JSON importado -->
+            <p
+              v-if="planCodigoOrigen && planCodigo !== planCodigoOrigen"
+              class="w-full text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1"
+            >
+              ⚠ El JSON importado declara el plan <strong>{{ planCodigoOrigen }}</strong>.
+              Al exportar se guardará como <strong>{{ planCodigo || '(sin código)' }}</strong>.
+            </p>
 
             <!-- Flag de disponibilidad -->
             <div class="flex items-center gap-2 bg-stone-100 p-2.5 rounded border border-stone-200">
@@ -274,6 +291,24 @@
                   </div>
                 </div>
 
+                <!-- Equivalencias con otros planes (plan madre) -->
+                <div class="mt-3 pt-2 border-t border-stone-200/60">
+                  <label
+                    :for="`equivale-${m.codigo}`"
+                    class="block text-xs font-semibold text-stone-600 mb-1"
+                  >
+                    Equivale a (códigos separados por coma):
+                  </label>
+                  <input
+                    :id="`equivale-${m.codigo}`"
+                    :value="(m.equivale_a || []).join(', ')"
+                    type="text"
+                    class="form-input text-xs bg-white"
+                    placeholder="Ej. 662-0.1, 662-0.2"
+                    @change="onEquivalenciasChange(m.codigo, $event.target.value)"
+                  >
+                </div>
+
                 <!-- Comentarios de la materia -->
                 <div class="mt-3 pt-2 border-t border-stone-200/60">
                   <button
@@ -325,6 +360,16 @@
               </li>
             </ul>
           </div>
+
+          <!-- Advertencias: no bloquean la publicación -->
+          <div v-if="advertencias.length > 0" class="alert bg-amber-50 border-amber-200 text-amber-800 text-sm mt-3">
+            <strong>⚠ {{ advertencias.length }} advertencia(s):</strong>
+            <ul class="list-disc list-inside mt-1 text-xs space-y-1">
+              <li v-for="(a, i) in advertencias" :key="i">
+                {{ a }}
+              </li>
+            </ul>
+          </div>
         </section>
 
         <!-- ==================== 4. EXPORTACIÓN ==================== -->
@@ -358,6 +403,11 @@
           <div v-if="mensajeExport" class="mt-3 alert alert-info text-xs">
             {{ mensajeExport }}
           </div>
+
+          <p class="text-xs text-stone-500 mt-3">
+            Para publicar, commiteá juntos <code>{{ planCodigo || '{codigo}' }}.json</code> y
+            <code>planes.json</code>. Un push a <code>main</code> despliega hosting y reglas.
+          </p>
         </section>
 
         <!-- ==================== 5. COMENTARIOS DEL PLAN ==================== -->
@@ -394,7 +444,7 @@ import { formatearFechaHora } from '@/utils/fechas.js'
 
 const route = useRoute()
 const { user } = useAuth()
-const { catalogo: catalogoActual } = useCatalogoPlanes()
+const { catalogo: catalogoActual, asegurarCatalogo } = useCatalogoPlanes()
 
 const {
   planesGuardados,
@@ -402,6 +452,7 @@ const {
   refrescarLista,
   cargarBorrador,
   guardarBorrador,
+  eliminarBorrador,
   marcarListoParaPublicar: marcarListoComposable,
   volverARevision: volverARevisionComposable
 } = useGestionPlanes()
@@ -417,9 +468,11 @@ const {
 const {
   materias,
   planCodigo,
+  planCodigoOrigen,
   planNombre,
   disponible,
   errores,
+  advertencias,
   valido,
   hayPregrado,
   materiasPorAnio,
@@ -427,6 +480,7 @@ const {
   importarJSONPlan,
   agregarMateria,
   eliminarMateria,
+  actualizarMateria,
   actualizarCondicion,
   validar: validarComposable,
   generarJSONCatalogo,
@@ -512,6 +566,32 @@ function onSeleccionarPlan(codigo) {
 }
 
 /**
+ * Elimina el borrador abierto (no toca el plan publicado) y limpia el editor.
+ */
+async function eliminarPlanAbierto() {
+  const codigo = planCodigo.value
+  if (!codigo) return
+  if (!window.confirm(`¿Eliminar el borrador del plan ${codigo}? El plan publicado no se modifica.`)) {
+    return
+  }
+
+  const resultado = await eliminarBorrador(codigo)
+  if (!resultado.exito) {
+    erroresImport.value = [resultado.error?.message || 'No se pudo eliminar el borrador.']
+    return
+  }
+
+  materias.value = {}
+  planCodigo.value = ''
+  planNombre.value = ''
+  planCodigoOrigen.value = ''
+  disponible.value = false
+  estadoRevisionActual.value = 'en_edicion'
+  comentarios.value = []
+  mensajeGuardado.value = `Borrador ${codigo} eliminado.`
+}
+
+/**
  * Abre un borrador guardado en Firestore y lo carga en el editor.
  * @param {string} codigo
  */
@@ -540,8 +620,7 @@ async function abrirBorrador(codigo) {
 }
 
 /** Marca el plan abierto como listo para publicar. */
-async function marcarListo() {
-  if (!planCodigo.value) return
+async function marcarListo() {  if (!planCodigo.value) return
 
   cambiandoEstado.value = true
   erroresImport.value = []
@@ -675,26 +754,41 @@ function agregarMateriaEn(anio) {
   agregarMateria(anio)
 }
 
+/**
+ * Convierte el texto libre de equivalencias (`"662-0.1, 662-0.2"`) al array
+ * canónico que espera el composable y el JSON exportado.
+ * @param {string} codigo
+ * @param {string} valor
+ */
+function onEquivalenciasChange(codigo, valor) {
+  const equivale_a = String(valor || '')
+    .split(',')
+    .map((equivalencia) => equivalencia.trim())
+    .filter(Boolean)
+  actualizarMateria(codigo, 'equivale_a', equivale_a)
+}
+
 async function ejecutarValidacion() {
   mensajeExport.value = ''
   await validarComposable()
 }
 
-function exportarCatalogo() {
+async function exportarCatalogo() {
   const listaPlanes = Object.values(catalogoActual.value || {})
-  descargarJSON(generarJSONCatalogo(listaPlanes), 'planes.json')
+  const catalogo = await generarJSONCatalogo(listaPlanes)
+  descargarJSON(catalogo, 'planes.json')
   mensajeExport.value = 'Catálogo planes.json descargado.'
 }
 
 function exportarDetalle() {
-  const detalle = generarJSONDetalle()
+  const detalle = generarJSONDetalle({ revisadoPor: user.value?.uid || null })
   if (!detalle) return
   descargarJSON(detalle, `${planCodigo.value}.json`)
   mensajeExport.value = `Detalle ${planCodigo.value}.json descargado.`
 }
 
 async function copiarDetalle() {
-  const detalle = generarJSONDetalle()
+  const detalle = generarJSONDetalle({ revisadoPor: user.value?.uid || null })
   if (!detalle) return
 
   try {
@@ -707,6 +801,7 @@ async function copiarDetalle() {
 
 onMounted(async () => {
   if (!esCoordinacion.value) return
+  await asegurarCatalogo()
   await refrescarLista()
   const codigo = route.query?.abrir
   if (codigo) abrirBorrador(String(codigo))
