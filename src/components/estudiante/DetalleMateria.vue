@@ -1,90 +1,150 @@
 <template>
-  <div class="card detalle-materia-card" ref="modalContainer" tabindex="-1">
+  <div
+    ref="modalContainer"
+    class="card detalle-materia-card"
+    :tabindex="embebido ? undefined : -1"
+  >
     <div class="flex justify-between items-start mb-4">
-      <h3 id="detalle-materia-title" class="text-lg font-semibold text-stone-800">
+      <h3
+        id="detalle-materia-title"
+        class="text-lg font-semibold text-stone-800"
+      >
         Detalle de Materia
       </h3>
       <div class="flex space-x-2 no-print">
         <button 
           v-if="materia"
-          @click="copiarAlPortapapeles"
           class="btn-icon"
           :aria-label="copiado ? 'Copiado al portapapeles' : 'Copiar detalles al portapapeles'"
           title="Copiar detalles al portapapeles"
+          @click="copiarAlPortapapeles"
         >
-          <ClipboardIcon v-if="!copiado" class="h-5 w-5" aria-hidden="true" />
-          <CheckCircleIcon v-else class="h-5 w-5 text-green-500" aria-hidden="true" />
+          <ClipboardIcon
+            v-if="!copiado"
+            class="h-5 w-5"
+            aria-hidden="true"
+          />
+          <CheckCircleIcon
+            v-else
+            class="h-5 w-5 text-green-500"
+            aria-hidden="true"
+          />
         </button>
         <button
           v-if="materia"
-          @click="imprimirDetalle"
           class="btn-icon"
           aria-label="Imprimir detalles de materia"
           title="Imprimir detalles de materia"
+          @click="imprimirDetalle"
         >
-          <PrinterIcon class="h-5 w-5" aria-hidden="true" />
+          <PrinterIcon
+            class="h-5 w-5"
+            aria-hidden="true"
+          />
         </button>
         <button 
+          v-if="!embebido"
           ref="closeButton"
-          @click="$emit('cerrar')"
           class="btn-icon"
           aria-label="Cerrar detalles de materia"
+          @click="$emit('cerrar')"
         >
-          <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+          <XMarkIcon
+            class="h-5 w-5"
+            aria-hidden="true"
+          />
         </button>
       </div>
     </div>
 
-    <div v-if="materia" id="detalle-materia-content" ref="contentToPrint" class="detalle-materia-content">
+    <div
+      v-if="materia"
+      id="detalle-materia-content"
+      ref="contentToPrint"
+      class="detalle-materia-content"
+    >
       <div>
-        <h4 class="text-xl font-medium text-stone-900">{{ materia.nombre }}</h4>
-        <p class="text-stone-600">{{ materia.codigo }}</p>
+        <h4 class="text-xl font-medium text-stone-900">
+          {{ materia.nombre }}
+        </h4>
+        <p class="text-stone-600">
+          {{ materia.codigo }}
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h5 class="font-medium text-stone-700">Nombre corto</h5>
-          <p class="text-stone-600">{{ materia.nombre_c }}</p>
+          <h5 class="font-medium text-stone-700">
+            Nombre corto
+          </h5>
+          <p class="text-stone-600">
+            {{ materia.nombre_c }}
+          </p>
         </div>
         
         <div>
-          <h5 class="font-medium text-stone-700">Período de cursada</h5>
-          <p class="text-stone-600">{{ materia.cursada }}</p>
+          <h5 class="font-medium text-stone-700">
+            Período de cursada
+          </h5>
+          <p class="text-stone-600">
+            {{ materia.cursada }}
+          </p>
         </div>
       </div>
 
-      <div v-if="tieneCorrelativas" class="detalle-materia-correlativas">
-        <h5 class="font-medium text-stone-700 mb-2">Correlativas</h5>
+      <div
+        v-if="tieneCorrelativas"
+        class="detalle-materia-correlativas"
+      >
+        <h5 class="font-medium text-stone-700 mb-2">
+          Correlativas
+        </h5>
         <div class="bg-stone-50 p-4 rounded-lg">
           <div v-if="materia.correlativas.cursar">
-            <h6 class="font-medium text-stone-700 mb-1">Para cursar</h6>
+            <h6 class="font-medium text-stone-700 mb-1">
+              Para cursar
+            </h6>
             <div class="ml-2">
-              <CorrelativasList 
-                :items="procesarCorrelativasParaVista(materia.correlativas.cursar)" 
+              <CorrelativasList
+                :items="procesarCorrelativasParaVista(materia.correlativas.cursar)"
+                :seleccionable="correlativasNavegables"
+                @seleccionar="$emit('seleccionar-materia', $event)"
               />
             </div>
           </div>
           
           <div v-if="materia.correlativas.aprobar">
-            <h6 class="font-medium text-stone-700 mb-1">Para aprobar</h6>
+            <h6 class="font-medium text-stone-700 mb-1">
+              Para aprobar
+            </h6>
             <div class="ml-2">
-              <CorrelativasList 
-                :items="procesarCorrelativasParaVista(materia.correlativas.aprobar)" 
+              <CorrelativasList
+                :items="procesarCorrelativasParaVista(materia.correlativas.aprobar)"
+                :seleccionable="correlativasNavegables"
+                @seleccionar="$emit('seleccionar-materia', $event)"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="materia.equivale_a" class="detalle-materia-equivalencia">
-        <h5 class="font-medium text-stone-700">Equivalencia</h5>
+      <div
+        v-if="materia.equivale_a"
+        class="detalle-materia-equivalencia"
+      >
+        <h5 class="font-medium text-stone-700">
+          Equivalencia
+        </h5>
         <p class="text-stone-600">
           Esta materia es equivalente a: {{ materia.equivale_a }}
         </p>
       </div>
     </div>
 
-    <div v-else class="text-center py-8 text-stone-500 no-print">
+    <div
+      v-else
+      class="text-center py-8 text-stone-500 no-print"
+    >
       <p>Seleccione una materia para ver sus detalles</p>
     </div>
   </div>
@@ -103,10 +163,26 @@ const props = defineProps({
   plan: {
     type: Object,
     default: null
+  },
+  /**
+   * Modo embebido: se usa como panel fijo (sin modal), no enfoca al montar,
+   * no atrapa el foco ni responde a Escape, y oculta el botón de cierre.
+   */
+  embebido: {
+    type: Boolean,
+    default: false
+  },
+  /**
+   * Convierte las correlativas en enlaces internos que emiten
+   * `seleccionar-materia` con el código elegido (navegación entre dependencias).
+   */
+  correlativasNavegables: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['cerrar'])
+const emit = defineEmits(['cerrar', 'seleccionar-materia'])
 const modalContainer = ref(null)
 const closeButton = ref(null)
 const copiado = ref(false)
@@ -343,12 +419,14 @@ const imprimirDetalle = () => {
 
 
 const handleKeyDown = (event) => {
+  if (props.embebido) return
   if (event.key === 'Escape') {
     emit('cerrar')
   }
 }
 
 const trapFocus = (event) => {
+  if (props.embebido) return
   if (event.key === 'Tab' && modalContainer.value) {
     const focusableElements = modalContainer.value.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -368,6 +446,9 @@ const trapFocus = (event) => {
 }
 
 onMounted(() => {
+  // En modo embebido no se comporta como modal: sin foco ni listeners globales.
+  if (props.embebido) return
+
   // Enfocar el contenedor del modal cuando se monta
   if (modalContainer.value) {
     modalContainer.value.focus()

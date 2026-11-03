@@ -91,7 +91,7 @@
                 {{ cursadaVisible(m) }}
               </span>
               <span
-                v-if="incompleta(m)"
+                v-if="mostrarAvisos && incompleta(m)"
                 class="text-amber-600"
                 title="Falta nombre o cursada"
                 aria-label="Datos incompletos"
@@ -99,7 +99,7 @@
                 ⚠
               </span>
               <span
-                v-if="conteoComentarios[m.codigo]"
+                v-if="mostrarAvisos && conteoComentarios[m.codigo]"
                 class="text-stone-500"
                 :title="`${conteoComentarios[m.codigo]} comentario(s)`"
               >
@@ -131,6 +131,14 @@ const props = defineProps({
   comentarios: {
     type: Array,
     default: () => []
+  },
+  /**
+   * Muestra los avisos propios del editor (datos incompletos y comentarios).
+   * La vista pública lo desactiva para dejar sólo la información académica.
+   */
+  mostrarAvisos: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -200,7 +208,7 @@ function etiquetaAnio(anio) {
  * @returns {string}
  */
 function etiquetaFila(materia) {
-  const aviso = incompleta(materia) ? ', datos incompletos' : ''
+  const aviso = props.mostrarAvisos && incompleta(materia) ? ', datos incompletos' : ''
   return `${materia.codigo} ${nombreVisible(materia)}${aviso}`
 }
 
@@ -356,13 +364,35 @@ function scrollASeleccionado() {
   fila?.scrollIntoView?.({ block: 'nearest' })
 }
 
+/**
+ * Abre el año de la materia seleccionada si estaba colapsado, para que la fila
+ * quede visible (por ejemplo, al saltar a una correlativa de otro año).
+ * @param {string} codigo
+ */
+function abrirAnioDe(codigo) {
+  if (!codigo) return
+  const materia = props.materias.find((m) => m.codigo === codigo)
+  if (!materia) return
+
+  const anio = Number.isFinite(Number(materia.anio)) ? Number(materia.anio) : -1
+  if (!aniosCerrados.value.has(anio)) return
+
+  const siguiente = new Set(aniosCerrados.value)
+  siguiente.delete(anio)
+  aniosCerrados.value = siguiente
+}
+
 watch(
   () => props.seleccionado,
-  async () => {
+  async (codigo) => {
+    abrirAnioDe(codigo)
     await nextTick()
     scrollASeleccionado()
   }
 )
 
-onMounted(scrollASeleccionado)
+onMounted(() => {
+  abrirAnioDe(props.seleccionado)
+  scrollASeleccionado()
+})
 </script>

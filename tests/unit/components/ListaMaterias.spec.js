@@ -101,6 +101,21 @@ describe('ListaMaterias.vue', () => {
     expect(wrapper.find('[data-codigo="663-0.2"]').text()).not.toContain('💬')
   })
 
+  it('oculta los avisos de edición con mostrarAvisos en false', () => {
+    const wrapper = mount(ListaMaterias, {
+      props: {
+        materias,
+        mostrarAvisos: false,
+        comentarios: [{ materiaId: '663-1.1' }]
+      }
+    })
+
+    const incompleta = wrapper.find('[data-codigo="663-0.1"]')
+    expect(incompleta.text()).not.toContain('⚠')
+    expect(incompleta.attributes('aria-label')).not.toContain('datos incompletos')
+    expect(wrapper.find('[data-codigo="663-1.1"]').text()).not.toContain('💬')
+  })
+
   it('colapsa los grupos y los abre al buscar', async () => {
     const wrapper = mount(ListaMaterias, { props: { materias } })
 
@@ -117,6 +132,19 @@ describe('ListaMaterias.vue', () => {
     expect(cabeceraFiltrada.attributes('aria-expanded')).toBe('true')
     expect(wrapper.find('[data-codigo="663-1.10"]').exists()).toBe(true)
     expect(wrapper.find('ul').attributes('style') || '').not.toContain('display: none')
+  })
+
+  it('abre el año de la materia seleccionada si estaba colapsado', async () => {
+    const wrapper = mount(ListaMaterias, { props: { materias } })
+
+    const cabeceraAnio1 = wrapper.findAll('section')[1].find('button')
+    await cabeceraAnio1.trigger('click')
+    expect(cabeceraAnio1.attributes('aria-expanded')).toBe('false')
+
+    await wrapper.setProps({ seleccionado: '663-1.1' })
+    await nextTick()
+
+    expect(wrapper.findAll('section')[1].find('button').attributes('aria-expanded')).toBe('true')
   })
 
   it('enfoca el buscador con "/" y navega filas con las flechas', async () => {

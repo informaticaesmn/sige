@@ -355,7 +355,7 @@ describe('auth-guard', () => {
   })
 
   describe('Rutas públicas', () => {
-    it('debe permitir acceso a PlanesEstudioPublico sin autenticación', async () => {
+    it('debe permitir acceso a PlanesEstudioPublico sin autenticación y aplicar el tema de acceso', async () => {
       // Arrange
       const { useAuth } = await import('@/composables/auth/useAuth.js')
       useAuth.mockReturnValue({
@@ -366,8 +366,9 @@ describe('auth-guard', () => {
         checkAuthState: vi.fn().mockResolvedValue(undefined),
       })
 
+      const layout = mockUseLayout()
       const { useLayout } = await import('@/composables/useLayout.js')
-      useLayout.mockReturnValue(mockUseLayout())
+      useLayout.mockReturnValue(layout)
 
       // Simular acceso a ruta pública de planes de estudio
       const to = {
@@ -387,8 +388,46 @@ describe('auth-guard', () => {
       expect(routerGuardCallback).not.toBeNull()
       await routerGuardCallback(to, from, next)
 
-      // Assert - Debe permitir el acceso
+      // Assert - Debe permitir el acceso sin dejar el body sin tema
       expect(next).toHaveBeenCalled()
+      expect(layout.setLayout).toHaveBeenCalledWith('acceso')
+    })
+
+    it('debe conservar el tema del rol primario al abrir PlanesEstudioPublico con sesión', async () => {
+      // Arrange
+      const mockUser = createMockUser()
+
+      const { useAuth } = await import('@/composables/auth/useAuth.js')
+      useAuth.mockReturnValue({
+        user: { value: mockUser },
+        isLoggedIn: { value: true },
+        userRoles: { value: ['admin'] },
+        userRole: { value: 'admin' },
+        checkAuthState: vi.fn().mockResolvedValue(undefined),
+      })
+
+      const layout = mockUseLayout()
+      const { useLayout } = await import('@/composables/useLayout.js')
+      useLayout.mockReturnValue(layout)
+
+      const to = {
+        name: 'PlanesEstudioPublico',
+        path: '/planes-estudio',
+        meta: {},
+        matched: [],
+      }
+      const from = {
+        name: 'AdminTablero',
+        path: '/admin',
+      }
+      const next = vi.fn()
+
+      // Act
+      await import('@/router/index.js')
+      await routerGuardCallback(to, from, next)
+
+      // Assert - Usa el rol primario y nunca llama con `undefined`
+      expect(layout.setLayout).toHaveBeenCalledWith('admin')
     })
   })
 })

@@ -126,8 +126,10 @@ createdRouter.beforeEach(async (to, from, next) => {
       return next(primaryRole ? `/${primaryRole}` : '/') // A su dashboard o a la raíz
     }
 
-    // Si tiene permiso, ajustamos el layout según el rol de la ruta y permitimos el paso.
-    setLayout(requiredRole)
+    // Si tiene permiso, ajustamos el layout. Las rutas sin rol propio (p. ej. la
+    // vidriera pública de planes) usan el rol primario del usuario para no
+    // quedarse sin tema visual.
+    setLayout(requiredRole || userRoles.value[0] || 'acceso')
     return next()
   }
 
@@ -145,8 +147,10 @@ createdRouter.beforeEach(async (to, from, next) => {
       return next()
     }
     
-    // Si es la ruta pública de planes de estudio, permitir el acceso
+    // Si es la ruta pública de planes de estudio, permitir el acceso con el
+    // mismo tema del login (acceso → estudiante).
     if (isPlanesEstudioPublico) {
+      setLayout('acceso')
       return next()
     }
 

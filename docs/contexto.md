@@ -95,6 +95,15 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 > comentarios en `EditorPlanes.vue`, y las reglas asociadas. Publicación (`planesPublicados`) es
 > Fase 2. Ver [plan-planes-publicacion-202611.md](plan-planes-publicacion-202611.md).
 
+> **Editor compacto de planes (03/11/2026):** `EditorPlanes.vue` pasó a un layout lista + detalle
+> (`ListaMaterias.vue` + `EditorMateria.vue`) con selector sticky, resumen del plan, secciones
+> colapsables, selección por URL (`?abrir=...&materia=...`), aviso de cambios sin guardar y vista
+> mobile de una columna. `condicionATexto()` resume correlativas en texto legible. La lógica de la
+> vista vive en `useEditorPlanesVista.js`. La vista pública `PlanesEstudioPublico.vue` reutiliza
+> `ListaMaterias` (con `mostrarAvisos: false`) y `DetalleMateria` en modo `embebido` (solo lectura),
+> con correlativas navegables y botón "volver" al login o al estado anterior; su lógica vive en
+> `usePlanesPublicos.js`. Ver [plan-editor-planes-compacto-202611.md](plan-editor-planes-compacto-202611.md).
+
 ---
 
 ## Flujo de Autenticación
@@ -120,9 +129,11 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - **`inscripciones/useOfertaAcademica.js`**: Lectura de `ofertaAcademica/{ciclo}`.
 - **`inscripciones/useCargaOferta.js`**: Carga masiva de oferta desde CSV (`coordinacion`). Reemplaza el documento del ciclo en un `writeBatch`.
 - **`inscripciones/useInscripciones.js`**: Creación y lectura de inscripciones (subcolección de `usuarios`).
-- **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas. En E2/E3 debe reutilizar el normalizador compartido de `src/utils/planes.js` (hoy todavía lee el JSON crudo).
+- **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas. Alimenta `PlanesEstudioPublico.vue`, que arma el layout lista + detalle con `ListaMaterias.vue` y `DetalleMateria.vue` (modo `embebido`). En E2/E3 debe reutilizar el normalizador compartido de `src/utils/planes.js` (hoy todavía lee el JSON crudo).
 - **`academico/useGestionPlanes.js`**: Orquestación de borradores de planes (`planesPendientes`) para las vistas de coordinación: listar, abrir, importar/guardar y eliminar; estado de revisión (`marcarListoParaPublicar` / `volverARevision`) y bandeja `planesListosParaPublicar`. Lo consumen `CargaDatos.vue` (importar y abrir) y `EditorPlanes.vue` (editar, comentar y guardar cambios). La persistencia pura vive en `usePlanesPendientes.js`.
 - **`academico/useComentariosPlanes.js`**: CRUD de comentarios del proceso de revisión (subcolección `planesPendientes/{codigo}/comentarios`): listar, agregar, resolver/reabrir y eliminar. Lo consume `EditorPlanes.vue` vía `PanelComentarios.vue`.
+- **`academico/useEditorPlanesVista.js`** *(nuevo, 03/11/2026)*: Orquestación (view-model) de `EditorPlanes.vue`: selector de borradores, selección de materia con URL (`?abrir=...&materia=...`), estado de revisión, comentarios, cambios sin guardar y vista mobile. Combina `useEditorPlanes`, `useGestionPlanes`, `useComentariosPlanes` y `useCatalogoPlanes` (el `script setup` de la vista queda como consumidor).
+- **`academico/usePlanesPublicos.js`** *(nuevo, 03/11/2026)*: Lógica de la vista pública `PlanesEstudioPublico.vue`: catálogo (reutiliza `useCatalogoPlanes`), carga del plan con `usePlanesEstudio`, selección de materia con URL (`?plan=...&materia=...`), navegación entre correlativas y botón "volver" (al login o al estado anterior).
 - **`useLayout.js`**: Theme + layout singleton (body class switching).
 
 **Utilidades puras compartidas (nuevas):**

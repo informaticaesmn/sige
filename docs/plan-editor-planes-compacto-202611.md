@@ -147,7 +147,8 @@ que **validación se abre automáticamente si hay errores**.
 |---|---|
 | `src/views/coordinacion/EditorPlanes.vue` | Pasa a orquestador: selector + resumen + `ListaMaterias` + `EditorMateria` + colapsables. Buena parte de su template actual se muda a los componentes nuevos |
 | `src/utils/condiciones.js` | Nueva función pura `condicionATexto()` (§5) |
-| `src/composables/academico/useEditorPlanes.js` | Solo aditivo: helper `materiasOrdenadas` (array plano ordenado por año y código) para no repetir el `Object.entries` en dos componentes |
+| `src/composables/academico/useEditorPlanesVista.js` | **Nuevo (03/11/2026):** orquestación de la vista (selector de borradores, selección + URL, mobile, cambios sin guardar); incluye `materiasOrdenadas`. Deja `EditorPlanes.vue` como consumidor |
+| `src/composables/academico/useEditorPlanes.js` | Sin cambios de contrato: sigue siendo el modelo puro del plan |
 | `docs/plan-editor-planes-202611.md` | Nota de que esta vista la reemplaza |
 
 ### Sin cambios
@@ -258,3 +259,34 @@ Cada paso deja el repo verde; se puede cortar en cualquier punto.
 - El JSON exportado es **byte a byte** el mismo que antes del refactor para un plan sin cambios.
 - Validación visible sin scrollear el plan completo.
 - Mobile usable en una columna.
+
+---
+
+## 10. Composición en composables y vista pública (03/11/2026)
+
+Las dos vistas dejaron su lógica en composables (AGENTS.md §3). Los componentes tontos
+(`ListaMaterias`, `EditorMateria`) siguen con lógica de presentación.
+
+- `src/composables/academico/useEditorPlanesVista.js`: orquestación de `EditorPlanes.vue`.
+  `EditorPlanes.vue` quedó reducido a imports + destructuring.
+- `src/composables/academico/usePlanesPublicos.js`: lógica de `PlanesEstudioPublico.vue`
+  (catálogo, apertura de plan, selección con URL, `volver`).
+
+`PlanesEstudioPublico.vue` adoptó el mismo concepto lista + detalle, **sin edición**:
+
+- `ListaMaterias.vue` con `mostrarAvisos: false` (oculta los avisos ⚠/💬 del editor) y
+  auto-apertura del año de la materia seleccionada (para saltar entre años).
+- `DetalleMateria.vue` en modo `embebido`: panel fijo de solo lectura, sin botón de cierre
+  ni comportamiento de modal (no enfoca al montar, no atrapa el foco, no responde a Escape).
+- Con `correlativas-navegables`, las correlativas son enlaces internos: al hacer clic,
+  el detalle salta a esa materia (`CorrelativasList` emite `seleccionar`). Ayuda a seguir
+  las dependencias.
+- Botón **Volver**: si hay historial en la SPA regresa al estado anterior (`router.back()`);
+  si se entró directo, va a la raíz (login, o el dashboard del rol por el guard). La etiqueta
+  cambia entre "Volver a la app" (con sesión) y "Volver al inicio" (público).
+- Selector sticky, resumen del plan (`N materias · M años`, badge de pregrado) y layout
+  `lg:grid-cols-[18rem_minmax(0,1fr)]`; en mobile alterna lista/detalle con "← Materias".
+- Selección por URL `?plan=...&materia=...` con `router.replace`.
+- El catálogo se reutiliza de `useCatalogoPlanes.js` (mismo `fetch` que la app calienta en
+  `main.js`); `usePlanesEstudio.js` sigue leyendo el JSON crudo y el año de cada materia se
+  deriva con `anioDeMateria()` de `src/utils/planes.js`.
