@@ -40,8 +40,10 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 **Colecciones de soporte (nuevas)**
 - `importaciones/{id}`: auditoría de cargas masivas (hash, usuario, totales, errores).
 - `contadores/legajos`: secuencia transaccional para `numeroLegajo` (formato previsto `AAAA-NNNN`, a confirmar en E5).
-- `planesPendientes/{codigo}`: borradores JSON del editor de planes (`codigo`, `nombre`,
-  `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`).
+- `planesPendientes/{codigo}`: borradores **provisorios** del editor de planes (`codigo`, `nombre`,
+  `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`,
+  `estadoRevision`). La subcolección `planesPendientes/{codigo}/comentarios/{id}` guarda los
+  comentarios de revisión (taller editorial; ver `plan-planes-publicacion-202611.md`).
 
 **Colección: `ofertaAcademica`**
 - Documento por ciclo (ej: `2026-1`).
@@ -87,6 +89,11 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 > `planes.json` y conectar el gate en el alta. Ver
 > [plan-editor-planes-202611.md](plan-editor-planes-202611.md).
 
+> **Taller editorial de planes (Fase 1, 03/11/2026):** implementado `estadoRevision` en
+> `planesPendientes`, la subcolección `comentarios`, el selector de provisorios y el panel de
+> comentarios en `EditorPlanes.vue`, y las reglas asociadas. Publicación (`planesPublicados`) es
+> Fase 2. Ver [plan-planes-publicacion-202611.md](plan-planes-publicacion-202611.md).
+
 ---
 
 ## Flujo de Autenticación
@@ -113,6 +120,8 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
 - **`inscripciones/useCargaOferta.js`**: Carga masiva de oferta desde CSV (`coordinacion`). Reemplaza el documento del ciclo en un `writeBatch`.
 - **`inscripciones/useInscripciones.js`**: Creación y lectura de inscripciones (subcolección de `usuarios`).
 - **`academico/usePlanesEstudio.js`**: Carga JSON local + procesamiento de correlativas. En E2/E3 debe reutilizar el normalizador compartido de `src/utils/planes.js` (hoy todavía lee el JSON crudo).
+- **`academico/useGestionPlanes.js`**: Orquestación de borradores de planes (`planesPendientes`) para las vistas de coordinación: listar, abrir, importar/guardar y eliminar; estado de revisión (`marcarListoParaPublicar` / `volverARevision`) y bandeja `planesListosParaPublicar`. Lo consumen `CargaDatos.vue` (importar y abrir) y `EditorPlanes.vue` (editar, comentar y guardar cambios). La persistencia pura vive en `usePlanesPendientes.js`.
+- **`academico/useComentariosPlanes.js`**: CRUD de comentarios del proceso de revisión (subcolección `planesPendientes/{codigo}/comentarios`): listar, agregar, resolver/reabrir y eliminar. Lo consume `EditorPlanes.vue` vía `PanelComentarios.vue`.
 - **`useLayout.js`**: Theme + layout singleton (body class switching).
 
 **Utilidades puras compartidas (nuevas):**
@@ -128,6 +137,7 @@ Los composables siguen el patrón `useXxx.js` en subdirectorios temáticos bajo 
   `recorrerCondicion`, `codigosDeCondicion`, `validarCondicion`).
 - `src/utils/validacionUsuarios.js` (E2): normalización y validación de usuarios, planes y fechas; construcción de `usuarios` y `legajos`.
 - `src/utils/csv.js` (E2): parser CSV v2 con columnas y arrays paralelos.
+- `src/utils/fechas.js` (02/11/2026): `formatearFechaHora` (Date/Timestamp/string → fecha y hora corta es-AR).
 
 ---
 

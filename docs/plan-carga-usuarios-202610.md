@@ -36,7 +36,7 @@
 |---|---|
 | `usuarios` | Pre-registro con ID = `email` (lowercase), `estado: 'pendiente_registro'`, campos `dni, nombre, apellido, email, roles[], planes[]` (array de nombres). Post-registro pasa a `usuarios/{uid}` con `uid` y `actualizadoEn`. |
 | `perfiles` | **No existe.** El modelo v2 lo reemplaza por `legajos` (legajo digital). `PerfilCard.vue` lee `carrera` y `legajo`, pero nadie los escribe. |
-| Carga masiva | **Existe** (`CargaMasiva.vue` + `useImportarUsuarios.js`): CSV, valida todo antes de escribir, `writeBatch` en lotes de ≤500. También hay `scripts/import-usuarios.js` con service account. |
+| Carga masiva | **Existe** (`CargaDatos.vue` + `useImportarUsuarios.js`): CSV, valida todo antes de escribir, `writeBatch` en lotes de ≤500. También hay `scripts/import-usuarios.js` con service account. |
 | Alta individual | **No existe** (ni estudiante ni docente). |
 | Rules de `usuarios` | `create`: admin, o coordinación sin poder otorgar `admin`/`coordinacion`. **Bedel no puede crear.** Bedel solo actualiza usuarios con rol `estudiante` y sin tocar `roles`. |
 | Custom claims | Se setean en `registrarUsuario`. `actualizarRoles()` escribe solo Firestore y **no sincroniza claims** (deuda aparte). |
@@ -671,14 +671,14 @@ planes; dry-run con diff impreso.
    duplicados en memoria.
 3. Chequear duplicados en Firestore por chunks de `in` (email y DNI).
 4. Si algo falla: abortar todo y reportar filas, planes y motivos.
-5. Previsualización en `CargaMasiva.vue`: válidas / con error / duplicadas.
+5. Previsualización en `CargaDatos.vue`: válidas / con error / duplicadas.
 6. Generar `numeroLegajo` (contador transaccional) y crear `usuarios` + `legajos` en lotes
    de ≤500; reportar importados vs fallidos si un lote falla.
 7. Registrar auditoría en `importaciones/{id}` (hash del archivo, usuario, totales, errores).
 8. Actualizar `docs/importar-usuarios.md`.
 
 **Archivos:** `src/composables/usuarios/useImportarUsuarios.js`,
-`src/views/coordinacion/CargaMasiva.vue`, `src/utils/validacionUsuarios.js`,
+`src/views/coordinacion/CargaDatos.vue`, `src/utils/validacionUsuarios.js`,
 `docs/importar-usuarios.md`, `tests/unit/composables/useImportarUsuarios.spec.js`.
 **Colecciones:** `usuarios`, `legajos`, `importaciones`, `contadores`.
 **Verificación:** unit tests (válido, inválido, duplicado, plan sin JSON, fecha faltante,

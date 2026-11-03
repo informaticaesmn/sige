@@ -1,8 +1,9 @@
 <!-- src/views/coordinacion/EditorPlanes.vue -->
 <!--
   Editor/Revisor de Planes de Estudio (rol Coordinación).
-  Permite revisar borradores en Firestore, importar JSON del Apps Script,
-  editar el árbol de correlatividades (AND/OR/año), validar y exportar JSON.
+  Se centra en la edición del plan abierto (materias, correlatividades y
+  exportación). La importación de JSON y la gestión de borradores viven en
+  CargaDatos.vue; acá se abre un borrador con `?abrir={codigo}`.
 -->
 <template>
   <div class="min-h-screen font-sans bg-stone-50">
@@ -13,7 +14,7 @@
             Editor de Planes de Estudio
           </h1>
           <p class="text-sm text-stone-500">
-            Revisar, editar condiciones y exportar JSON para
+            Editar materias, correlatividades y exportar JSON para
             <code class="text-xs bg-stone-200 px-1 py-0.5 rounded">public/planes/</code>.
           </p>
         </div>
@@ -42,121 +43,89 @@
       </div>
 
       <template v-else>
-        <!-- ==================== 1. BORRADORES Y CARGA DE JSON ==================== -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <!-- Columna 1 y 2: Borradores guardados -->
-          <div class="lg:col-span-2 card">
-            <div class="flex items-center justify-between gap-2 mb-3">
-              <h2 class="card-header mb-0">
-                1. Borradores en la nube
-              </h2>
-              <button
-                class="btn btn-secondary text-xs"
-                :disabled="cargandoLista"
-                @click="cargarListaPlanes"
+        <!-- Selector de planes provisorios -->
+        <section class="card mb-6">
+          <div class="flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-[16rem]">
+              <label class="form-label text-xs" for="plan-selector">Plan provisorio</label>
+              <select
+                id="plan-selector"
+                class="form-input text-sm w-full"
+                :value="planCodigo"
+                @change="onSeleccionarPlan($event.target.value)"
               >
-                {{ cargandoLista ? '...' : 'Actualizar' }}
-              </button>
+                <option value="">— Elegí un plan para editar —</option>
+                <option v-for="p in planesGuardados" :key="p.codigo" :value="p.codigo">
+                  {{ p.codigo }} · {{ ETIQUETAS_ESTADO_REVISION[p.estadoRevision] || 'En edición' }} · {{ formatearFechaHora(p.actualizadoEn) }}
+                </option>
+              </select>
             </div>
-
-            <div v-if="errorLista" class="alert alert-danger text-xs mb-3">
-              {{ errorLista }}
-            </div>
-
-            <div
-              v-if="!cargandoLista && planesGuardados.length === 0"
-              class="text-xs text-stone-500 italic p-3 bg-stone-100 rounded"
+            <button
+              class="btn btn-secondary text-xs"
+              :disabled="cargandoLista"
+              @click="refrescarLista"
             >
-              No hay borradores guardados en la nube.
-            </div>
-
-            <div v-else-if="planesGuardados.length > 0" class="overflow-x-auto border border-stone-200 rounded">
-              <table class="min-w-full text-left text-xs">
-                <thead class="bg-stone-100 font-semibold text-stone-600">
-                  <tr>
-                    <th class="px-2 py-1.5">Código</th>
-                    <th class="px-2 py-1.5">Nombre</th>
-                    <th class="px-2 py-1.5">Materias</th>
-                    <th class="px-2 py-1.5">Actualizado</th>
-                    <th class="px-2 py-1.5 text-center">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="plan in planesGuardados"
-                    :key="plan.codigo"
-                    class="border-b border-stone-100 hover:bg-stone-50"
-                  >
-                    <td class="px-2 py-1.5 font-mono text-stone-700 font-medium">
-                      {{ plan.codigo }}
-                    </td>
-                    <td class="px-2 py-1.5 text-stone-800 max-w-xs truncate">
-                      {{ plan.nombre }}
-                    </td>
-                    <td class="px-2 py-1.5">
-                      {{ plan.materiasCount ?? '—' }}
-                    </td>
-                    <td class="px-2 py-1.5 text-stone-500">
-                      {{ formatearFecha(plan.actualizadoEn) }}
-                    </td>
-                    <td class="px-2 py-1.5 text-center flex items-center justify-center gap-1">
-                      <button
-                        class="btn-link font-medium"
-                        :disabled="cargandoPlan === plan.codigo"
-                        @click="abrirPlanGuardado(plan.codigo)"
-                      >
-                        {{ cargandoPlan === plan.codigo ? '...' : 'Abrir' }}
-                      </button>
-                      <button
-                        class="btn-link text-red-600"
-                        @click="eliminarPlanGuardado(plan.codigo)"
-                      >
-                        ×
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              {{ cargandoLista ? '...' : 'Actualizar lista' }}
+            </button>
+            <router-link :to="{ name: 'CoordinacionCarga' }" class="btn-link text-xs pb-2">
+              Importar nuevo JSON
+            </router-link>
           </div>
 
-          <!-- Columna 3: Carga rápida de JSON local -->
-          <div class="card bg-stone-100/60 border border-stone-200">
-            <h2 class="card-header text-sm mb-2">
-              Cargar archivo JSON
-            </h2>
-            <p class="text-xs text-stone-500 mb-3">
-              Importar salida del Apps Script o archivo local.
-            </p>
-
-            <div class="space-y-3">
-              <input
-                id="archivo-json"
-                type="file"
-                accept=".json,application/json"
-                class="form-input text-xs w-full bg-white"
-                @change="onArchivoJSON"
-              >
-
-              <div
-                v-if="erroresImport.length > 0"
-                class="alert alert-danger text-xs p-2"
-              >
-                <ul class="list-disc list-inside space-y-0.5">
-                  <li v-for="(e, i) in erroresImport" :key="i">
-                    {{ e }}
-                  </li>
-                </ul>
-              </div>
-
-              <div v-if="mensajeGuardado" class="alert alert-info text-xs p-2">
-                {{ mensajeGuardado }}
-              </div>
-            </div>
+          <!-- Estado de revisión del plan abierto -->
+          <div
+            v-if="materiasCount > 0"
+            class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-stone-200"
+          >
+            <span class="text-xs font-semibold" :class="claseEstadoRevision">
+              {{ ETIQUETAS_ESTADO_REVISION[estadoRevisionActual] || 'En edición' }}
+            </span>
+            <button
+              v-if="estadoRevisionActual !== 'listo_para_publicar'"
+              class="btn btn-secondary text-xs"
+              :disabled="cambiandoEstado"
+              @click="marcarListo"
+            >
+              Marcar listo para publicar
+            </button>
+            <button
+              v-else
+              class="btn btn-secondary text-xs"
+              :disabled="cambiandoEstado"
+              @click="volverARevision"
+            >
+              Volver a revisión
+            </button>
           </div>
+        </section>
+
+        <!-- Mensajes de la apertura de un borrador -->
+        <div v-if="erroresImport.length > 0" class="alert alert-danger text-xs mb-4">
+          <ul class="list-disc list-inside space-y-0.5">
+            <li v-for="(e, i) in erroresImport" :key="i">{{ e }}</li>
+          </ul>
+        </div>
+        <div v-if="mensajeGuardado" class="alert alert-info text-xs mb-4">
+          {{ mensajeGuardado }}
         </div>
 
-        <!-- ==================== 2. METADATOS Y ESTADO DEL PLAN ==================== -->
+        <!-- Sin plan abierto -->
+        <div v-if="materiasCount === 0" class="card text-center py-10">
+          <h2 class="text-lg font-semibold text-stone-700 mb-2">
+            No hay ningún plan abierto
+          </h2>
+          <p class="text-sm text-stone-500 mb-4">
+            Elegí un plan provisorio en el selector de arriba, o importá un JSON desde Carga de Datos.
+          </p>
+          <router-link
+            :to="{ name: 'CoordinacionCarga' }"
+            class="btn btn-primary text-sm"
+          >
+            Ir a Carga de Datos
+          </router-link>
+        </div>
+
+        <!-- ==================== 1. METADATOS Y ESTADO DEL PLAN ==================== -->
         <section v-if="materiasCount > 0" class="card mb-6">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
@@ -197,7 +166,7 @@
           </div>
         </section>
 
-        <!-- ==================== 3. EDITOR DE MATERIAS Y CONDICIONES ==================== -->
+        <!-- ==================== 2. EDITOR DE MATERIAS Y CONDICIONES ==================== -->
         <section v-if="materiasCount > 0" class="card mb-6">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-stone-200">
             <div class="flex items-center gap-3">
@@ -304,16 +273,40 @@
                     />
                   </div>
                 </div>
+
+                <!-- Comentarios de la materia -->
+                <div class="mt-3 pt-2 border-t border-stone-200/60">
+                  <button
+                    type="button"
+                    class="text-xs font-medium text-stone-600 hover:text-stone-900"
+                    @click="toggleComentariosMateria(m.codigo)"
+                  >
+                    💬 Comentarios{{ contarComentariosMateria(m.codigo) ? ` (${contarComentariosMateria(m.codigo)})` : '' }}
+                  </button>
+                  <PanelComentarios
+                    v-if="materiaComentariosAbierta === m.codigo"
+                    class="mt-2"
+                    :comentarios="comentarios"
+                    :materia-id="m.codigo"
+                    :titulo="`Comentarios de ${m.codigo}`"
+                    :cargando="cargandoComentarios"
+                    :error="errorComentarios"
+                    @agregar="onAgregarComentario"
+                    @resolver="onResolverComentario"
+                    @reabrir="onReabrirComentario"
+                    @eliminar="onEliminarComentario"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ==================== 4. VALIDACIONES ==================== -->
+        <!-- ==================== 3. VALIDACIONES ==================== -->
         <section v-if="materiasCount > 0" class="card mb-6">
           <div class="flex items-center justify-between gap-3 mb-3">
             <h2 class="card-header mb-0">
-              4. Validación del Plan
+              3. Validación del Plan
             </h2>
             <button class="btn btn-secondary text-xs" @click="ejecutarValidacion">
               Re-validar
@@ -334,10 +327,10 @@
           </div>
         </section>
 
-        <!-- ==================== 5. EXPORTACIÓN ==================== -->
+        <!-- ==================== 4. EXPORTACIÓN ==================== -->
         <section v-if="materiasCount > 0" class="card mb-6">
           <h2 class="card-header text-sm mb-3">
-            5. Exportar archivos JSON finales
+            4. Exportar archivos JSON finales
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
@@ -366,6 +359,21 @@
             {{ mensajeExport }}
           </div>
         </section>
+
+        <!-- ==================== 5. COMENTARIOS DEL PLAN ==================== -->
+        <section v-if="materiasCount > 0" class="card mb-6">
+          <PanelComentarios
+            :comentarios="comentarios"
+            :materia-id="null"
+            titulo="Comentarios generales del plan"
+            :cargando="cargandoComentarios"
+            :error="errorComentarios"
+            @agregar="onAgregarComentario"
+            @resolver="onResolverComentario"
+            @reabrir="onReabrirComentario"
+            @eliminar="onEliminarComentario"
+          />
+        </section>
       </template>
     </div>
   </div>
@@ -373,24 +381,40 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useEditorPlanes } from '@/composables/academico/useEditorPlanes.js'
-import { usePlanesPendientes } from '@/composables/academico/usePlanesPendientes.js'
+import { useGestionPlanes } from '@/composables/academico/useGestionPlanes.js'
 import { useCatalogoPlanes } from '@/composables/academico/useCatalogoPlanes.js'
+import { useComentariosPlanes } from '@/composables/academico/useComentariosPlanes.js'
+import { ETIQUETAS_ESTADO_REVISION } from '@/composables/academico/usePlanesPendientes.js'
 import EditorCondicion from '@/components/ui/EditorCondicion.vue'
+import PanelComentarios from '@/components/ui/PanelComentarios.vue'
 import { useAuth } from '@/composables/auth/useAuth.js'
+import { formatearFechaHora } from '@/utils/fechas.js'
 
+const route = useRoute()
 const { user } = useAuth()
 const { catalogo: catalogoActual } = useCatalogoPlanes()
 
 const {
-  listarPlanesPendientes,
-  obtenerPlanPendiente,
-  guardarPlanPendiente,
-  eliminarPlanPendiente
-} = usePlanesPendientes()
+  planesGuardados,
+  cargandoLista,
+  refrescarLista,
+  cargarBorrador,
+  guardarBorrador,
+  marcarListoParaPublicar: marcarListoComposable,
+  volverARevision: volverARevisionComposable
+} = useGestionPlanes()
 
 const {
-  jsonTexto,
+  listarComentarios,
+  agregarComentario,
+  resolverComentario,
+  reabrirComentario,
+  eliminarComentario
+} = useComentariosPlanes()
+
+const {
   materias,
   planCodigo,
   planNombre,
@@ -414,14 +438,16 @@ const {
 // --- Estado local de la vista ---
 const erroresImport = ref([])
 const mensajeExport = ref('')
-
-// --- Estado del listado de borradores guardados ---
-const planesGuardados = ref([])
-const errorLista = ref('')
-const cargandoLista = ref(false)
-const cargandoPlan = ref('')
 const guardandoNube = ref(false)
 const mensajeGuardado = ref('')
+
+// --- Estado de revisión y comentarios del plan abierto ---
+const estadoRevisionActual = ref('en_edicion')
+const cambiandoEstado = ref(false)
+const comentarios = ref([])
+const cargandoComentarios = ref(false)
+const errorComentarios = ref('')
+const materiaComentariosAbierta = ref(null)
 
 const esCoordinacion = computed(() => {
   return user.value?.roles?.includes('coordinacion') === true
@@ -429,55 +455,183 @@ const esCoordinacion = computed(() => {
 
 const materiasCount = computed(() => Object.keys(materias.value).length)
 
-function formatearFecha(valor) {
-  if (!valor) return '—'
-  const fecha = valor instanceof Date ? valor : new Date(valor)
-  if (Number.isNaN(fecha.getTime())) return '—'
-  return fecha.toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })
+/** Clase visual de la píldora de estado de revisión. */
+const claseEstadoRevision = computed(() => {
+  switch (estadoRevisionActual.value) {
+    case 'listo_para_publicar':
+      return 'bg-green-100 text-green-800 px-2 py-1 rounded'
+    case 'revision':
+      return 'bg-amber-100 text-amber-800 px-2 py-1 rounded'
+    default:
+      return 'bg-stone-200 text-stone-700 px-2 py-1 rounded'
+  }
+})
+
+/**
+ * Cantidad de comentarios anclados a una materia.
+ * @param {string} codigo
+ * @returns {number}
+ */
+function contarComentariosMateria(codigo) {
+  return comentarios.value.filter((c) => c.materiaId === codigo).length
 }
 
-// 1. Borradores en Firestore
-async function cargarListaPlanes() {
-  cargandoLista.value = true
-  errorLista.value = ''
+/** Abre/cierra el panel de comentarios de una materia. */
+function toggleComentariosMateria(codigo) {
+  materiaComentariosAbierta.value =
+    materiaComentariosAbierta.value === codigo ? null : codigo
+}
 
-  const resultado = await listarPlanesPendientes()
-  if (resultado.exito) {
-    planesGuardados.value = resultado.datos
-  } else {
-    errorLista.value = resultado.error?.message || 'No se pudo leer el listado de borradores guardados.'
+/**
+ * Carga los comentarios de un borrador.
+ * @param {string} codigo
+ */
+async function cargarComentarios(codigo) {
+  if (!codigo) {
+    comentarios.value = []
+    return
   }
 
-  cargandoLista.value = false
+  cargandoComentarios.value = true
+  errorComentarios.value = ''
+
+  const resultado = await listarComentarios(codigo)
+  if (resultado.exito) {
+    comentarios.value = resultado.datos
+  } else {
+    errorComentarios.value = resultado.error?.message || 'No se pudieron cargar los comentarios.'
+  }
+
+  cargandoComentarios.value = false
 }
 
-async function abrirPlanGuardado(codigo) {
-  cargandoPlan.value = codigo
+/** Selecciona un plan provisorio del desplegable. */
+function onSeleccionarPlan(codigo) {
+  if (!codigo) return
+  abrirBorrador(codigo)
+}
+
+/**
+ * Abre un borrador guardado en Firestore y lo carga en el editor.
+ * @param {string} codigo
+ */
+async function abrirBorrador(codigo) {
   erroresImport.value = []
   mensajeGuardado.value = ''
   mensajeExport.value = ''
+  materiaComentariosAbierta.value = null
 
-  try {
-    const resultado = await obtenerPlanPendiente(codigo)
-    if (!resultado.exito) {
-      erroresImport.value = [resultado.error?.message || 'No se pudo abrir el borrador.']
-      return
-    }
+  const resultado = await cargarBorrador(codigo)
+  if (!resultado.exito) {
+    erroresImport.value = [resultado.error?.message || 'No se pudo abrir el borrador.']
+    return
+  }
 
-    const { jsonTexto: jsonGuardado, nombre } = resultado.datos
-    const importado = await importarJSONPlan(jsonGuardado, {
-      planCodigo: codigo,
-      planNombre: nombre
-    })
-    erroresImport.value = importado.errores || []
-    mensajeGuardado.value = `Borrador ${codigo} cargado desde Firestore.`
-  } catch (err) {
-    erroresImport.value = [err.message || 'Error al abrir el borrador.']
-  } finally {
-    cargandoPlan.value = ''
+  const { jsonTexto, nombre, estadoRevision } = resultado.datos
+  const importado = await importarJSONPlan(jsonTexto, {
+    planCodigo: codigo,
+    planNombre: nombre
+  })
+  erroresImport.value = importado.errores || []
+  estadoRevisionActual.value = estadoRevision || 'en_edicion'
+  mensajeGuardado.value = `Borrador ${codigo} cargado desde la nube.`
+
+  await cargarComentarios(codigo)
+}
+
+/** Marca el plan abierto como listo para publicar. */
+async function marcarListo() {
+  if (!planCodigo.value) return
+
+  cambiandoEstado.value = true
+  erroresImport.value = []
+
+  const resultado = await marcarListoComposable(planCodigo.value, {
+    uid: user.value?.uid || '',
+    email: user.value?.email || ''
+  })
+
+  cambiandoEstado.value = false
+
+  if (resultado.exito) {
+    estadoRevisionActual.value = 'listo_para_publicar'
+    mensajeGuardado.value = `Plan ${planCodigo.value} marcado como listo para publicar.`
+  } else {
+    erroresImport.value = [resultado.error?.message || 'No se pudo cambiar el estado.']
   }
 }
 
+/** Devuelve el plan abierto a "en edición". */
+async function volverARevision() {
+  if (!planCodigo.value) return
+
+  cambiandoEstado.value = true
+  erroresImport.value = []
+
+  const resultado = await volverARevisionComposable(planCodigo.value, {
+    uid: user.value?.uid || '',
+    email: user.value?.email || ''
+  })
+
+  cambiandoEstado.value = false
+
+  if (resultado.exito) {
+    estadoRevisionActual.value = 'en_edicion'
+    mensajeGuardado.value = `Plan ${planCodigo.value} devuelto a edición.`
+  } else {
+    erroresImport.value = [resultado.error?.message || 'No se pudo cambiar el estado.']
+  }
+}
+
+/**
+ * Agrega un comentario al plan abierto.
+ * @param {{ texto: string, tipo: string, materiaId: string|null }} datos
+ */
+async function onAgregarComentario({ texto, tipo, materiaId }) {
+  if (!planCodigo.value) {
+    erroresImport.value = ['Cargá o guardá un plan antes de comentar.']
+    return
+  }
+
+  const resultado = await agregarComentario(planCodigo.value, {
+    texto,
+    tipo,
+    materiaId: materiaId || null,
+    uid: user.value?.uid || '',
+    email: user.value?.email || ''
+  })
+
+  if (resultado.exito) await cargarComentarios(planCodigo.value)
+  else errorComentarios.value = resultado.error?.message || 'No se pudo agregar el comentario.'
+}
+
+/** Resuelve un comentario. */
+async function onResolverComentario(id) {
+  const resultado = await resolverComentario(planCodigo.value, id, {
+    uid: user.value?.uid || ''
+  })
+  if (resultado.exito) await cargarComentarios(planCodigo.value)
+  else errorComentarios.value = resultado.error?.message || 'No se pudo resolver el comentario.'
+}
+
+/** Reabre un comentario resuelto. */
+async function onReabrirComentario(id) {
+  const resultado = await reabrirComentario(planCodigo.value, id)
+  if (resultado.exito) await cargarComentarios(planCodigo.value)
+  else errorComentarios.value = resultado.error?.message || 'No se pudo reabrir el comentario.'
+}
+
+/** Elimina un comentario. */
+async function onEliminarComentario(id) {
+  if (!window.confirm('¿Eliminar este comentario?')) return
+  const resultado = await eliminarComentario(planCodigo.value, id)
+  if (resultado.exito) await cargarComentarios(planCodigo.value)
+  else errorComentarios.value = resultado.error?.message || 'No se pudo eliminar el comentario.'
+}
+
+/**
+ * Guarda el estado actual del editor como borrador en la nube.
+ */
 async function guardarBorradorEnNube() {
   if (!planCodigo.value) {
     erroresImport.value = ['Definí un código de plan antes de guardarlo.']
@@ -489,62 +643,28 @@ async function guardarBorradorEnNube() {
 
   try {
     const detalleJson = generarJSONDetalle()
-    const jsonStr = JSON.stringify(detalleJson, null, 2)
-
-    const resultado = await guardarPlanPendiente({
+    const resultado = await guardarBorrador({
       codigo: planCodigo.value,
       nombre: planNombre.value,
-      jsonTexto: jsonStr,
+      jsonTexto: JSON.stringify(detalleJson, null, 2),
       materiasCount: materiasCount.value,
       uid: user.value?.uid || '',
       email: user.value?.email || ''
     })
 
-    if (!resultado.exito) {
+    mensajeGuardado.value = resultado.exito
+      ? `Borrador del plan ${resultado.datos.codigo} guardado en la nube.`
+      : `No se pudo guardar el borrador: ${resultado.error?.message}`
+    if (resultado.exito) {
+      await refrescarLista()
+    } else {
       erroresImport.value = [resultado.error?.message || 'No se pudo guardar el borrador.']
-      return
     }
-
-    mensajeGuardado.value = `Borrador del plan ${resultado.datos.codigo} guardado en la nube.`
-    await cargarListaPlanes()
   } catch (err) {
     erroresImport.value = [err.message || 'Error al guardar el borrador.']
   } finally {
     guardandoNube.value = false
   }
-}
-
-async function eliminarPlanGuardado(codigo) {
-  try {
-    const resultado = await eliminarPlanPendiente(codigo)
-    if (!resultado.exito) {
-      errorLista.value = resultado.error?.message || 'No se pudo eliminar el borrador.'
-      return
-    }
-    await cargarListaPlanes()
-  } catch (err) {
-    errorLista.value = err.message || 'Error al eliminar el borrador.'
-  }
-}
-
-// 2. Importar JSON Local
-function onArchivoJSON(event) {
-  const archivo = event.target.files?.[0]
-  if (!archivo) return
-
-  const lector = new FileReader()
-  lector.onload = async (e) => {
-    erroresImport.value = []
-    mensajeGuardado.value = ''
-    try {
-      const res = await importarJSONPlan(e.target.result)
-      erroresImport.value = res.errores || []
-      mensajeGuardado.value = `JSON cargado exitosamente (${res.materiasCount} materias).`
-    } catch (err) {
-      erroresImport.value = [err.message || 'Error al procesar el archivo JSON.']
-    }
-  }
-  lector.readAsText(archivo)
 }
 
 function agregarMateriaEn(anio) {
@@ -585,7 +705,10 @@ async function copiarDetalle() {
   }
 }
 
-onMounted(() => {
-  if (esCoordinacion.value) cargarListaPlanes()
+onMounted(async () => {
+  if (!esCoordinacion.value) return
+  await refrescarLista()
+  const codigo = route.query?.abrir
+  if (codigo) abrirBorrador(String(codigo))
 })
 </script>

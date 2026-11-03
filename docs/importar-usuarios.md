@@ -11,7 +11,7 @@
 
 | Camino | Rol / credenciales | Alcance | Sujeto a rules |
 |---|---|---|---|
-| **Carga in-app** (`CargaMasiva.vue` + `useImportarUsuarios.js`) | `coordinacion` (o `admin`) | **Solo estudiantes ingresantes** (`roles = ["estudiante"]`) | Sí |
+| **Carga in-app** (`CargaDatos.vue` + `useImportarUsuarios.js`) | `coordinacion` (o `admin`) | **Solo estudiantes ingresantes** (`roles = ["estudiante"]`) | Sí |
 | **Script** (`scripts/import-usuarios.js`) | Service account | Estudiantes vigentes, docentes, bedeles y coordinadores | No (bypasea rules) |
 
 Ambos caminos comparten el mismo núcleo de validación (E2): normalización, planes con JSON,

@@ -1,11 +1,13 @@
 /**
- * Tests unitarios para usePlanesPendientes.js (v2 con jsonTexto)
+ * Tests unitarios para usePlanesPendientes.js (v3: jsonTexto + estadoRevision)
  *
  * Valida:
- * - Normalización de documentos (Timestamp → Date, defaults)
+ * - Normalización de documentos (Timestamp → Date, defaults, estadoRevision)
  * - Listado ordenado por fecha de actualización
  * - Lectura de un borrador (jsonTexto) con fallback a csvTexto
  * - Validaciones antes de escribir (código, JSON vacío, tamaño máximo)
+ * - Escritura con merge (no pisa campos administrados por otro flujo)
+ * - Cambio de estado de revisión (marcar listo / volver a edición)
  * - Escritura/borrado con el SDK lite
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -45,6 +47,8 @@ vi.mock('@/config/firebase.js', () => ({ db: {} }))
 
 import {
   COLECCION_PLANES_PENDIENTES,
+  ESTADO_REVISION_DEFAULT,
+  ESTADOS_REVISION,
   MAX_JSON_BYTES,
   normalizarPlanPendiente,
   usePlanesPendientes
@@ -79,6 +83,36 @@ describe('usePlanesPendientes', () => {
       expect(resultado.actualizadoEn).toBeInstanceOf(Date)
       expect(resultado.actualizadoEn.toISOString()).toBe(fecha)
       expect(resultado.actualizadoPorEmail).toBe('coord@test.com')
+    })
+
+    it('debe default-ear estadoRevision a "en_edicion" y auditoría vacía', () => {
+      const resultado = normalizarPlanPendiente('663', {})
+
+      expect(resultado.estadoRevision).toBe(ESTADO_REVISION_DEFAULT)
+      expect(resultado.listoParaPublicarEn).toBeNull()
+      expect(resultado.listoParaPublicarPor).toBe('')
+      expect(resultado.publicadoEn).toBeNull()
+    })
+
+    it('debe respetar un estadoRevision válido y descartar uno inválido', () => {
+      const valido = normalizarPlanPendiente('663', { estadoRevision: 'listo_para_publicar' })
+      const invalido = normalizarPlanPendiente('663', { estadoRevision: 'cualquier_cosa' })
+
+      expect(valido.estadoRevision).toBe('listo_para_publicar')
+      expect(invalido.estadoRevision).toBe(ESTADO_REVISION_DEFAULT)
+    })
+
+    it('debe convertir la auditoría de "listo para publicar" a Date', () => {
+      const fecha = '2026-11-02T12:00:00.000Z'
+      const resultado = normalizarPlanPendiente('663', {
+        estadoRevision: 'listo_para_publicar',
+        listoParaPublicarEn: timestamp(fecha),
+        listoParaPublicarPor: 'uid-admin'
+      })
+
+      expect(resultado.listoParaPublicarEn).toBeInstanceOf(Date)
+      expect(resultado.listoParaPublicarEn.toISOString()).toBe(fecha)
+      expect(resultado.listoParaPublicarPor).toBe('uid-admin')
     })
   })
 
@@ -168,6 +202,34 @@ describe('usePlanesPendientes', () => {
       })
     })
 
+    it('debe escribir con { merge: true } para no pisar campos de otro flujo', async () => {
+      const { guardarPlanPendiente } = usePlanesPendientes()
+      await guardarPlanPendiente({ codigo: '663', jsonTexto: '{"plan": "663"}' })
+
+      const opciones = mockSetDoc.mock.calls[0][2]
+      expect(opciones).toEqual({ merge: true })
+    })
+
+    it('NO debe incluir estadoRevision si no se pasa (lo preserva el merge)', async () => {
+      const { guardarPlanPendiente } = usePlanesPendientes()
+      await guardarPlanPendiente({ codigo: '663', jsonTexto: '{"plan": "663"}' })
+
+      const documento = mockSetDoc.mock.calls[0][1]
+      expect(documento).not.toHaveProperty('estadoRevision')
+    })
+
+    it('debe incluir estadoRevision si se pasa un valor válido', async () => {
+      const { guardarPlanPendiente } = usePlanesPendientes()
+      await guardarPlanPendiente({
+        codigo: '663',
+        jsonTexto: '{"plan": "663"}',
+        estadoRevision: 'revision'
+      })
+
+      const documento = mockSetDoc.mock.calls[0][1]
+      expect(documento.estadoRevision).toBe('revision')
+    })
+
     it('NO debe escribir si el JSON está vacío o supera el tamaño máximo', async () => {
       const { guardarPlanPendiente } = usePlanesPendientes()
 
@@ -188,6 +250,65 @@ describe('usePlanesPendientes', () => {
 
       expect(resultado.exito).toBe(false)
       expect(resultado.error.message).toBe('permiso denegado')
+    })
+  })
+
+  describe('actualizarEstadoRevision / marcarListoParaPublicar / volverARevision', () => {
+    it('debe rechazar un estado inválido sin escribir', async () => {
+      const { actualizarEstadoRevision } = usePlanesPendientes()
+      const resultado = await actualizarEstadoRevision('663', 'inventado')
+
+      expect(resultado.exito).toBe(false)
+      expect(resultado.error.message).toContain('inválido')
+      expect(mockSetDoc).not.toHaveBeenCalled()
+    })
+
+    it('debe rechazar si falta el código sin escribir', async () => {
+      const { actualizarEstadoRevision } = usePlanesPendientes()
+      const resultado = await actualizarEstadoRevision('', 'revision')
+
+      expect(resultado.exito).toBe(false)
+      expect(mockSetDoc).not.toHaveBeenCalled()
+    })
+
+    it('marcarListoParaPublicar setea estado y auditoría con merge', async () => {
+      const { marcarListoParaPublicar } = usePlanesPendientes()
+      const resultado = await marcarListoParaPublicar('663', {
+        uid: 'uid-admin',
+        email: 'admin@test.com'
+      })
+
+      expect(resultado.exito).toBe(true)
+      expect(resultado.datos).toEqual({ codigo: '663', estadoRevision: 'listo_para_publicar' })
+
+      const [, documento, opciones] = mockSetDoc.mock.calls[0]
+      expect(opciones).toEqual({ merge: true })
+      expect(documento).toMatchObject({
+        estadoRevision: 'listo_para_publicar',
+        listoParaPublicarPor: 'uid-admin',
+        listoParaPublicarEn: 'SERVER_TIMESTAMP',
+        actualizadoPor: 'uid-admin',
+        actualizadoPorEmail: 'admin@test.com'
+      })
+    })
+
+    it('volverARevision limpia la auditoría de "listo para publicar"', async () => {
+      const { volverARevision } = usePlanesPendientes()
+      const resultado = await volverARevision('663', { uid: 'uid-coord' })
+
+      expect(resultado.exito).toBe(true)
+      expect(resultado.datos).toEqual({ codigo: '663', estadoRevision: 'en_edicion' })
+
+      const documento = mockSetDoc.mock.calls[0][1]
+      expect(documento).toMatchObject({
+        estadoRevision: 'en_edicion',
+        listoParaPublicarEn: null,
+        listoParaPublicarPor: ''
+      })
+    })
+
+    it('debe ofrecer los tres estados del flujo', () => {
+      expect(ESTADOS_REVISION).toEqual(['en_edicion', 'revision', 'listo_para_publicar'])
     })
   })
 })

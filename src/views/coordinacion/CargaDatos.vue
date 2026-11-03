@@ -1,10 +1,10 @@
-<!-- src/views/coordinacion/CargaMasiva.vue -->
+<!-- src/views/coordinacion/CargaDatos.vue -->
 <template>
   <div class="bg-stone-100 min-h-screen font-sans">
     <div class="container mx-auto px-4 py-6 max-w-4xl">
-      <h1 class="text-2xl font-medium mb-2">Carga Masiva</h1>
+      <h1 class="text-2xl font-medium mb-2">Carga de Datos</h1>
       <p class="text-muted mb-6">
-        Importación de usuarios y oferta académica desde archivos CSV (formato Google Sheets).
+        Importación de usuarios, oferta académica y planes de estudio.
       </p>
 
       <!-- Guardia extra en UI: la seguridad real la dan las reglas de Firestore -->
@@ -120,6 +120,69 @@
             </div>
           </div>
         </section>
+
+        <!-- ============================ PLANES (JSON) ============================ -->
+        <section class="card mb-6">
+          <h2 class="card-header">3. Planes de estudio (JSON)</h2>
+          <p class="text-muted mb-4">
+            Gestión de borradores en la nube. Importa un JSON para crear un borrador o continúa uno guardado.
+          </p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Listado -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-semibold text-stone-700">Borradores guardados</h3>
+                <button class="btn btn-secondary text-xs" :disabled="cargandoLista" @click="refrescarLista">
+                  {{ cargandoLista ? '...' : 'Actualizar' }}
+                </button>
+              </div>
+              <div v-if="errorLista" class="alert alert-danger text-xs mb-3">
+                {{ errorLista }}
+              </div>
+              <div v-if="planesGuardados.length === 0" class="text-xs text-stone-500 italic p-3 bg-stone-100 rounded">
+                No hay borradores guardados.
+              </div>
+              <div v-else class="overflow-x-auto border border-stone-200 rounded">
+                <table class="min-w-full text-left text-xs">
+                  <thead class="bg-stone-100 font-semibold text-stone-600">
+                    <tr>
+                      <th class="px-2 py-1.5">Código</th>
+                      <th class="px-2 py-1.5">Estado</th>
+                      <th class="px-2 py-1.5">Actualizado</th>
+                      <th class="px-2 py-1.5 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="plan in planesGuardados" :key="plan.codigo" class="border-b border-stone-100 hover:bg-stone-50">
+                      <td class="px-2 py-1.5 font-mono font-medium">{{ plan.codigo }}</td>
+                      <td class="px-2 py-1.5">{{ ETIQUETAS_ESTADO_REVISION[plan.estadoRevision] || 'En edición' }}</td>
+                      <td class="px-2 py-1.5 text-stone-500">{{ formatearFechaHora(plan.actualizadoEn) }}</td>
+                      <td class="px-2 py-1.5 text-center flex items-center justify-center gap-1">
+                        <router-link
+                          :to="{ name: 'CoordinacionEditorPlanes', query: { abrir: plan.codigo } }"
+                          class="btn-link font-medium"
+                        >
+                          Abrir
+                        </router-link>
+                        <button class="btn-link text-red-600" @click="onEliminarBorrador(plan.codigo)">×</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Importación -->
+            <div>
+              <h3 class="text-sm font-semibold text-stone-700 mb-2">Importar nuevo JSON</h3>
+              <input type="file" accept=".json" class="form-input text-xs w-full bg-white mb-3" @change="onArchivoJSON" />
+              <div v-if="mensajeGuardado" class="alert alert-info text-xs p-2">
+                {{ mensajeGuardado }}
+              </div>
+            </div>
+          </div>
+        </section>
       </template>
     </div>
   </div>
@@ -133,6 +196,9 @@ import {
   mapaDePlanesDesdeJson
 } from '@/composables/usuarios/useImportarUsuarios.js'
 import { useCargaOferta } from '@/composables/inscripciones/useCargaOferta.js'
+import { useGestionPlanes } from '@/composables/academico/useGestionPlanes.js'
+import { ETIQUETAS_ESTADO_REVISION } from '@/composables/academico/usePlanesPendientes.js'
+import { formatearFechaHora } from '@/utils/fechas.js'
 
 // --- Permisos en UI (la seguridad real la aplican las reglas de Firestore) ---
 const { user } = useAuth()
@@ -200,4 +266,47 @@ async function limpiarOferta() {
     ? { exito: true, datos: { ciclo: res.datos.ciclo, etapas: 0, materias: 0, comisiones: 0 } }
     : res
 }
+
+// --- Gestión de Planes (JSON) ---
+// Toda la orquestación (listar, importar, guardar, eliminar) vive en el
+// composable; la vista solo maneja el input de archivo y el feedback.
+const {
+  planesGuardados,
+  cargandoLista,
+  errorLista,
+  refrescarLista,
+  importarBorradorDesdeTexto,
+  eliminarBorrador
+} = useGestionPlanes()
+
+const mensajeGuardado = ref('')
+
+async function onArchivoJSON(event) {
+  const archivo = event.target.files?.[0]
+  if (!archivo) return
+
+  mensajeGuardado.value = ''
+  const texto = await archivo.text()
+
+  const resultado = await importarBorradorDesdeTexto(texto, {
+    uid: user.value?.uid || '',
+    email: user.value?.email || ''
+  })
+
+  mensajeGuardado.value = resultado.exito
+    ? `¡Plan ${resultado.datos.codigo} importado y guardado como borrador!`
+    : `No se pudo importar el JSON: ${resultado.error?.message}`
+}
+
+async function onEliminarBorrador(codigo) {
+  if (!window.confirm(`¿Eliminar borrador del plan ${codigo}?`)) return
+  const resultado = await eliminarBorrador(codigo)
+  if (!resultado.exito) {
+    errorLista.value = resultado.error?.message || 'No se pudo eliminar el borrador.'
+  }
+}
+
+onMounted(() => {
+  refrescarLista()
+})
 </script>

@@ -89,7 +89,7 @@ service cloud.firestore {
       allow write: if esCoordinacion() || esAdmin();
     }
 
-    // --- CSV de planes en revisión (editor de planes) ---
+    // --- Borradores de planes en revisión (editor de planes) ---
     // Un documento por plan, ID = código canónico (`663`, `662G`, ...).
     // Solo coordinación y admin. La validación profunda es del cliente;
     // las rules solo garantizan el shape mínimo y el límite de tamaño.
@@ -102,9 +102,40 @@ service cloud.firestore {
                request.resource.data.jsonTexto.size() <= 1000000 &&
                request.resource.data.actualizadoPor == request.auth.uid;
       }
+
+      // `estadoRevision` es opcional (los borradores viejos no lo tienen). Si
+      // viene, debe ser uno de los estados del flujo (usePlanesPendientes.js).
+      function estadoRevisionValido() {
+        return !request.resource.data.keys().hasAny(['estadoRevision']) ||
+               request.resource.data.estadoRevision in ['en_edicion', 'revision', 'listo_para_publicar'];
+      }
+
       allow read: if esCoordinacion() || esAdmin();
-      allow create, update: if (esCoordinacion() || esAdmin()) && shapeValido();
+      allow create, update: if (esCoordinacion() || esAdmin()) && shapeValido() && estadoRevisionValido();
       allow delete: if esCoordinacion() || esAdmin();
+
+      // --- Comentarios del proceso de revisión (subcolección del borrador) ---
+      // Un documento por comentario, ID autogenerado. Solo coordinación y admin.
+      // Ver src/composables/academico/useComentariosPlanes.js.
+      match /comentarios/{comentarioId} {
+        function shapeComentario() {
+          return request.resource.data.texto is string &&
+                 request.resource.data.texto.size() > 0 &&
+                 request.resource.data.texto.size() <= 2000 &&
+                 request.resource.data.autor == request.auth.uid &&
+                 request.resource.data.tipo in ['nota', 'actualizacion', 'chequear', 'listo'];
+        }
+
+        allow read: if esCoordinacion() || esAdmin();
+        allow create: if (esCoordinacion() || esAdmin()) && shapeComentario();
+        // El autor no cambia: se puede editar el texto y resolver/reabrir.
+        allow update: if (esCoordinacion() || esAdmin()) &&
+                         request.resource.data.texto is string &&
+                         request.resource.data.texto.size() > 0 &&
+                         request.resource.data.texto.size() <= 2000 &&
+                         request.resource.data.autor == resource.data.autor;
+        allow delete: if esCoordinacion() || esAdmin();
+      }
     }
 
     // --- Inscripciones de un usuario (subcolección por ciclo) ---

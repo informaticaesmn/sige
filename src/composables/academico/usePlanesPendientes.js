@@ -7,7 +7,7 @@
 // de lectura para no romper el trabajo pendiente de los coordinadores.
 //
 // Colección: `planesPendientes/{codigo}` (ID = código de plan, string).
-// Campos (v2):
+// Campos (v3):
 //   codigo              string  código canónico del plan
 //   nombre              string  nombre legible del plan
 //   jsonTexto           string  JSON crudo del editor (árbol de correlativas)
@@ -16,6 +16,13 @@
 //   actualizadoEn       timestamp
 //   actualizadoPor      string  uid del coordinador
 //   actualizadoPorEmail string  email del coordinador
+//   estadoRevision      string  'en_edicion' | 'revision' | 'listo_para_publicar'
+//   listoParaPublicarEn timestamp | null
+//   listoParaPublicarPor string | null
+//   publicadoEn         timestamp | null
+//
+// Los comentarios del proceso de revisión viven en la subcolección
+// `planesPendientes/{codigo}/comentarios` (ver useComentariosPlanes.js).
 import { ref } from 'vue'
 import {
   collection,
@@ -35,6 +42,19 @@ export const COLECCION_PLANES_PENDIENTES = 'planesPendientes'
  * Límite de Firestore por documento (~1MB).
  */
 export const MAX_JSON_BYTES = 1_000_000
+
+/** Estados del flujo de revisión de un borrador. */
+export const ESTADOS_REVISION = Object.freeze(['en_edicion', 'revision', 'listo_para_publicar'])
+
+/** Estado de revisión por defecto al crear un borrador. */
+export const ESTADO_REVISION_DEFAULT = 'en_edicion'
+
+/** Etiquetas legibles de cada estado (para la UI). */
+export const ETIQUETAS_ESTADO_REVISION = Object.freeze({
+  en_edicion: 'En edición',
+  revision: 'En revisión',
+  listo_para_publicar: 'Listo para publicar'
+})
 
 /**
  * Convierte un `Timestamp` de Firestore (o Date/string) a Date.
@@ -57,7 +77,13 @@ export function normalizarPlanPendiente(id, data = {}) {
     materiasCount: Number.isInteger(data.materiasCount) ? data.materiasCount : null,
     actualizadoEn: aFecha(data.actualizadoEn),
     actualizadoPor: data.actualizadoPor || '',
-    actualizadoPorEmail: data.actualizadoPorEmail || ''
+    actualizadoPorEmail: data.actualizadoPorEmail || '',
+    estadoRevision: ESTADOS_REVISION.includes(data.estadoRevision)
+      ? data.estadoRevision
+      : ESTADO_REVISION_DEFAULT,
+    listoParaPublicarEn: aFecha(data.listoParaPublicarEn),
+    listoParaPublicarPor: data.listoParaPublicarPor || '',
+    publicadoEn: aFecha(data.publicadoEn)
   }
 }
 
@@ -148,10 +174,15 @@ export function usePlanesPendientes() {
   }
 
   /**
-   * Crea o reemplaza el borrador de un plan.
-   * @param {{ codigo: string, nombre?: string, jsonTexto: string, materiasCount?: number, uid?: string, email?: string }} plan
+   * Crea o actualiza el borrador de un plan.
+   *
+   * Usa `setDoc` con `merge: true` para no pisar campos que administra otro
+   * flujo (por ejemplo `estadoRevision` o `publicadoEn`): el editor guarda el
+   * contenido (`jsonTexto`) sin tocar el estado de revisión.
+   *
+   * @param {{ codigo: string, nombre?: string, jsonTexto: string, materiasCount?: number, uid?: string, email?: string, estadoRevision?: string }} plan
    */
-  async function guardarPlanPendiente({ codigo, nombre = '', jsonTexto = '', materiasCount = null, uid = '', email = '' } = {}) {
+  async function guardarPlanPendiente({ codigo, nombre = '', jsonTexto = '', materiasCount = null, uid = '', email = '', estadoRevision = null } = {}) {
     const codigoLimpio = String(codigo || '').trim()
 
     if (!codigoLimpio) {
@@ -182,7 +213,11 @@ export function usePlanesPendientes() {
         actualizadoPorEmail: email || ''
       }
 
-      await setDoc(doc(db, COLECCION_PLANES_PENDIENTES, codigoLimpio), documento)
+      if (ESTADOS_REVISION.includes(estadoRevision)) {
+        documento.estadoRevision = estadoRevision
+      }
+
+      await setDoc(doc(db, COLECCION_PLANES_PENDIENTES, codigoLimpio), documento, { merge: true })
 
       return { exito: true, datos: documento, error: null }
     } catch (e) {
@@ -217,11 +252,84 @@ export function usePlanesPendientes() {
     }
   }
 
+  /**
+   * Cambia el estado de revisión de un borrador.
+   *
+   * @param {string} codigo
+   * @param {'en_edicion'|'revision'|'listo_para_publicar'} estadoRevision
+   * @param {{ uid?: string, email?: string }} [auditoria]
+   * @returns {Promise<{ exito: boolean, datos: Object|null, error: any }>}
+   */
+  async function actualizarEstadoRevision(codigo, estadoRevision, { uid = '', email = '' } = {}) {
+    const codigoLimpio = String(codigo || '').trim()
+
+    if (!codigoLimpio) {
+      return { exito: false, datos: null, error: new Error('Falta el código del plan.') }
+    }
+    if (!ESTADOS_REVISION.includes(estadoRevision)) {
+      return {
+        exito: false,
+        datos: null,
+        error: new Error(`Estado de revisión inválido: ${estadoRevision}.`)
+      }
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const documento = {
+        estadoRevision,
+        actualizadoEn: serverTimestamp(),
+        actualizadoPor: uid || '',
+        actualizadoPorEmail: email || ''
+      }
+
+      if (estadoRevision === 'listo_para_publicar') {
+        documento.listoParaPublicarEn = serverTimestamp()
+        documento.listoParaPublicarPor = uid || ''
+      } else {
+        documento.listoParaPublicarEn = null
+        documento.listoParaPublicarPor = ''
+      }
+
+      await setDoc(doc(db, COLECCION_PLANES_PENDIENTES, codigoLimpio), documento, { merge: true })
+
+      return { exito: true, datos: { codigo: codigoLimpio, estadoRevision }, error: null }
+    } catch (e) {
+      error.value = e
+      return { exito: false, datos: null, error: e }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Marca un borrador como "listo para publicar" (bandeja del admin).
+   * @param {string} codigo
+   * @param {{ uid?: string, email?: string }} [auditoria]
+   */
+  async function marcarListoParaPublicar(codigo, auditoria = {}) {
+    return actualizarEstadoRevision(codigo, 'listo_para_publicar', auditoria)
+  }
+
+  /**
+   * Devuelve un borrador a "en edición" (deshace "listo para publicar").
+   * @param {string} codigo
+   * @param {{ uid?: string, email?: string }} [auditoria]
+   */
+  async function volverARevision(codigo, auditoria = {}) {
+    return actualizarEstadoRevision(codigo, 'en_edicion', auditoria)
+  }
+
   return {
     listarPlanesPendientes,
     obtenerPlanPendiente,
     guardarPlanPendiente,
     eliminarPlanPendiente,
+    actualizarEstadoRevision,
+    marcarListoParaPublicar,
+    volverARevision,
     loading,
     error
   }

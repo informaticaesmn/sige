@@ -44,6 +44,8 @@ Esto hace que tenga que tener en cuenta previamente una lista de equivalencias e
 
 > âš ï¸ **Superado (Oct 2026):** la oferta ya no se modela como documento por materia en `ofertaAcademica_YYYY`. El modelo vigente es un **documento Ãºnico por ciclo** en `ofertaAcademica/{ciclo}` (`etapas â†’ materias â†’ comisiones`), cargado desde la app por el rol `coordinacion` (`useCargaOferta.js`). Ver [contexto.md](contexto.md) e [importar-oferta.md](importar-oferta.md).
 
+> **Revisión de la decisión de planes estáticos (Nov 2026):** la **vidriera de runtime** de los planes sigue siendo estática (`public/planes/`): la app y la página pública la leen sin tocar Firestore. Lo que se suma es un **taller editorial** en Firestore (`planesPendientes` + comentarios; a futuro `planesPublicados`) donde coordinación revisa, comenta y marca "listo para publicar". Se decidió así tras verificar que la inscripción **no lee el plan** y que las lecturas de planes no son el factor de costo (lo que hay que vigilar son las escrituras). Ver [plan-planes-publicacion-202611.md](plan-planes-publicacion-202611.md).
+
 
 
 ## RevisiÃ³n de cÃ³digo â€” pendientes (Oct 2026)
@@ -261,7 +263,7 @@ sige/
 â”‚       â”œâ”€â”€ admin/              # TableroA
 â”‚       â”œâ”€â”€ bedel/              # TableroB, ConfirmarInscripciones
 â”‚       â”œâ”€â”€ docente/            # TableroD
-â”‚       â””â”€â”€ coordinacion/       # TableroC, CargaMasiva
+â”‚       â””â”€â”€ coordinacion/       # TableroC, CargaDatos
 â”œâ”€â”€ codebase-functions/         # Cloud Functions v2 (registrarUsuario)
 â”œâ”€â”€ firebase.json, firestore.rules, firestore.indexes.json
 â”œâ”€â”€ vite.config.js, tailwind.config.js, postcss.config.js

@@ -345,14 +345,32 @@ contador es la forma de evitar números repetidos cuando hay cargas concurrentes
 
 ### `planesPendientes/{codigo}`
 
-- Borradores de planes en revisión (editor de planes). ID = código canónico (`663`, `662G`, ...).
+- Borradores **provisorios** de planes en revisión (taller editorial del editor de planes).
+  ID = código canónico (`663`, `662G`, ...).
 - Campos: `codigo`, `nombre`, `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`,
-  `actualizadoPorEmail`.
+  `actualizadoPorEmail`, `estadoRevision`, `listoParaPublicarEn`, `listoParaPublicarPor`,
+  `publicadoEn`.
 - `jsonTexto` guarda el JSON crudo importado (máx. 1.000.000 bytes). Reemplaza al viejo
   `csvTexto`; la lectura acepta `csvTexto` como fallback para documentos viejos, pero la
   escritura siempre usa `jsonTexto`.
-- Solo coordinación y admin. La fuente de verdad del plan publicado sigue siendo
-  `public/planes/{codigo}.json`.
+- `estadoRevision` es uno de `en_edicion` (default) | `revision` | `listo_para_publicar` y
+  arma la bandeja del admin. `listoParaPublicarEn/Por` y `publicadoEn` son auditoría.
+- La escritura del editor usa `setDoc(..., { merge: true })` para **no pisar** campos que
+  administra otro flujo (por ejemplo `estadoRevision`).
+- Solo coordinación y admin. La **vidriera de runtime** (lo que lee la app y la página pública)
+  sigue siendo `public/planes/{codigo}.json`; la promoción a "listo" vive en el taller (ver
+  `plan-planes-publicacion-202611.md`).
+
+### `planesPendientes/{codigo}/comentarios/{comentarioId}`
+
+- Subcolección de comentarios del proceso de revisión de un provisorio.
+- Campos: `texto` (1–2000), `materiaId` (string | null; `null` = comentario general del plan),
+  `tipo` (`nota` | `actualizacion` | `chequear` | `listo`), `autor`, `autorEmail`, `creadoEn`,
+  `resuelto`, `resueltoPor`, `resueltoEn`.
+- Van en subcolección, **no** dentro del JSON ni del documento padre: no contaminan el
+  `jsonTexto` y sobreviven a re-guardados (`setDoc` del padre no toca subcolecciones) y a
+  re-imports.
+- Solo coordinación y admin.
 
 ## 8. Diseño futuro (no implementado)
 

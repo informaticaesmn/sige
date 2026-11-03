@@ -67,7 +67,7 @@ const routes = [
     meta: { requiresAuth: true, role: 'coordinacion' },
     children: [
       { path: '', name: 'CoordinacionTablero', component: () => import('@/views/coordinacion/TableroC.vue') },
-      { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaMasiva.vue') },
+      { path: 'carga', name: 'CoordinacionCarga', component: () => import('@/views/coordinacion/CargaDatos.vue') },
       { path: 'editor-planes', name: 'CoordinacionEditorPlanes', component: () => import('@/views/coordinacion/EditorPlanes.vue') }
     ]
   },

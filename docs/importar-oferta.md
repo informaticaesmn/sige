@@ -3,7 +3,7 @@
 Este documento define el formato necesario para los archivos CSV que se usarán para poblar las colecciones de Firestore.
 
 > **Estado (Oct 2026):** la oferta se carga **únicamente desde la app** (rol `coordinacion`):
-> `src/views/coordinacion/CargaMasiva.vue` + `useCargaOferta.js` escriben `ofertaAcademica/{ciclo}` con el
+> `src/views/coordinacion/CargaDatos.vue` + `useCargaOferta.js` escriben `ofertaAcademica/{ciclo}` con el
 > modelo real (`etapas → materias → comisiones`, ver sección 2) dentro de un `writeBatch`. El viejo script
 > `scripts/importar-oferta.js` **se eliminó** (apuntaba a otra colección y duplicaba la lógica).
 > Los planes y materias viven en los JSON de `public/planes/` (la sección 1 quedó obsoleta).
@@ -187,7 +187,7 @@ El detalle y los ejemplos están en [importar-usuarios.md](importar-usuarios.md#
 
 1. El equipo (coordinación/bedelía) crea los datos en Google Sheets usando los formatos CSV definidos
 2. Se exportan los archivos CSV
-3. Se cargan **desde la app** (rol `coordinacion`, `CargaMasiva.vue`, sujeto a las reglas de Firestore)
+3. Se cargan **desde la app** (rol `coordinacion`, `CargaDatos.vue`, sujeto a las reglas de Firestore)
 4. La aplicación accede a los datos directamente desde Firestore y los archivos JSON en `public/planes/`
 
 Este proceso permite:

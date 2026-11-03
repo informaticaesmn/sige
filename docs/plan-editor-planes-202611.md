@@ -114,18 +114,20 @@ El editor debe funcionar igual con el script actual; estas mejoras solo reducen 
 
 | Archivo | Acción | Propósito |
 |---|---|---|
-| `src/views/coordinacion/EditorPlanes.vue` | **Editar** | Vista principal: importar JSON, editar materias y condiciones, validar, exportar. |
+| `src/views/coordinacion/EditorPlanes.vue` | **Editar** | Vista principal: editar materias y condiciones, validar, exportar. Abre borradores con `?abrir={codigo}`. |
 | `src/composables/academico/useEditorPlanes.js` | **Reescribir** | Lógica pura: parsear JSON, normalizar, validar, generar JSON, estado de edición. |
 | `src/composables/academico/usePlanesPendientes.js` | **Editar** | Persistir `jsonTexto` en `planesPendientes`. |
+| `src/composables/academico/useGestionPlanes.js` | **Crear** | Orquestación de borradores (listar, abrir, importar/guardar, eliminar) para las vistas de coordinación. |
 | `src/composables/academico/useCatalogoPlanes.js` | **Crear** | Cargar y cachear `planes.json`; exponer planes disponibles. |
 | `src/components/ui/EditorCondicion.vue` | **Crear** | Editor recursivo de condiciones AND/OR/año completo. |
 | `src/components/ui/SelectMateria.vue` | **Mantener** | Autocomplete de materias para las hojas de la condición. |
 | `src/utils/condiciones.js` | **Crear** | Conversión, recorrido y validación pura de condiciones. |
+| `src/utils/fechas.js` | **Crear** | `formatearFechaHora` compartida por las vistas de coordinación. |
 | `src/utils/validacionPlanes.js` | **Editar** | Validaciones adaptadas a condiciones estructuradas. |
 | `src/utils/planes.js` | **Editar** | Catálogo desde `planes.json`, `planesDisponibles()`, `validarPlanDetalle()`. |
 | `src/utils/validacionUsuarios.js` | **Editar** | Gate de planes disponibles en el alta. |
 | `src/composables/usuarios/useImportarUsuarios.js` | **Editar** | Validar detalle de planes y calcular estado inicial. |
-| `src/views/coordinacion/CargaMasiva.vue` | **Editar** | Usar `useCatalogoPlanes` antes de importar. |
+| `src/views/coordinacion/CargaDatos.vue` | **Editar** | Usar `useCatalogoPlanes` antes de importar. |
 | `src/router/index.js` | **Hecho** | Ruta `/coordinacion/editor-planes`. |
 | `src/components/BarraApp.vue` | **Hecho** | Ítem “Editor de Planes”. |
 | `firestore.rules` | **Editar** | `planesPendientes`: exigir `jsonTexto`. |
@@ -359,6 +361,11 @@ Secciones de arriba a abajo:
 
 Texto de ayuda: “Para publicar, commiteá juntos `{codigo}.json` y `planes.json`. Un push a `main` despliega hosting y reglas.”
 
+> **Actualización (Nov 2026):** el flujo editorial (provisorios, comentarios, estado de revisión y,
+> a futuro, la promoción a "listo" admin-only) se especifica en
+> [plan-planes-publicacion-202611.md](plan-planes-publicacion-202611.md). La publicación sigue
+> siendo download + commit; la vidriera de runtime (`public/planes/`) no cambia.
+
 ---
 
 ## 5. Ruta y navegación (hecho)
@@ -406,7 +413,7 @@ Singleton con:
 - `asegurarCatalogo()` → idempotente; si falla, devuelve error explícito (no se asume disponibilidad).
 - `planesDisponibles` (computed): solo `disponible === true`.
 
-Se invoca antes de importar usuarios (`CargaMasiva.vue`) y en `EditorPlanes.vue`. Puede calentarse desde `main.js` sin bloquear el montaje.
+Se invoca antes de importar usuarios (`CargaDatos.vue`) y en `EditorPlanes.vue`. Puede calentarse desde `main.js` sin bloquear el montaje.
 
 ### 6.3 Semántica nueva en `src/utils/planes.js`
 
@@ -521,9 +528,9 @@ En `src/composables/usuarios/useImportarUsuarios.js`:
 
 ### Pendientes menores
 
-1. ¿El editor debe permitir crear un plan nuevo sin JSON previo? Recomendación: sí, con “Agregar materia” y metadatos manuales.
-2. ¿Se guarda un historial de versiones del JSON en Firestore? Recomendación: no por ahora; el historial es git.
-3. ¿`revisadoPor` guarda uid o email? Recomendación: uid + email en `planesPendientes`; en el detalle publicado, uid.
+1. ¿El editor debe permitir crear un plan nuevo sin JSON previo? No, se cargan solo desde un json inicial.
+2. ¿Se guarda un historial de versiones del JSON en Firestore? Recomendación: no por ahora; el historial es git. si queda la ultima version corregida en pendientes.
+3. ¿`revisadoPor` guarda uid o email? uid + email en `planesPendientes`; en el detalle publicado, uid.
 
 ---
 
