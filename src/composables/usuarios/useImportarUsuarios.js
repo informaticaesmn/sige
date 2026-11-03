@@ -16,7 +16,7 @@ import { doc, writeBatch, serverTimestamp } from 'firebase/firestore/lite'
 import { db } from '@/config/firebase.js'
 import { parsearCSVUsuarios } from '@/utils/csv.js'
 import { validarCSVUsuarios, construirDocumentoUsuario, construirLegajo } from '@/utils/validacionUsuarios.js'
-import { catalogoDePlanes } from '@/utils/planes.js'
+import { planesDisponibles } from '@/utils/planes.js'
 
 /** Máximo de operaciones por batch (límite duro de Firestore: 500). */
 export const LIMITE_BATCH = 500

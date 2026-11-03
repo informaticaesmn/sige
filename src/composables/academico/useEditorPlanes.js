@@ -1,8 +1,8 @@
 // src/composables/academico/useEditorPlanes.js
 //
 // Lógica de negocio para el editor/revisor de planes de estudio.
-// Responsable de: parsear CSV de Google Sheets, normalizar materias,
-// validar, generar JSON (catálogo + detalle) y exportar archivos.
+// Responsable de: importar JSON del Apps Script / borrador, normalizar materias,
+// editar el árbol de condiciones de correlatividades, validar y generar JSON.
 // Usado por src/views/coordinacion/EditorPlanes.vue.
 
 import { ref, computed } from 'vue'
@@ -10,101 +10,11 @@ import {
   validarMaterias,
   detectarPregrado
 } from '@/utils/validacionPlanes.js'
-
-/**
- * Extrae el año de un código de materia.
- * Acepta formatos:
- *  - `663-00-01` → año 0 (pregrado)
- *  - `663-0.1`   → año 0
- *  - `663-1.5`   → año 1
- *  - `663-4.14`  → año 4
- * @param {string} codigo
- * @returns {number|null}
- */
-function extraerAnio(codigo) {
-  if (!codigo || typeof codigo !== 'string') return null
-  const match = codigo.match(/-(\d{1,2})(?:[.-]|$)/)
-  if (match) return Number.parseInt(match[1], 10)
-  return null
-}
-
-/**
- * Construye el código canónico a partir de los datos de una fila CSV.
- * Prioridad: materia_id (formato largo) > construir desde {plan}-{Cod}.
- * @param {Object} fila
- * @returns {string|null}
- */
-function construirCodigo(fila) {
-  const materiaId = String(fila.materia_id ?? '').trim()
-  if (materiaId) return materiaId
-
-  const plan = String(fila.Plan ?? '').trim()
-  const cod = String(fila.Cod ?? '').trim()
-  if (plan && cod) return `${plan}-${cod}`
-
-  return null
-}
-
-/**
- * Parsea texto CSV simple (respetando comillas dobles) a array de objetos fila.
- * @param {string} texto
- * @returns {Object[]}
- */
-function parsearCSV(texto) {
-  if (!texto || texto.trim() === '') return []
-
-  const filas = []
-  let fila = []
-  let campo = ''
-  let enComillas = false
-
-  for (let i = 0; i < texto.length; i++) {
-    const c = texto[i]
-
-    if (enComillas) {
-      if (c === '"') {
-        if (texto[i + 1] === '"') {
-          campo += '"'
-          i++
-        } else {
-          enComillas = false
-        }
-      } else {
-        campo += c
-      }
-    } else if (c === '"') {
-      enComillas = true
-    } else if (c === ',') {
-      fila.push(campo)
-      campo = ''
-    } else if (c === '\n') {
-      fila.push(campo)
-      campo = ''
-      filas.push(fila)
-      fila = []
-    } else if (c !== '\r') {
-      campo += c
-    }
-  }
-
-  if (campo !== '' || fila.length > 0) {
-    fila.push(campo)
-    filas.push(fila)
-  }
-
-  // Descartar filas completamente vacías
-  const filasNoVacias = filas.filter((f) => f.some((v) => v.trim() !== ''))
-  if (filasNoVacias.length < 2) return []
-
-  const encabezados = filasNoVacias[0].map((h) => h.trim())
-  return filasNoVacias.slice(1).map((valores) => {
-    const filaObj = {}
-    encabezados.forEach((col, idx) => {
-      filaObj[col] = (valores[idx] ?? '').trim()
-    })
-    return filaObj
-  })
-}
+import {
+  condicionDesdeJson,
+  condicionAJson
+} from '@/utils/condiciones.js'
+import { anioDeMateria } from '@/utils/planes.js'
 
 /**
  * Normaliza el valor de cursada a uno de los valores válidos de SIGE.
@@ -112,7 +22,7 @@ function parsearCSV(texto) {
  * @returns {'anual'|'1C'|'2C'|null}
  */
 function normalizarCursada(valor) {
-  if (!valor || valor.trim() === '') return null
+  if (!valor || typeof valor !== 'string') return null
   const v = valor.trim().toUpperCase()
   if (v === 'ANUAL') return 'anual'
   if (v === '1C') return '1C'
@@ -121,40 +31,30 @@ function normalizarCursada(valor) {
 }
 
 /**
- * Parsea una lista de correlativas que puede venir como:
- *  - string con códigos separados por coma: "662-0.1, 662-0.2"
- *  - string con nombres: "GUITARRA I, Elementos del Análisis"
- *  - array de strings
- * Devuelve array de códigos (los que se puedan interpretar como código).
- * @param {string|string[]|null} valor
+ * Normaliza equivalencias a un array de strings.
+ * @param {any} valor
  * @returns {string[]}
  */
-function parsearCorrelativas(valor) {
+function normalizarEquivalencias(valor) {
   if (!valor) return []
-  if (Array.isArray(valor)) return valor.filter(Boolean)
-
-  const texto = String(valor).trim()
-  if (texto === '') return []
-
-  // Intentar separar por coma
-  return texto.split(',').map((c) => c.trim()).filter(Boolean)
+  if (Array.isArray(valor)) {
+    return valor.map((v) => String(v ?? '').trim()).filter(Boolean)
+  }
+  if (typeof valor === 'string') {
+    return valor.split(',').map((v) => v.trim()).filter(Boolean)
+  }
+  return []
 }
-
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
 
 export function useEditorPlanes() {
   // --- Estado de importación ---
-  const csvTexto = ref('')
-  const filasCSV = ref([])
-  const planCodigoDetectado = ref('')
-  const planNombreDetectado = ref('')
+  const jsonTexto = ref('')
 
   // --- Estado de edición ---
   const materias = ref({}) // mapa { [codigo]: MateriaEdit }
   const planCodigo = ref('')
   const planNombre = ref('')
+  const disponible = ref(false)
 
   // --- Estado de validación y exportación ---
   const errores = ref([])
@@ -162,80 +62,86 @@ export function useEditorPlanes() {
   const hayPregrado = ref(false)
 
   // ---------------------------------------------------------------------------
-  // 1. Importar CSV
+  // 1. Importar JSON
   // ---------------------------------------------------------------------------
 
   /**
-   * Importa un texto CSV de Google Sheets y construye el mapa de materias.
-   * Prioriza las columnas finales (materia_id, nombre, nombre_c, cursada,
-   * correlativas_cursar, correlativas_aprobar) como fuente de verdad.
-   * @param {string} texto
+   * Importa un JSON de plan (texto o ya parseado) y construye el mapa de materias.
+   *
+   * @param {string|Object} entrada JSON crudo o de objeto parseado
    * @param {{ planCodigo?: string, planNombre?: string }} [opciones]
-   *   Permite forzar los metadatos cuando el CSV no los trae (ej. al reabrir un
-   *   plan guardado en Firestore).
-   * @returns {Promise<{ exito, materiasCount, errores }>}
+   * @returns {Promise<{ exito: boolean, materiasCount: number, errores: string[] }>}
    */
-  async function importarCSV(texto, { planCodigo: codigoForzado = '', planNombre: nombreForzado = '' } = {}) {
-    csvTexto.value = texto
-    filasCSV.value = parsearCSV(texto)
+  async function importarJSONPlan(entrada, { planCodigo: codigoForzado = '', planNombre: nombreForzado = '' } = {}) {
+    let datos = null
 
-    if (filasCSV.value.length === 0) {
-      return { exito: false, materiasCount: 0, errores: ['El CSV no tiene filas de datos.'] }
+    if (typeof entrada === 'string') {
+      jsonTexto.value = entrada
+      try {
+        datos = JSON.parse(entrada)
+      } catch (err) {
+        return {
+          exito: false,
+          materiasCount: 0,
+          errores: [`Error de parseo JSON: ${err.message}`]
+        }
+      }
+    } else if (typeof entrada === 'object' && entrada !== null) {
+      datos = entrada
+      jsonTexto.value = JSON.stringify(entrada, null, 2)
+    } else {
+      return { exito: false, materiasCount: 0, errores: ['El insumo no es un JSON válido.'] }
     }
 
-    // Detectar código de plan de la primera fila (columna "Plan"), salvo que
-    // la vista ya tenga un código canónico (ej. al abrir un plan guardado).
-    const primeraFila = filasCSV.value[0]
-    const planDesdeCSV = String(primeraFila.Plan ?? '').trim()
-    if (codigoForzado) {
-      planCodigo.value = String(codigoForzado).trim()
-      planCodigoDetectado.value = planCodigo.value
-    } else if (planDesdeCSV) {
-      planCodigo.value = planDesdeCSV
-      planCodigoDetectado.value = planDesdeCSV
-    }
+    // Extraer metadatos
+    const rawPlan = String(datos.plan ?? datos.codigo ?? '').trim()
+    const codigoDerivado = rawPlan.split(' ')[0]
 
-    if (nombreForzado) planNombre.value = nombreForzado
+    planCodigo.value = codigoForzado || codigoDerivado
+    const rawNombre = String(datos.nombre ?? '').trim()
+    planNombre.value = nombreForzado || rawNombre.replace(/^Plan\s+/i, '')
+    disponible.value = datos.disponible === true
 
-    // Construir mapa de materias priorizando columnas finales
+    // Procesar materias
+    const materiasRaw = datos.materias ?? {}
     const nuevoMapa = {}
     const erroresImport = []
 
-    for (const fila of filasCSV.value) {
-      const codigo = construirCodigo(fila)
+    for (const [key, mat] of Object.entries(materiasRaw)) {
+      const codigo = String(key || mat?.id || '').trim()
       if (!codigo) {
-        erroresImport.push(`Fila sin código: "${fila.Materia || fila.materia || '(sin nombre)'}"`)
+        erroresImport.push('Se encontró una materia sin código ID.')
         continue
       }
 
-      // Si ya existe, no duplicar y avisar (la primera aparición gana)
       if (nuevoMapa[codigo]) {
-        erroresImport.push(`Código de materia duplicado en el CSV: "${codigo}"`)
+        erroresImport.push(`Código de materia duplicado en el JSON: "${codigo}"`)
         continue
       }
 
-      const nombre = String(fila.nombre ?? fila.Materia ?? fila.materia ?? '').trim()
-      const nombre_c = String(fila.nombre_c ?? fila.NombreCorto ?? '').trim()
-      const cursada = normalizarCursada(fila.cursada ?? fila.Cursada ?? '')
-      const equivale_a = String(fila.equivale_a ?? '').trim() || null
+      const anio = mat?.anio !== undefined ? mat.anio : anioDeMateria(codigo)
+      const nombre = String(mat?.nombre ?? codigo).trim()
+      const nombre_c = mat?.nombre_c ? String(mat.nombre_c).trim() : null
+      const cursada = normalizarCursada(mat?.cursada)
+      const equivale_a = normalizarEquivalencias(mat?.equivale_a)
 
-      // Correlativas: priorizar columnas finales, sino intentar CodC/CodA
-      const cursarRaw = fila.correlativas_cursar ?? fila.CodC ?? ''
-      const aprobarRaw = fila.correlativas_aprobar ?? fila.CodA ?? ''
+      // Correlatividades: convertir a árbol normalizado
+      const corrCursar = condicionDesdeJson(mat?.correlativas?.cursar)
+      const corrAprobar = condicionDesdeJson(mat?.correlativas?.aprobar)
 
       nuevoMapa[codigo] = {
         id: codigo,
-        anio: extraerAnio(codigo),
+        anio: Number.isInteger(anio) ? anio : null,
         nombre: nombre || codigo,
-        nombre_c: nombre_c || null,
+        nombre_c,
         cursada,
         correlativas: {
-          cursar: parsearCorrelativas(cursarRaw),
-          aprobar: parsearCorrelativas(aprobarRaw)
+          cursar: corrCursar,
+          aprobar: corrAprobar
         },
         equivale_a,
-        propia: String(fila.propia ?? '').toLowerCase() === 'true',
-        cSiuned: String(fila.cSiuned ?? '').toLowerCase() === 'true'
+        propia: mat?.propia === true,
+        cSiuned: mat?.cSiuned === true
       }
     }
 
@@ -255,7 +161,7 @@ export function useEditorPlanes() {
 
   /**
    * Agrega una materia vacía al mapa.
-   * @param {string} anio año como string o number
+   * @param {string|number} anio año como string o number
    */
   function agregarMateria(anio = '0') {
     const anioNum = Number.parseInt(String(anio), 10) || 0
@@ -264,10 +170,11 @@ export function useEditorPlanes() {
     ).length
 
     let nuevoCodigo
+    let contador = existentesEnAnio + 1
     do {
-      const sufijo = String(existentesEnAnio + 1).padStart(2, '0')
-      nuevoCodigo = `${planCodigo.value || 'PLAN'}-${String(anioNum).padStart(2, '0')}.${sufijo}`
-      existentesEnAnio++
+      const sufijo = String(contador).padStart(2, '0')
+      nuevoCodigo = `${planCodigo.value || 'PLAN'}-${anioNum}.${sufijo}`
+      contador++
     } while (materias.value[nuevoCodigo])
 
     materias.value = {
@@ -278,8 +185,8 @@ export function useEditorPlanes() {
         nombre: '',
         nombre_c: null,
         cursada: null,
-        correlativas: { cursar: [], aprobar: [] },
-        equivale_a: null,
+        correlativas: { cursar: null, aprobar: null },
+        equivale_a: [],
         propia: false,
         cSiuned: false
       }
@@ -297,7 +204,7 @@ export function useEditorPlanes() {
   }
 
   /**
-   * Actualiza un campo de una materia.
+   * Actualiza un campo básico de una materia.
    * @param {string} codigo
    * @param {string} campo
    * @param {any} valor
@@ -311,37 +218,18 @@ export function useEditorPlanes() {
   }
 
   /**
-   * Agrega una correlativa (código) a una materia.
+   * Actualiza la condición de correlatividad ('cursar' o 'aprobar') de una materia.
    * @param {string} codigoMateria
    * @param {'cursar'|'aprobar'} tipo
-   * @param {string} codigoCorrelativa
+   * @param {Object|null} condicion
    */
-  function agregarCorrelativa(codigoMateria, tipo, codigoCorrelativa) {
-    if (!codigoCorrelativa) return
+  function actualizarCondicion(codigoMateria, tipo, condicion) {
     const nuevo = { ...materias.value }
     if (nuevo[codigoMateria]) {
-      const lista = [...(nuevo[codigoMateria].correlativas[tipo] || [])]
-      if (!lista.includes(codigoCorrelativa)) {
-        lista.push(codigoCorrelativa)
-        nuevo[codigoMateria].correlativas[tipo] = lista
+      nuevo[codigoMateria].correlativas = {
+        ...nuevo[codigoMateria].correlativas,
+        [tipo]: condicion
       }
-    }
-    materias.value = nuevo
-  }
-
-  /**
-   * Elimina una correlativa de una materia.
-   * @param {string} codigoMateria
-   * @param {'cursar'|'aprobar'} tipo
-   * @param {string} codigoCorrelativa
-   */
-  function eliminarCorrelativa(codigoMateria, tipo, codigoCorrelativa) {
-    const nuevo = { ...materias.value }
-    if (nuevo[codigoMateria]) {
-      const lista = (nuevo[codigoMateria].correlativas[tipo] || []).filter(
-        (c) => c !== codigoCorrelativa
-      )
-      nuevo[codigoMateria].correlativas[tipo] = lista
     }
     materias.value = nuevo
   }
@@ -366,7 +254,7 @@ export function useEditorPlanes() {
 
   /**
    * Lista de materias como array para SelectMateria.
-   * @returns {{ codigo, nombre }[]}
+   * @returns {{ codigo: string, nombre: string }[]}
    */
   const materiasLista = computed(() =>
     Object.entries(materias.value).map(([codigo, m]) => ({
@@ -381,7 +269,7 @@ export function useEditorPlanes() {
 
   /**
    * Ejecuta validaciones sobre el mapa actual de materias.
-   * @returns {{ exito, errores }}
+   * @returns {{ exito: boolean, errores: string[] }}
    */
   async function validar() {
     const resultado = validarMaterias(materias.value)
@@ -396,18 +284,35 @@ export function useEditorPlanes() {
 
   /**
    * Genera el objeto para public/planes/planes.json (catálogo).
-   * @returns {{ planes: [{ codigo, nombre }] }}
+   * @param {Array<{ codigo: string, nombre: string, disponible?: boolean }>} [catalogoExistente]
+   * @returns {{ planes: Array<{ codigo: string, nombre: string, disponible: boolean }> }}
    */
-  function generarJSONCatalogo() {
-    const planes = Object.entries(materias.value)
-      .map(([codigo, m]) => ({
-        codigo,
-        nombre: m.nombre || `Plan ${codigo}`
-      }))
-      // Deduplicar por código (el mapa ya no tiene duplicados, pero por seguridad)
-      .filter((v, i, a) => a.findIndex((x) => x.codigo === v.codigo) === i)
+  function generarJSONCatalogo(catalogoExistente = []) {
+    const mapaActual = new Map()
 
-    return { planes }
+    // 1) Si viene catálogo existente, cargarlo
+    if (Array.isArray(catalogoExistente)) {
+      for (const item of catalogoExistente) {
+        if (item?.codigo) {
+          mapaActual.set(item.codigo, {
+            codigo: item.codigo,
+            nombre: item.nombre || item.codigo,
+            disponible: item.disponible === true
+          })
+        }
+      }
+    }
+
+    // 2) Merge con el plan actual
+    if (planCodigo.value) {
+      mapaActual.set(planCodigo.value, {
+        codigo: planCodigo.value,
+        nombre: planNombre.value || `Plan ${planCodigo.value}`,
+        disponible: disponible.value === true
+      })
+    }
+
+    return { planes: Array.from(mapaActual.values()) }
   }
 
   /**
@@ -419,20 +324,24 @@ export function useEditorPlanes() {
 
     const materiasDetalle = {}
     for (const [codigo, m] of Object.entries(materias.value)) {
+      const cursarJson = condicionAJson(m.correlativas?.cursar)
+      const aprobarJson = condicionAJson(m.correlativas?.aprobar)
+
       materiasDetalle[codigo] = {
-        id: m.id,
+        id: m.id || codigo,
         anio: m.anio,
-        nombre: m.nombre || m.id,
-        nombre_c: m.nombre_c,
-        cursada: m.cursada,
+        nombre: m.nombre || codigo,
+        nombre_c: m.nombre_c || null,
+        cursada: m.cursada || null,
         correlativas: {
-          cursar: m.correlativas?.cursar || [],
-          aprobar: m.correlativas?.aprobar || []
+          cursar: cursarJson,
+          aprobar: aprobarJson
         },
-        equivale_a: m.equivale_a,
-        propia: m.propia,
-        cSiuned: m.cSiuned
+        equivale_a: m.equivale_a || []
       }
+
+      if (m.propia) materiasDetalle[codigo].propia = true
+      if (m.cSiuned) materiasDetalle[codigo].cSiuned = true
     }
 
     return {
@@ -440,8 +349,8 @@ export function useEditorPlanes() {
       nombre: planNombre.value || `Plan ${planCodigo.value}`,
       formato: 'objeto',
       materias: materiasDetalle,
-      disponible: false,
-      revisadoEn: null,
+      disponible: disponible.value === true,
+      revisadoEn: new Date().toISOString(),
       revisadoPor: null
     }
   }
@@ -475,13 +384,11 @@ export function useEditorPlanes() {
 
   return {
     // Estado
-    csvTexto,
-    filasCSV,
-    planCodigoDetectado,
-    planNombreDetectado,
+    jsonTexto,
     materias,
     planCodigo,
     planNombre,
+    disponible,
     errores,
     valido,
     hayPregrado,
@@ -491,12 +398,11 @@ export function useEditorPlanes() {
     materiasLista,
 
     // Acciones
-    importarCSV,
+    importarJSONPlan,
     agregarMateria,
     eliminarMateria,
     actualizarMateria,
-    agregarCorrelativa,
-    eliminarCorrelativa,
+    actualizarCondicion,
     validar,
     generarJSONCatalogo,
     generarJSONDetalle,

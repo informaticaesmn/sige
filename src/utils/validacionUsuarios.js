@@ -6,7 +6,7 @@
 // El núcleo NO escribe en Firestore; solo valida y construye los documentos.
 // El estado global (ref/computed) debe declararse a nivel de módulo (singleton), no dentro de la función factory.
 
-import { catalogoDePlanes } from './planes.js'
+import { catalogoDePlanes, planesDisponibles } from './planes.js'
 import { parsearArray } from './csv.js'
 
 /**
@@ -206,7 +206,7 @@ export function validarDatosUsuario(datos, opciones = {}) {
   if (rolesInvalidos.length > 0) errores.push(`Roles inválidos: ${rolesInvalidos.join(', ')}`)
 
   // Validar planes
-  const catalogoPlanes = opciones.catalogoPlanes || catalogoDePlanes()
+  const catalogoPlanes = opciones.catalogoPlanes || planesDisponibles()
   const planesValidados = []
   for (const plan of planes) {
     const res = resolverCodigoPlan(plan, {}) // sin nombresDePlanes para validación
@@ -216,7 +216,7 @@ export function validarDatosUsuario(datos, opciones = {}) {
     }
     const codigo = res.codigo
     if (!catalogoPlanes.includes(codigo)) {
-      errores.push(`El plan "${codigo}" no está disponible (no tiene JSON revisado)`)
+      errores.push(`El plan "${codigo}" no está disponible.`)
     } else {
       planesValidados.push(codigo)
     }
@@ -276,7 +276,7 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}, catalogoPlanes =
   const filasValidas = []
   const errores = []
 
-  const catalogoValido = catalogoPlanes || catalogoDePlanes()
+  const catalogoValido = catalogoPlanes || planesDisponibles()
 
   for (let i = 0; i < filas.length; i++) {
     const fila = filas[i]
@@ -309,7 +309,7 @@ export function validarCSVUsuarios(filas, nombresDePlanes = {}, catalogoPlanes =
       }
       const codigo = res.codigo
       if (!catalogoValido.includes(codigo)) {
-        erroresFila.push(`El plan "${codigo}" no está disponible (no tiene JSON revisado)`)
+        erroresFila.push(`El plan "${codigo}" no está disponible.`)
       } else {
         planesValidados.push(codigo)
       }

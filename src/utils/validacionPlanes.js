@@ -4,6 +4,8 @@
 // Usado por src/composables/academico/useEditorPlanes.js.
 // No lanza excepciones: devuelve siempre { exito, errores }.
 
+import { codigosDeCondicion, validarCondicion } from './condiciones.js'
+
 /**
  * Detecta códigos de materia duplicados en un mapa de materias.
  * @param {Record<string, Object>} materias mapa { [codigo]: materia }
@@ -22,25 +24,36 @@ export function validarCodigosDuplicados(materias) {
 }
 
 /**
- * Detecta correlativas (cursar/aprobar) que referencian códigos inexistentes.
+ * Detecta correlativas (cursar/aprobar) que referencian códigos inexistentes o reglas inválidas.
  * @param {Record<string, Object>} materias mapa { [codigo]: materia }
  * @returns {string[]} lista de mensajes de error
  */
 export function validarCorrelativasExistentes(materias) {
   const errores = []
   const codigosValidos = new Set(Object.keys(materias))
+  const aniosValidos = [
+    ...new Set(
+      Object.values(materias)
+        .map((m) => m.anio)
+        .filter((a) => Number.isInteger(a))
+    )
+  ]
 
   for (const [codigo, materia] of Object.entries(materias)) {
-    const correlativas = materia.correlativas || { cursar: [], aprobar: [] }
+    const correlativas = materia.correlativas || { cursar: null, aprobar: null }
 
     for (const tipo of ['cursar', 'aprobar']) {
-      const lista = Array.isArray(correlativas[tipo]) ? correlativas[tipo] : []
-      for (const ref of lista) {
-        if (!codigosValidos.has(ref)) {
-          errores.push(
-            `Materia "${codigo}": correlativa de ${tipo} inexistente: "${ref}"`
-          )
-        }
+      const cond = correlativas[tipo]
+      if (!cond) continue
+
+      const res = validarCondicion(cond, {
+        codigosValidos,
+        aniosValidos,
+        autoReferencia: codigo
+      })
+
+      for (const err of res.errores) {
+        errores.push(`Materia "${codigo}" (${tipo}): ${err}`)
       }
     }
   }

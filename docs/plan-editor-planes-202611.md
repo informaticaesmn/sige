@@ -8,24 +8,16 @@
 
 ## 0. Contexto y decisiones de diseño
 
-### 0.1 De CSV a JSON
+### 0.1 Exclusividad de JSON (Adiós al pasado)
 
-La planilla de Google Sheets sigue siendo la herramienta de edición humana, pero el **Apps Script `exportPlanJSONCore`** pasa a ser el productor del insumo del editor. Ese script ya resuelve:
+La planilla de Google Sheets sigue siendo la herramienta de edición humana, pero el **Apps Script `exportPlanJSONCore`** es el único productor del insumo del editor. El editor **no procesa CSV de planes**: trabaja pura y exclusivamente con archivos y borradores en formato JSON.
 
-- el código canónico de cada materia (`materia_id`);
-- el nombre y el nombre corto;
-- la cursada;
-- las correlatividades estructuradas (`{and}`, `{or}`, materia suelta);
-- las equivalencias con el plan madre (`equivale_a`).
+Ventajas:
+1. Una sola fuente de verdad estructurada entre la planilla y SIGE.
+2. No se parsea texto libre ni se manejan formatos planos ambiguos.
+3. El JSON de entrada ya tiene el mismo shape que consume la app, permitiendo un round-trip (importar → editar → exportar) limpio y sin pérdida.
 
-Por eso el editor deja de parsear CSV y consume directamente ese JSON. Ventajas:
-
-1. Una sola fuente de verdad entre la planilla y SIGE.
-2. No se duplican columnas ni se parsea texto libre.
-3. El JSON de entrada ya tiene el mismo shape que consume la app, así que el round-trip (importar → exportar) es posible sin pérdida.
-4. Menos código de parseo que mantener.
-
-**Decisión:** se elimina la importación CSV. El editor solo acepta JSON.
+**Decisión:** se elimina cualquier rastro de importación o persistencia basada en CSV para los planes de estudio. El editor solo acepta y emite JSON.
 
 ### 0.2 Formato de entrada (salida del Apps Script)
 
@@ -87,14 +79,14 @@ Particularidades que el editor debe tolerar:
 
 ### 0.4 Persistencia de borradores
 
-Los JSON en revisión se guardan en **Firestore**, no en `public/planes/pendientes/`:
+Los JSON en revisión se guardan en **Firestore**:
 
 - Colección: `planesPendientes/{codigo}` (ID = código canónico del plan).
 - Campos: `codigo`, `nombre`, `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`.
 - Motivo: un coordinador sube el JSON una sola vez y cualquier coordinador puede reabrirlo sin volver a elegir el archivo.
-- `jsonTexto` reemplaza al viejo `csvTexto`. La lectura acepta `csvTexto` como fallback para documentos viejos, pero la escritura siempre usa `jsonTexto`.
-- Límite: 1.000.000 bytes (mismo límite que Firestore menos margen).
-- Las reglas de `firestore.rules` deben validar `jsonTexto` (no `csvTexto`).
+- `jsonTexto` almacena el contenido crudo del JSON de trabajo.
+- Límite: 1.000.000 bytes.
+- Las reglas de `firestore.rules` validan `jsonTexto`.
 
 La fuente de verdad del plan **publicado** sigue siendo `public/planes/{codigo}.json`.
 
@@ -124,7 +116,7 @@ El editor debe funcionar igual con el script actual; estas mejoras solo reducen 
 |---|---|---|
 | `src/views/coordinacion/EditorPlanes.vue` | **Editar** | Vista principal: importar JSON, editar materias y condiciones, validar, exportar. |
 | `src/composables/academico/useEditorPlanes.js` | **Reescribir** | Lógica pura: parsear JSON, normalizar, validar, generar JSON, estado de edición. |
-| `src/composables/academico/usePlanesPendientes.js` | **Editar** | Persistir `jsonTexto` en `planesPendientes` (reemplaza `csvTexto`). |
+| `src/composables/academico/usePlanesPendientes.js` | **Editar** | Persistir `jsonTexto` en `planesPendientes`. |
 | `src/composables/academico/useCatalogoPlanes.js` | **Crear** | Cargar y cachear `planes.json`; exponer planes disponibles. |
 | `src/components/ui/EditorCondicion.vue` | **Crear** | Editor recursivo de condiciones AND/OR/año completo. |
 | `src/components/ui/SelectMateria.vue` | **Mantener** | Autocomplete de materias para las hojas de la condición. |
@@ -136,13 +128,13 @@ El editor debe funcionar igual con el script actual; estas mejoras solo reducen 
 | `src/views/coordinacion/CargaMasiva.vue` | **Editar** | Usar `useCatalogoPlanes` antes de importar. |
 | `src/router/index.js` | **Hecho** | Ruta `/coordinacion/editor-planes`. |
 | `src/components/BarraApp.vue` | **Hecho** | Ítem “Editor de Planes”. |
-| `firestore.rules` | **Editar** | `planesPendientes`: `csvTexto` → `jsonTexto`. |
+| `firestore.rules` | **Editar** | `planesPendientes`: exigir `jsonTexto`. |
 | `public/planes/planes.json` | **Editar** | Agregar `disponible` a cada plan. |
 | `tests/unit/utils/condiciones.spec.js` | **Crear** | Conversión y validación de condiciones. |
 | `tests/unit/utils/validacionPlanes.spec.js` | **Crear** | Validaciones del editor. |
 | `tests/unit/composables/useEditorPlanes.spec.js` | **Crear** | Importación, edición y round-trip. |
 | `tests/unit/composables/useCatalogoPlanes.spec.js` | **Crear** | Fetch, cache y fallback del catálogo. |
-| `tests/unit/composables/usePlanesPendientes.spec.js` | **Editar** | `jsonTexto` y compatibilidad con `csvTexto`. |
+| `tests/unit/composables/usePlanesPendientes.spec.js` | **Editar** | Tests para `jsonTexto`. |
 | `tests/unit/utils/planes.spec.js` | **Editar** | `planesDisponibles`, resolución sin gate y `validarPlanDetalle`. |
 | `tests/unit/utils/validacionUsuarios.spec.js` | **Editar** | Plan no disponible → error. |
 | `tests/unit/composables/useImportarUsuarios.spec.js` | **Editar** | Fetch de detalle, estado inicial y aborto. |

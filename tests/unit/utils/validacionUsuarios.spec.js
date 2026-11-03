@@ -10,6 +10,17 @@ import {
   construirDocumentoUsuario,
   construirLegajo
 } from '@/utils/validacionUsuarios.js'
+import { setCatalogoPlanes } from '@/utils/planes.js'
+
+setCatalogoPlanes({
+  planes: [
+    { codigo: '662', nombre: '662 Profesorado de Música', disponible: true },
+    { codigo: '708', nombre: '708 Plan de Estudio', disponible: true },
+    { codigo: '666', nombre: '666 Composición', disponible: false },
+    { codigo: '662G', nombre: '662G Guitarra', disponible: false },
+    { codigo: '709', nombre: '709', disponible: true }
+  ]
+})
 
 const nombresDePlanes = {
   '662': '662 Profesorado de Música',
@@ -353,16 +364,17 @@ describe('validarCSVUsuarios', () => {
     expect(resultado.errores[0].detalle.some((d) => d.includes('Código de plan inválido'))).toBe(true)
   })
 
-  it('acepta fila con código en planes.json aunque no tenga JSON de materias (666)', () => {
-    // 666 está en planes.json pero no tiene 666.json; validarCSVUsuarios solo
-    // chequea el catálogo de planes.json, la verificación del JSON se hace en el script
+  it('rechaza fila con código de plan no disponible en el catálogo', () => {
+    // Con el nuevo gating estricto, 666 tiene disponible: false en planes.json
+    // y no se puede dar de alta (requiere plan con disponible: true).
     const filas = [
       { ...filaValida, plan: ['666'] }
     ]
     const resultado = validarCSVUsuarios(filas, nombresDePlanes)
-    expect(resultado.filas).toHaveLength(1)
-    expect(resultado.errores).toHaveLength(0)
-    expect(resultado.filas[0].planes).toEqual(['666'])
+    expect(resultado.filas).toHaveLength(0)
+    expect(resultado.errores).toHaveLength(1)
+    expect(resultado.errores[0].fila).toBe(2)
+    expect(resultado.errores[0].detalle.some((d) => d.includes('no está disponible'))).toBe(true)
   })
 
   it('rechaza fila con fecha inválida', () => {

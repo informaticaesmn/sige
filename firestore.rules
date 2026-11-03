@@ -91,15 +91,15 @@ service cloud.firestore {
 
     // --- CSV de planes en revisión (editor de planes) ---
     // Un documento por plan, ID = código canónico (`663`, `662G`, ...).
-    // Solo coordinación y admin. La validación profunda del CSV es del cliente;
+    // Solo coordinación y admin. La validación profunda es del cliente;
     // las rules solo garantizan el shape mínimo y el límite de tamaño.
     match /planesPendientes/{codigo} {
       function shapeValido() {
         return request.resource.data.codigo is string &&
                request.resource.data.codigo == codigo &&
                request.resource.data.nombre is string &&
-               request.resource.data.csvTexto is string &&
-               request.resource.data.csvTexto.size() <= 1000000 &&
+               request.resource.data.jsonTexto is string &&
+               request.resource.data.jsonTexto.size() <= 1000000 &&
                request.resource.data.actualizadoPor == request.auth.uid;
       }
       allow read: if esCoordinacion() || esAdmin();
