@@ -51,6 +51,9 @@
           <button @click="navigate('/perfil', true)" class="dropdown-item">
             Mi Perfil
           </button>
+          <button @click="navigate('/planes-estudio', true)" class="dropdown-item">
+            Ver Planes de Estudio
+          </button>
           <button 
             v-if="userHasMultipleRoles" 
             @click="navigate({ name: 'seleccionar-rol', query: { uid: user.uid } }, true)" 
@@ -96,104 +99,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useAuth } from '@/composables/auth/useAuth'
-import { useRouter } from 'vue-router'
+import { Bars3Icon, ArrowRightStartOnRectangleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { vOnClickOutside } from '@vueuse/components'
-import { Bars3Icon, Square3Stack3DIcon, WindowIcon, AcademicCapIcon, ArrowRightStartOnRectangleIcon, ArrowUpTrayIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import TerminosContenido from '@/components/legal/TerminosContenido.vue'
+import { useBarraApp } from '@/composables/useBarraApp.js'
 
-const menuOpen = ref(false)
-const showTerminos = ref(false)
-
-function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-}
-
-const userMenuOpen = ref(false)
-const toggleUserMenu = () => {
-  userMenuOpen.value = !userMenuOpen.value
-}
-const closeUserMenu = () => {
-  userMenuOpen.value = false
-}
-
-
-const { user, logoutFirebase } = useAuth()
-const router = useRouter()
-
-// Hacemos que el rol activo sea una propiedad computada que reaccione a los cambios en el usuario.
-const rolActivo = computed(() => {
-  // Primero, intenta obtener el rol desde localStorage.
-  const rolGuardado = localStorage.getItem('rolActivo');
-  // Si existe y el usuario actual tiene ese rol, lo usamos.
-  if (rolGuardado && user.value?.roles?.includes(rolGuardado)) {
-    return rolGuardado;
-  }
-  // Si no, usamos el primer rol del usuario (para usuarios con un solo rol) o 'estudiante' como fallback.
-  return user.value?.roles?.[0] || 'estudiante';
-});
-
-
-const userHasMultipleRoles = computed(() => {
-  return Array.isArray(user.value?.roles) && user.value.roles.length > 1;
-});
-
-const userName = computed(() => {
-  // Nombre completo desde Firestore (nombre + apellido), con fallback a email
-  const nombreCompleto = [user.value?.nombre, user.value?.apellido]
-    .filter(Boolean)
-    .join(' ')
-    .trim()
-  return nombreCompleto || user.value?.email || 'Usuario'
-});
-
-// --- Lógica de Menú Dinámico ---
-const menuLinks = {
-  estudiante: [
-    { to: '/estudiante', text: 'Tablero', icon: WindowIcon },
-    { to: '/estudiante/inscripciones', text: 'Inscripciones', icon: Square3Stack3DIcon },
-    { to: '/estudiante/historial', text: 'Historial', icon: AcademicCapIcon },
-  ],
-  admin: [
-    { to: '/admin', text: 'Tablero Admin', icon: WindowIcon },
-  ],
-  bedel: [
-    { to: '/bedel', text: 'Tablero Bedel', icon: WindowIcon },
-    { to: '/bedel/inscripciones', text: 'Confirmar Inscripciones', icon: Square3Stack3DIcon }
-  ],
-  coordinacion: [
-    { to: '/coordinacion', text: 'Tablero Coordinación', icon: WindowIcon },
-    { to: '/coordinacion/carga', text: 'Carga de Datos', icon: ArrowUpTrayIcon },
-    { to: '/coordinacion/editor-planes', text: 'Editor de Planes', icon: AcademicCapIcon }
-  ],
-  docente: [
-    { to: '/docente', text: 'Tablero Docente', icon: WindowIcon },
-  ],
-};
-
-const roleLinks = computed(() => menuLinks[rolActivo.value] || []);
-
-function navigate(path, closeMenus = false) {
-  if (closeMenus) {
-    menuOpen.value = false;
-    userMenuOpen.value = false
-  }
-  router.push(path);
-}
-
-async function logout() {
-  await logoutFirebase()
-  router.push('/')
-}
-
-/**
- * Solicitar baja de usuario — funcionalidad pendiente de implementar.
- * @todo: Implementar el flujo de solicitud de baja con validación y confirmación.
- */
-function solicitarBaja() {
-  console.warn('[TODO] Solicitar Baja: funcionalidad no implementada todavía')
-}
+const {
+  user,
+  menuOpen,
+  userMenuOpen,
+  showTerminos,
+  userHasMultipleRoles,
+  userName,
+  roleLinks,
+  toggleMenu,
+  toggleUserMenu,
+  closeUserMenu,
+  navigate,
+  logout,
+  solicitarBaja
+} = useBarraApp()
 </script>
 
 <style scoped>

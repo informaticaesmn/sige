@@ -8,8 +8,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { createMockUser, createMockFirestoreUser, mockUseAuth, mockUseLayout, mockLocalStorage } from '../mocks/firebaseMocks.js'
+import { MENU_LINKS } from '@/composables/useBarraApp.js'
 
 // Mock de useAuth
 vi.mock('@/composables/auth/useAuth.js', () => ({
@@ -17,10 +19,9 @@ vi.mock('@/composables/auth/useAuth.js', () => ({
 }))
 
 // Mock de useRouter
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }))
 vi.mock('vue-router', () => ({
-  useRouter: vi.fn(() => ({
-    push: vi.fn(),
-  })),
+  useRouter: () => ({ push: pushMock }),
 }))
 
 // Mock de @vueuse/components
@@ -234,8 +235,8 @@ describe('BarraApp.vue', () => {
         },
       })
 
-      // Assert - Verificar que el rolActivo se establece correctamente
-      expect(wrapper.vm.rolActivo).toBe('bedel')
+      // Assert - El rol activo de localStorage define los enlaces del menú
+      expect(wrapper.vm.roleLinks[0].text).toBe('Tablero Bedel')
     })
 
     it('debe usar el primer rol como fallback cuando rolActivo no está en localStorage', async () => {
@@ -270,8 +271,8 @@ describe('BarraApp.vue', () => {
         },
       })
 
-      // Assert - Verificar que usa el primer rol como fallback
-      expect(wrapper.vm.rolActivo).toBe('estudiante')
+      // Assert - Usa el primer rol como fallback
+      expect(wrapper.vm.roleLinks[0].text).toBe('Tablero')
     })
 
     it('debe usar estudiante como fallback cuando el usuario no tiene roles', async () => {
@@ -304,8 +305,8 @@ describe('BarraApp.vue', () => {
         },
       })
 
-      // Assert - Verificar que usa estudiante como fallback
-      expect(wrapper.vm.rolActivo).toBe('estudiante')
+      // Assert - Usa estudiante como fallback
+      expect(wrapper.vm.roleLinks[0].text).toBe('Tablero')
     })
   })
 
@@ -453,12 +454,19 @@ describe('BarraApp.vue', () => {
   })
 
   describe('menuLinks', () => {
-    it('debe tener los enlaces correctos para cada rol', async () => {
+    it('debe tener los enlaces correctos para cada rol', () => {
+      expect(MENU_LINKS).toHaveProperty('estudiante')
+      expect(MENU_LINKS.estudiante).toHaveLength(3)
+      expect(MENU_LINKS.estudiante[0].to).toBe('/estudiante')
+      expect(MENU_LINKS.estudiante[0].text).toBe('Tablero')
+    })
+  })
+
+  describe('Menú de usuario', () => {
+    it('ofrece "Ver Planes de Estudio" y navega a la vista pública', async () => {
       // Arrange
       const mockUser = createMockUser()
-      const mockFirestoreUser = createMockFirestoreUser({
-        roles: ['estudiante'],
-      })
+      const mockFirestoreUser = createMockFirestoreUser({ roles: ['estudiante'] })
 
       const { useAuth } = await import('@/composables/auth/useAuth.js')
       useAuth.mockReturnValue({
@@ -466,7 +474,6 @@ describe('BarraApp.vue', () => {
         logoutFirebase: vi.fn().mockResolvedValue({ exito: true }),
       })
 
-      // Act - Montar el componente
       const BarraApp = (await import('@/components/BarraApp.vue')).default
       const wrapper = mount(BarraApp, {
         global: {
@@ -483,12 +490,16 @@ describe('BarraApp.vue', () => {
         },
       })
 
-      // Assert - Verificar que los enlaces de estudiante están definidos
-      const menuLinks = wrapper.vm.menuLinks
-      expect(menuLinks).toHaveProperty('estudiante')
-      expect(menuLinks.estudiante).toHaveLength(3)
-      expect(menuLinks.estudiante[0].to).toBe('/estudiante')
-      expect(menuLinks.estudiante[0].text).toBe('Tablero')
+      // Act - Abrir el menú de usuario y hacer clic en la opción
+      wrapper.vm.userMenuOpen = true
+      await nextTick()
+
+      const opcion = wrapper.findAll('button').find((b) => b.text() === 'Ver Planes de Estudio')
+      expect(opcion).toBeTruthy()
+      await opcion.trigger('click')
+
+      // Assert
+      expect(pushMock).toHaveBeenCalledWith('/planes-estudio')
     })
   })
 })
