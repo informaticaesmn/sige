@@ -16,7 +16,13 @@ procesos administrativos como inscripciones a cursados, mesas de examen y trazab
 | `main` | Producción | `sige-esmn` | Automático en push: reglas (gate) + hosting (`firebase-hosting-main.yml`) |
 
 Los alias de `.firebaserc` son `staging` → `prueba1-esmn` y `production` → `sige-esmn`.
+El alias `default` es **`prueba1-esmn`**: si alguien corre `firebase deploy` a mano sin
+`--project`, publica en staging y nunca en producción.
 Los datos de staging son descartables: **nunca** se cargan datos reales de estudiantes ahí.
+
+Cloud Functions se despliega en cada push a `dev` (staging). En producción **no** se
+despliega en cada push: se usa el workflow manual *Deploy Cloud Functions (manual)*
+(Actions → Run workflow → elegir `production`; solo se acepta si se lanza desde `main`).
 
 ## Stack
 

@@ -1,0 +1,71 @@
+# .github/workflows/deploy-functions.yml
+#
+# Deploy MANUAL de Cloud Functions (workflow_dispatch).
+#
+# Por qué no está en el push a `main` todavía:
+#   - Un cambio de `registrarUsuario` es poco frecuente; desplegarlo en cada release
+#     alarga el deploy y suma un punto de fallo al release de producción.
+#   - El secreto de producción nunca se probó para deploy de functions (sí para reglas
+#     y hosting). Este workflow permite verificarlo sin bloquear un release.
+#   - El proyecto va LITERAL en cada paso; `deploy-firebase.sh` además valida que la key
+#     pertenezca a ese proyecto, así que no se puede cruzar staging/producción.
+#
+# Uso: Actions → "Deploy Cloud Functions (manual)" → Run workflow → elegir entorno.
+# Producción solo se acepta si el workflow se lanza desde `main` (hay un paso que
+# aborta el run si se elige producción desde otra rama).
+
+name: Deploy Cloud Functions (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: 'Entorno destino'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # `workflow_dispatch` puede lanzarse desde CUALQUIER rama. Sin este paso, alguien
+      # podría elegir `production` desde `dev` y publicar código sin probar en producción.
+      # Se falla (no se saltea el job) para que el run quede rojo y visible.
+      - name: Verificar rama para producción
+        if: inputs.entorno == 'production' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error title=Rama incorrecta::Producción solo se despliega desde 'main' (ref actual: ${{ github.ref }}). Elegí 'staging' o lanzá desde main."
+          exit 1
+
+      # --- Producción (`sige-esmn`) ---
+      - name: Deploy Functions (producción)
+        if: inputs.entorno == 'production'
+        run: bash .github/scripts/deploy-firebase.sh functions sige-esmn
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+
+      # --- Staging (`prueba1-esmn`) ---
+      - name: Deploy Functions (staging)
+        if: inputs.entorno == 'staging'
+        run: bash .github/scripts/deploy-firebase.sh functions prueba1-esmn
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_STAGING }}

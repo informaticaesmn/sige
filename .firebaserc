@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "sige-esmn",
+    "default": "prueba1-esmn",
     "production": "sige-esmn",
     "staging": "prueba1-esmn"
   }

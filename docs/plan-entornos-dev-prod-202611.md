@@ -1,7 +1,8 @@
 # Plan: separar entornos (dev/staging vs producción)
 
-> **Estado:** propuesto (03/11/2026). Pendiente de decisión. **No hay cambios de código
-> propuestos acá todavía**: primero hay que elegir el proyecto de staging.
+> **Estado:** implementado (04/11/2026). Quedan solo dos tareas de consola —presupuesto con
+> alertas (Fase 4) y revocación de la key vieja (Fase 1)— y el primer deploy manual de
+> functions a producción.
 > **Objetivo:** que las pruebas de desarrollo no consuman la cuota ni los datos de producción,
 > y que las reglas de Firestore de `dev` se desplieguen siempre.
 > **Datos verificados:** 03/11/2026 con la CLI de Firebase y las APIs de Firebase Rules,
@@ -9,7 +10,7 @@
 
 ---
 
-## 0. Situación actual (verificada)
+## 0. Situación inicial (verificada el 03/11/2026)
 
 | | `sige-esmn` | `prueba1-esmn` |
 |---|---|---|
@@ -145,7 +146,8 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
 
 - [x] Confirmar en la consola el plan real (Spark/Blaze) de `sige-esmn` y `prueba1-esmn`.
       → Hecho (04/11/2026): ambos proyectos pasaron a **Blaze**.
-- [ ] Decidir titularidad: ¿producción sigue en `informaticaesmn@gmail.com`?
+- [x] Decidir titularidad: ¿producción sigue en `informaticaesmn@gmail.com`?
+      → Resuelto: no se crea una cuenta nueva; producción sigue en la cuenta actual.
 - [x] Decidir si se usa `prueba1-esmn` (A) o se crea uno nuevo (B).
       → **A**: `prueba1-esmn` es staging.
 - [x] Confirmar en Vercel cuál es la **Production Branch** (si es `dev`, hoy el "producción"
@@ -168,16 +170,16 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
       roles `Firebase Hosting Admin` + `Firebase Rules Admin`. Verificada con
       `projects.get`, `hosting.sites.list` y `firebaserules.projects:test` (200; la key
       vieja daba 403 acá). Archivo local: `secrets/prueba1-esmn-ba3fad6bfcff.json`.
-      La key vieja (`...-180d01ef9a.json`) sigue sin `Rules Admin`: no usarla para deploy
-      (el `rules.test` daba 403).
+      La key vieja (`...-180d01ef9a.json`) no tenía `Rules Admin` (el `rules.test` daba 403);
+      su archivo local se borró el 04/11/2026. **Pendiente:** revocarla en la consola
+      (Service accounts → `firebase-adminsdk-9p782` → Keys → key ID `180d01ef…`).
 
 ### Fase 2 — Config multi-proyecto
 
-- [x] `.firebaserc` con alias:
-
-  ```json
-  { "projects": { "default": "sige-esmn", "production": "sige-esmn", "staging": "prueba1-esmn" } }
-  ```
+- [x] `.firebaserc` con alias `staging` → `prueba1-esmn`, `production` → `sige-esmn` y
+      `default` → `prueba1-esmn` (04/11/2026). Antes `default` era `sige-esmn`, así que un
+      `firebase deploy` local olvidado publicaba en producción; ahora publica en staging.
+      Los workflows no dependen del default: pasan `--project` literal.
 
 - [x] Workflow `.github/workflows/firebase-hosting-dev.yml` (push a `dev`): `firestore:rules`
       + `functions` + `hosting` contra `--project prueba1-esmn`, con el secreto
@@ -211,10 +213,35 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
 
 - [x] Habilitar Blaze + *budget alert* + *spend cap* en Cloud Run functions, **o** asumir
       explícitamente el techo de 50k lecturas/día.
-      → Blaze habilitado en ambos (04/11/2026). **Pendiente:** presupuesto con alertas y
-      `maxInstances` (hoy 10 por `setGlobalOptions`) para acotar el gasto.
-- [ ] Exportar y borrar `ofertaAcademica_2026` (colección huérfana).
-- [ ] Evaluar si `functions` debe sumarse al workflow de `main` (hoy se deploya a mano).
+      → Blaze habilitado en ambos (04/11/2026). No existe un *spend cap* global en GCP: el
+      techo se arma con `maxInstances` (10) + presupuesto con alertas + cuotas. El
+      presupuesto es el ítem siguiente.
+- [ ] Presupuesto con alertas en Cloud Billing + revisar `maxInstances` (hoy 10 en
+      `codebase-functions/index.js`). No existe un "spend cap" general en GCP: el control
+      real es presupuesto + alertas + límites de instancia + cuotas.
+      → `maxInstances`: se mantiene en **10** (revisado 04/11/2026). Ya es un techo, no un
+      objetivo de escalado, y con una sola función callable el gasto máximo está acotado.
+      Bajar el número solo agrega 429 en horas pico de inscripciones.
+      → **Pendiente (consola):** Billing → Budgets & alerts → Create budget → scope
+      "Projects": `sige-esmn` + `prueba1-esmn`, monto USD 5, alertas 50/90/100 % al email
+      de la escuela. Los presupuestos **no** cortan el servicio: avisan.
+- [x] Exportar y borrar `ofertaAcademica_2026` (colección huérfana de `sige-esmn`).
+      → Hecho (04/11/2026): se borró **sin export** (decisión explícita: la app lee
+      `ofertaAcademica/{ciclo}`, nunca esa colección) con
+      `firebase firestore:delete --recursive -f ofertaAcademica_2026 --project sige-esmn`,
+      usando la sesión local de `informaticaesmn@gmail.com`. Verificado después con
+      `--debug`: el `runQuery` sobre la ruta no devuelve documentos (solo `readTime`).
+- [x] Evaluar si `functions` debe sumarse al workflow de `main` (hoy se deploya a mano).
+      → Evaluado (04/11/2026): se creó `.github/workflows/deploy-functions.yml`
+      (`workflow_dispatch`, elegís staging/producción). Producción **solo** se acepta si el
+      run se lanza desde `main` (paso que aborta el run en otra rama).
+      No se suma al push de `main` todavía: el secreto de producción no está probado para
+      functions y un fallo ahí no debe bloquear el release. Cuando se valide el primer
+      deploy manual, se puede evaluar pasarlo a automático.
+      → **Pendiente:** lanzar el workflow con `entorno=production` desde `main` una vez. Si
+      la key de producción no tiene permisos de functions, el error esperable es 403; la
+      solución es darle a `firebase-adminsdk-9p782@sige-esmn` `Cloud Functions Developer`
+      + `Service Account User` (y los que pida el error de Cloud Run/Cloud Build).
 
 ---
 
@@ -223,38 +250,54 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
 El bug de v0.8.27 fue posible porque `main` publicaba reglas y `dev` no. Con dos proyectos,
 el riesgo se multiplica: un `firebase deploy` en el proyecto equivocado pisa producción.
 
-- Los workflows usan `--project` **explícito y literal**; nunca una variable que pueda venir vacía.
-- `scripts/preflight.js` imprime `proyecto → entorno` y aborta si el branch no coincide.
-- Comandos documentados: `npm run deploy:staging` / `npm run deploy:production`. Nada de
-  `firebase deploy` a mano.
-- `firebase use staging` como default local en la rama `dev`.
-- El deploy de reglas sigue siendo **gate** en `main` (ya implementado en v0.8.28).
+Implementado:
+
+- Los workflows usan `--project` **explícito y literal**; nunca una variable que pueda venir
+  vacía.
+- `.github/scripts/deploy-firebase.sh` valida dos cosas antes de publicar: que el proyecto
+  sea conocido (`sige-esmn` | `prueba1-esmn`) y que la key del secreto pertenezca a ese
+  proyecto. Probado el 04/11/2026: con la key de staging y `sige-esmn` aborta con
+  *"Credenciales cruzadas"* sin tocar nada.
+- `.github/workflows/deploy-functions.yml` exige `main` para desplegar en producción; un
+  dispatch desde `dev` con `entorno=production` termina en rojo.
+- `.firebaserc` tiene `default` = `prueba1-esmn`: un deploy local sin `--project` cae en
+  staging, no en producción.
+- El deploy de reglas es **gate** en `main` y en `dev` (si falla, no se publica el hosting).
+- Secrets separados por entorno; los de staging llevan sufijo `_STAGING`.
+
+Descartado a propósito:
+
+- No hay `scripts/preflight.js` ni `npm run deploy:*`. Se evaluó y se prefirió no ofrecer un
+  atajo de deploy local: todo pasa por GitHub Actions, donde el proyecto es literal y el
+  secreto está acotado. Un script local que deploya producción es justamente el riesgo que
+  este documento intenta evitar.
 
 ---
 
 ## 7. Decisiones abiertas
 
-| # | Pregunta | Impacto |
+| # | Pregunta | Resolución |
 |---|---|---|
-| 1 | ¿A o B? | Define todo el resto del plan |
-| 2 | ¿Spark o Blaze en producción? | Si es Spark, hay riesgo de caída por cuota; si es Blaze, hay que poner alertas |
-| 3 | ¿Funciones en el workflow de `main`? | Hoy un cambio de `registrarUsuario` requiere deploy manual |
-| 4 | ¿Vercel sigue siendo el front de `dev`? | Con hosting de staging (`prueba1-esmn.web.app`) se podría abandonar Vercel en dev y simplificar |
-| 5 | ¿Staging comparte código con `dev` en todo momento? | Es lo natural: `dev` → staging, `main` → producción |
+| 1 | ¿A o B? | **A**: `prueba1-esmn` es staging (04/11/2026). |
+| 2 | ¿Spark o Blaze en producción? | **Blaze en ambos** (04/11/2026). Con presupuesto + alertas (Fase 4). |
+| 3 | ¿Funciones en el workflow de `main`? | **No por ahora**: workflow manual con guarda de rama. Se reevalúa tras el primer deploy real. |
+| 4 | ¿Vercel sigue siendo el front de `dev`? | **Sí**, con env vars de staging. Producción es Firebase Hosting. |
+| 5 | ¿Staging comparte código con `dev` en todo momento? | **Sí**: `dev` → staging, `main` → producción. |
 
 ---
 
 ## 8. Costos
 
-| Concepto | Ahora | Con staging separado |
+| Concepto | Antes | Con staging separado |
 |---|---|---|
-| Firestore | 1 proyecto Spark (50k lecturas/día) | 2 proyectos Spark (50k c/u) |
-| Functions | 1 deploy manual | 1 deploy manual + 1 por workflow (requiere Blaze si se actualiza) |
+| Firestore | 1 proyecto (50k lecturas/día gratis) | 2 proyectos (50k c/u) |
+| Functions | 1 proyecto, deploy manual | 2 proyectos (Blaze), staging por workflow + producción manual |
 | Hosting | `sige-esmn.web.app` | + `prueba1-esmn.web.app` (incluido) |
-| Dinero | $0 | $0, salvo que se habilite Blaze para Functions |
+| Dinero | $0 | $0 dentro del *no-cost usage*; el riesgo es una factura sorpresa → presupuesto con alertas |
 
 En Blaze, el *no-cost usage* sigue siendo por proyecto; lo que se comparte es la forma de
-pago, no la cuota. Con *budget alerts* y *spend cap* el riesgo de factura sorpresa es bajo.
+pago, no la cuota. No existe un *spend cap* general: el control real es presupuesto +
+alertas + `maxInstances` + cuotas.
 
 ---
 
@@ -270,8 +313,12 @@ curl -H "Authorization: Bearer $TOKEN" \
      -H "x-goog-user-project: sige-esmn" \
      https://firebaserules.googleapis.com/v1/projects/sige-esmn/releases
 
-# Deploy a staging (cuando exista el alias)
+# Deploy de reglas a staging (alias ya existente). En la práctica, el deploy lo hace
+# el workflow de push a `dev`; esto es solo para probar a mano.
 npx firebase deploy --only firestore:rules --project staging
+
+# Qué proyecto usaría un deploy local sin --project (debe ser prueba1-esmn)
+npx firebase use
 
 # Emuladores (no consume cuota, no toca ningún proyecto)
 npm run test:integration
