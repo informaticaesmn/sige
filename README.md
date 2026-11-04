@@ -7,7 +7,16 @@ Nace para tener los datos del estudiantado en un repositorio único y ordenado, 
 procesos administrativos como inscripciones a cursados, mesas de examen y trazabilidad de la trayectoria académica.
 
 - Producción (Firebase Hosting): <https://sige-esmn.web.app>
+- Staging (Firebase Hosting): <https://prueba1-esmn.web.app>
 - Desarrollo (Vercel): <https://sige-esmn.vercel.app/>
+
+| Rama | Entorno | Proyecto Firebase | Deploy |
+|---|---|---|---|
+| `dev` | Staging | `prueba1-esmn` | Automático en push: reglas + functions + hosting (`firebase-hosting-dev.yml`) |
+| `main` | Producción | `sige-esmn` | Automático en push: reglas (gate) + hosting (`firebase-hosting-main.yml`) |
+
+Los alias de `.firebaserc` son `staging` → `prueba1-esmn` y `production` → `sige-esmn`.
+Los datos de staging son descartables: **nunca** se cargan datos reales de estudiantes ahí.
 
 ## Stack
 
@@ -21,7 +30,7 @@ procesos administrativos como inscripciones a cursados, mesas de examen y trazab
 | Backend | Firebase: Auth, Firestore **Lite**, Cloud Functions v2 y Hosting |
 | Iconos / utils | Heroicons 2, `@vueuse/components` |
 | Testing | Vitest 2 + Vue Test Utils + Firebase Emulator Suite |
-| CI/CD | GitHub Actions (build + tests) · deploy a Firebase Hosting desde `main` · Vercel desde `dev` |
+| CI/CD | GitHub Actions (build + tests) · deploy a Firebase Hosting desde `main` (producción) y `dev` (staging) · Vercel desde `dev` |
 
 Las versiones exactas están en `package.json`.
 
@@ -42,6 +51,7 @@ npm run dev
 | `npm run test:integration` | Tests de integración sobre los emuladores de Firebase |
 | `npm run test:ui` | Vitest en modo interfaz gráfica |
 | `npm run test:coverage` | Tests + reporte de cobertura |
+| `npm run seed:staging` | Deja staging usable (usuarios por rol, oferta, borrador). Dry-run por defecto; con `-- --apply` escribe. Requiere `GOOGLE_APPLICATION_CREDENTIALS` apuntando a la key de `prueba1-esmn` |
 
 Versionado y publicación: `update-dev.ps1` (rama `dev`) y `update-main.ps1` (rama `main`) corren `test:unit` + `build` y
 abortan si fallan; `update-dev` además hace el `npm version` del ciclo. Un push a `main` dispara el deploy a Firebase

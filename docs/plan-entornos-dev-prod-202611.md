@@ -143,46 +143,76 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
 
 ### Fase 0 — Decisiones (antes de tocar nada)
 
-- [ ] Confirmar en la consola el plan real (Spark/Blaze) de `sige-esmn` y `prueba1-esmn`.
+- [x] Confirmar en la consola el plan real (Spark/Blaze) de `sige-esmn` y `prueba1-esmn`.
+      → Hecho (04/11/2026): ambos proyectos pasaron a **Blaze**.
 - [ ] Decidir titularidad: ¿producción sigue en `informaticaesmn@gmail.com`?
-- [ ] Decidir si se usa `prueba1-esmn` (A) o se crea uno nuevo (B).
-- [ ] Confirmar en Vercel cuál es la **Production Branch** (si es `dev`, hoy el "producción"
+- [x] Decidir si se usa `prueba1-esmn` (A) o se crea uno nuevo (B).
+      → **A**: `prueba1-esmn` es staging.
+- [x] Confirmar en Vercel cuál es la **Production Branch** (si es `dev`, hoy el "producción"
       de Vercel está apuntando a datos de producción desde el código de `dev`).
+      → Hecho (04/11/2026): Production Branch = `dev`, con las env vars apuntando a
+      `prueba1-esmn`. Vercel queda como front de staging; producción es Firebase Hosting.
 
 ### Fase 1 — Limpiar staging
 
-- [ ] Exportar/archivar los 4 usuarios de Auth y la colección `usuarios` de `prueba1-esmn`
-      (por si alguno sirve).
-- [ ] Borrar los usuarios de Auth.
-- [ ] Vaciar `usuarios`.
-- [ ] Crear una service account key para `prueba1-esmn`; guardarla en `secrets/`
+- [x] ~~Exportar/archivar los 4 usuarios de Auth y la colección `usuarios`~~
+      → Descartado (04/11/2026): se borraron usuarios y colecciones sin backup. Eran datos
+      de prueba; si hacía falta algo, se recrea con `scripts/seed-dev.js` (Fase 3).
+- [x] Borrar los usuarios de Auth. → Hecho (04/11/2026): `listUsers` devuelve 0.
+- [x] Vaciar `usuarios`. → Hecho (04/11/2026): `listCollections` devuelve 0 colecciones raíz.
+      Ojo: si quedaron subcolecciones huérfanas de docs borrados, no las lista la API; no
+      afectan el uso (no son accesibles) y se pueden ignorar en staging.
+- [x] Crear una service account key para `prueba1-esmn`; guardarla en `secrets/`
       (ya está en `.gitignore`) y **nunca** versionarla.
+      → Hecho (04/11/2026): key nueva de `firebase-adminsdk-9p782@prueba1-esmn` con los
+      roles `Firebase Hosting Admin` + `Firebase Rules Admin`. Verificada con
+      `projects.get`, `hosting.sites.list` y `firebaserules.projects:test` (200; la key
+      vieja daba 403 acá). Archivo local: `secrets/prueba1-esmn-ba3fad6bfcff.json`.
+      La key vieja (`...-180d01ef9a.json`) sigue sin `Rules Admin`: no usarla para deploy
+      (el `rules.test` daba 403).
 
 ### Fase 2 — Config multi-proyecto
 
-- [ ] `.firebaserc` con alias:
+- [x] `.firebaserc` con alias:
 
   ```json
   { "projects": { "default": "sige-esmn", "production": "sige-esmn", "staging": "prueba1-esmn" } }
   ```
 
-- [ ] Workflow `.github/workflows/firebase-hosting-dev.yml` (push a `dev`): `firestore:rules`
-      + `functions` + `hosting` contra `--project staging`, con el secreto
+- [x] Workflow `.github/workflows/firebase-hosting-dev.yml` (push a `dev`): `firestore:rules`
+      + `functions` + `hosting` contra `--project prueba1-esmn`, con el secreto
       `FIREBASE_SERVICE_ACCOUNT_KEY_STAGING`.
-- [ ] Vercel: `Production` → proyecto de producción; `Preview` → staging.
-- [ ] Documentar en `README.md` qué entorno usa cada rama.
+      → Hecho (04/11/2026). Con Blaze habilitado, `functions` se sumó y se verificó el
+      deploy de `registrarUsuario` a staging con la key de CI. Orden: reglas → functions →
+      hosting (el front no se publica si falla lo anterior). `deploy-firebase.sh` recibe el
+      proyecto como segundo argumento y aborta si la key no pertenece a ese proyecto.
+- [x] Vercel: `Production` → proyecto de producción; `Preview` → staging.
+      → Resuelto distinto por el plan Hobby: Production Branch = `dev` y todas las env vars
+      apuntan a `prueba1-esmn`. Vercel queda como front de staging; producción es Firebase
+      Hosting. No se usan sufijos `_STAGING` en Vercel (se separa por ámbito).
+- [x] Documentar en `README.md` qué entorno usa cada rama.
+      → Hecho (04/11/2026): tabla rama → entorno → proyecto → deploy.
 
 ### Fase 3 — Que staging sea usable
 
-- [ ] `scripts/seed-dev.js`: un usuario por rol con sus custom claims, una oferta de prueba y
+- [x] `scripts/seed-dev.js`: un usuario por rol con sus custom claims, una oferta de prueba y
       un borrador de plan. Sin esto, cada purga deja staging inservible.
-- [ ] **Nunca** datos reales de estudiantes en staging (`data/*.csv` ya está ignorado por
+      → Hecho (04/11/2026): `admin`, `coordinacion`, `bedel`, `docente`, `estudiante`
+      (emails `@example.com`, password `SigeStaging2026!`), legajos, oferta `2026-1`,
+      borrador `planesPendientes/663` e inscripción pendiente del estudiante. Es
+      idempotente, dry-run por defecto y **aborta si las credenciales no son de
+      `prueba1-esmn`**. Se corre con `npm run seed:staging [-- --apply]`.
+- [x] **Nunca** datos reales de estudiantes en staging (`data/*.csv` ya está ignorado por
       contener datos personales).
+      → El seed usa datos sintéticos y `@example.com` (dominio que no recibe correo) para
+      que un reset de contraseña no llegue a un Gmail real.
 
 ### Fase 4 — Endurecer producción
 
-- [ ] Habilitar Blaze + *budget alert* + *spend cap* en Cloud Run functions, **o** asumir
+- [x] Habilitar Blaze + *budget alert* + *spend cap* en Cloud Run functions, **o** asumir
       explícitamente el techo de 50k lecturas/día.
+      → Blaze habilitado en ambos (04/11/2026). **Pendiente:** presupuesto con alertas y
+      `maxInstances` (hoy 10 por `setGlobalOptions`) para acotar el gasto.
 - [ ] Exportar y borrar `ofertaAcademica_2026` (colección huérfana).
 - [ ] Evaluar si `functions` debe sumarse al workflow de `main` (hoy se deploya a mano).
 

@@ -1,0 +1,110 @@
+# .github/workflows/firebase-hosting-dev.yml
+#
+# Deploy de STAGING: cada push a `dev` publica reglas + hosting en `prueba1-esmn`.
+# Producción (`sige-esmn`) se sigue publicando solo desde `main`
+# (`.github/workflows/firebase-hosting-main.yml`).
+#
+# Regla de oro: el proyecto va LITERAL en cada llamado a deploy-firebase.sh.
+# El script además valida que la key del secreto pertenezca a ese proyecto, así una
+# credencial cruzada falla antes de publicar en el proyecto equivocado.
+#
+# Secrets requeridos (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT_KEY_STAGING   → key de firebase-adminsdk-9p782@prueba1-esmn
+#   VITE_FIREBASE_API_KEY_STAGING
+#   VITE_FIREBASE_AUTH_DOMAIN_STAGING
+#   VITE_FIREBASE_PROJECT_ID_STAGING
+#   VITE_FIREBASE_STORAGE_BUCKET_STAGING
+#   VITE_FIREBASE_MESSAGING_SENDER_ID_STAGING
+#   VITE_FIREBASE_APP_ID_STAGING
+
+name: Deploy a Firebase Hosting (Rama Dev / Staging)
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build_and_deploy:
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1. Checkout
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      # 2. Node.js (misma versión que producción y que test-and-validate)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      # 3. Dependencias
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Tests unitarios (gate, igual que en main)
+      - name: Run Unit Tests
+        run: npm run test:unit
+
+      # 5. Fail fast: sin config de staging el build saldría apuntando a `undefined`
+      # y el hosting quedaría publicado pero roto. Mejor cortar acá.
+      - name: Verificar secrets de staging
+        run: |
+          faltan=0
+          for v in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID \
+                   VITE_FIREBASE_STORAGE_BUCKET VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_APP_ID; do
+            if [ -z "${!v:-}" ]; then
+              echo "::error title=Secret faltante::${v}_STAGING no está definido"
+              faltan=1
+            fi
+          done
+          [ "$faltan" -eq 0 ] || exit 1
+          echo "Config de staging presente (project_id: $VITE_FIREBASE_PROJECT_ID)"
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY_STAGING }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_STAGING }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID_STAGING }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_STAGING }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_STAGING }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID_STAGING }}
+
+      # 6. Build con la config de staging
+      - name: Build Vue App (staging)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY_STAGING }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_STAGING }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID_STAGING }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_STAGING }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_STAGING }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID_STAGING }}
+          # Sin VITE_FIREBASE_MEASUREMENT_ID: staging no tiene Analytics y
+          # `src/config/firebase.js` solo inicializa Analytics si el valor existe.
+
+      # 7. Reglas de Firestore (gate: si fallan, no se publica el hosting)
+      - name: Deploy Firestore Rules (staging)
+        continue-on-error: false
+        run: bash .github/scripts/deploy-firebase.sh firestore:rules prueba1-esmn
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_STAGING }}
+
+      # 8. Cloud Functions (staging). Ahora sí: ambos proyectos están en Blaze.
+      # Verificado el 04/11/2026: la key de staging puede deployar `registrarUsuario`.
+      - name: Deploy Cloud Functions (staging)
+        run: bash .github/scripts/deploy-firebase.sh functions prueba1-esmn
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_STAGING }}
+
+      # 9. Hosting (último: si falla functions o rules, no se publica el front)
+      - name: Deploy to Firebase Hosting (staging)
+        run: bash .github/scripts/deploy-firebase.sh hosting prueba1-esmn
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_STAGING }}

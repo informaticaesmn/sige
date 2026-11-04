@@ -91,13 +91,13 @@ jobs:
       # solo como anotación, fácil de pasar por alto).
       - name: Deploy Firestore Rules
         continue-on-error: false
-        run: bash .github/scripts/deploy-firebase.sh firestore:rules
+        run: bash .github/scripts/deploy-firebase.sh firestore:rules sige-esmn
         env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
 
       # 8. Desplegar a Firebase Hosting (con la CLI local: la acción de terceros usaba
       # `npx firebase-tools` y fallaba con "npx ... exit code 2" contra la versión del repo).
       - name: Deploy to Firebase Hosting
-        run: bash .github/scripts/deploy-firebase.sh hosting
+        run: bash .github/scripts/deploy-firebase.sh hosting sige-esmn
         env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}

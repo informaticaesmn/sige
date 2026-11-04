@@ -25,9 +25,10 @@ export const db   = getFirestore(app)
 // Este dato es CRUCIAL para que la app sepa dónde llamar a la función.
 export const functions = getFunctions(app, 'southamerica-east1')
 
-// Inicializar Analytics solo en el entorno de producción
+// Inicializar Analytics solo en producción y si el proyecto tiene measurementId.
+// Staging no tiene Analytics: getAnalytics() con measurementId undefined falla.
 let analytics
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && firebaseConfig.measurementId) {
   analytics = getAnalytics(app)
 }
 
