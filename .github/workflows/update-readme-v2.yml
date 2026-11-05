@@ -1,5 +1,7 @@
 name: Release and Update README
 
+run-name: "Release · ${{ inputs.version_type }}"
+
 on:
   workflow_dispatch:
     inputs:

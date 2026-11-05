@@ -1,12 +1,16 @@
-name: Test and Validate
+name: Tests (build + unit + integración)
+
+# Título de cada run en la lista de Actions. Sin esto GitHub usa el mensaje del commit
+# y todos los runs quedan con el mismo nombre ("chore(release): version dev v0.8.35").
+run-name: "Tests · ${{ github.ref_name }}"
 
 on:
   push:
     branches:
       - dev
       - main
-    tags:
-      - 'v*'
+    # Sin `tags: ['v*']`: el tag de release apunta al mismo commit que ya se validó en
+    # `main`, así que ese run era un duplicado exacto (el tercero de cada release).
 
 jobs:
   test-and-validate:

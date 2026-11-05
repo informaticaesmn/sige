@@ -166,10 +166,20 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
       afectan el uso (no son accesibles) y se pueden ignorar en staging.
 - [x] Crear una service account key para `prueba1-esmn`; guardarla en `secrets/`
       (ya está en `.gitignore`) y **nunca** versionarla.
-      → Hecho (04/11/2026): key nueva de `firebase-adminsdk-9p782@prueba1-esmn` con los
-      roles `Firebase Hosting Admin` + `Firebase Rules Admin`. Verificada con
-      `projects.get`, `hosting.sites.list` y `firebaserules.projects:test` (200; la key
-      vieja daba 403 acá). Archivo local: `secrets/prueba1-esmn-ba3fad6bfcff.json`.
+      → Hecho (04/11/2026): key nueva de `firebase-adminsdk-9p782@prueba1-esmn`.
+      Archivo local: `secrets/prueba1-esmn-ba3fad6bfcff.json`.
+      **Roles finales (05/11/2026)**, después del primer run real de CI:
+      `firebasehosting.admin`, `firebaserules.admin`, `cloudfunctions.developer`,
+      `iam.serviceAccountUser`, `serviceusage.serviceUsageConsumer` (más los que ya traía
+      la SA: `firebase.sdkAdminServiceAgent`, `iam.serviceAccountTokenCreator`).
+      El primer push a `dev` falló en el deploy de reglas con
+      `403 Permission denied to get service [firestore.googleapis.com]`: el CLI consulta
+      Service Usage antes de deployar y a la key le faltaba `serviceusage.services.get`.
+      Al agregar `serviceUsageConsumer` apareció el faltante siguiente,
+      `iam.serviceAccounts.actAs` sobre `prueba1-esmn@appspot.gserviceaccount.com`,
+      resuelto con `cloudfunctions.developer` + `serviceAccountUser`.
+      Los tres pasos (reglas, functions, hosting) se validaron localmente **solo con la key**,
+      sin la sesión de usuario, hasta que dieron OK (ver anexo: el CLI prefiere la sesión).
       La key vieja (`...-180d01ef9a.json`) no tenía `Rules Admin` (el `rules.test` daba 403);
       su archivo local se borró el 04/11/2026. **Pendiente:** revocarla en la consola
       (Service accounts → `firebase-adminsdk-9p782` → Keys → key ID `180d01ef…`).
@@ -204,7 +214,7 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
       borrador `planesPendientes/663` e inscripción pendiente del estudiante. Es
       idempotente, dry-run por defecto y **aborta si las credenciales no son de
       `prueba1-esmn`**. Se corre con `npm run seed:staging [-- --apply]`.
-- [x] **Nunca** datos reales de estudiantes en staging (`data/*.csv` ya está ignorado por
+- [x] **Nunca** datos reales de estudiantes en staging (`data/` ya está ignorado por
       contener datos personales).
       → El seed usa datos sintéticos y `@example.com` (dominio que no recibe correo) para
       que un reset de contraseña no llegue a un Gmail real.
@@ -238,10 +248,11 @@ Sin cambios de código en la app: `src/config/firebase.js` ya lee todo de `VITE_
       No se suma al push de `main` todavía: el secreto de producción no está probado para
       functions y un fallo ahí no debe bloquear el release. Cuando se valide el primer
       deploy manual, se puede evaluar pasarlo a automático.
-      → **Pendiente:** lanzar el workflow con `entorno=production` desde `main` una vez. Si
-      la key de producción no tiene permisos de functions, el error esperable es 403; la
-      solución es darle a `firebase-adminsdk-9p782@sige-esmn` `Cloud Functions Developer`
-      + `Service Account User` (y los que pida el error de Cloud Run/Cloud Build).
+      → **Pendiente:** lanzar el workflow con `entorno=production` desde `main` una vez.
+      La SA de producción (`firebase-adminsdk-fbsvc@sige-esmn`) ya tiene
+      `cloudfunctions.admin`, `firebasehosting.admin`, `firebaserules.admin` y
+      `firebaseauth.admin`. Si el deploy falla por `iam.serviceAccounts.actAs`, falta
+      `Service Account User`; el error lo dice con el nombre exacto de la SA.
 
 ---
 
@@ -322,6 +333,14 @@ npx firebase use
 
 # Emuladores (no consume cuota, no toca ningún proyecto)
 npm run test:integration
+
+# Probar un deploy como lo hace CI (solo service account, sin tu sesión).
+# Ojo: el CLI prefiere la sesión de usuario aunque GOOGLE_APPLICATION_CREDENTIALS esté
+# seteada, así que un deploy local exitoso NO prueba que la key de CI alcance.
+# Apuntando XDG_CONFIG_HOME a un directorio vacío, el CLI no ve la sesión y usa la key:
+XDG_CONFIG_HOME=/tmp/cfg-vacio \
+GOOGLE_APPLICATION_CREDENTIALS=secrets/prueba1-esmn-ba3fad6bfcff.json \
+npx firebase deploy --only firestore:rules --project prueba1-esmn --non-interactive
 ```
 
 ---

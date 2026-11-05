@@ -2,8 +2,9 @@
 
 Archivos de datos que consumen los scripts de importación.
 
-⚠️ **No se versionan** (`.gitignore` → `data/*.csv`) porque contienen datos personales
+⚠️ **No se versionan** (`.gitignore` → `data/`) porque contienen datos personales
 (DNI, emails, docentes, horarios). Si clonás el repo, tenés que pedirlos aparte.
+La excepción es este `README.md`, que ya está trackeado.
 
 | Archivo | Lo consume | Formato documentado en |
 | --- | --- | --- |

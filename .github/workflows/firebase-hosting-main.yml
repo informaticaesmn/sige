@@ -1,6 +1,10 @@
 # .github/workflows/firebase-hosting-main.yml
 
-name: Deploy a Firebase Hosting (Rama Main)
+name: Deploy producción (sige-esmn)
+
+# Ver el run en Actions sin abrirlo: "Deploy producción · sige-esmn · v0.8.35"
+# (en main el ref es la rama; el tag aparece en los runs de tags).
+run-name: "Deploy producción · sige-esmn · ${{ github.ref_name }}"
 
 # Define cuándo se ejecutará este workflow
 on:

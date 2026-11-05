@@ -16,6 +16,9 @@
 
 name: Deploy Cloud Functions (manual)
 
+# En la lista de Actions: "Functions · production" | "Functions · staging".
+run-name: "Functions · ${{ inputs.entorno }}"
+
 on:
   workflow_dispatch:
     inputs:

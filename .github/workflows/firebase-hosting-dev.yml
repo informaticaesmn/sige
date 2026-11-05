@@ -16,8 +16,16 @@
 #   VITE_FIREBASE_STORAGE_BUCKET_STAGING
 #   VITE_FIREBASE_MESSAGING_SENDER_ID_STAGING
 #   VITE_FIREBASE_APP_ID_STAGING
+#
+# Roles que necesita la service account (validado 05/11/2026):
+#   Firebase Hosting Admin, Firebase Rules Admin, Cloud Functions Developer,
+#   Service Account User y Service Usage Consumer (el CLI consulta serviceusage
+#   antes de cada deploy: sin ese permiso falla con 403 en el primer paso).
 
-name: Deploy a Firebase Hosting (Rama Dev / Staging)
+name: Deploy staging (prueba1-esmn)
+
+# Ver el run en Actions sin abrirlo: "Deploy staging · prueba1-esmn · dev".
+run-name: "Deploy staging · prueba1-esmn · ${{ github.ref_name }}"
 
 on:
   push:

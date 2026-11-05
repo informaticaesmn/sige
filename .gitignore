@@ -49,4 +49,4 @@ estructura.txt
 
 # Datos de importación: contienen datos personales (DNI, emails, docentes),
 # por eso NO se versionan. Ver data/README.md
-data/*.csv
+data/
