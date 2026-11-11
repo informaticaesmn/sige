@@ -1,6 +1,47 @@
 {
   "plan": "662",
   "nombre": "Plan 662",
+  "requisitos": [
+    {
+      "id": "R-0-01",
+      "anio": 0,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["662-0.1"],
+      "etiqueta": "Audioperceptiva"
+    },
+    {
+      "id": "R-0-02",
+      "anio": 0,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["662-0.2"]
+    },
+    {
+      "id": "R-0-03",
+      "anio": 0,
+      "tipo": "conmutable",
+      "minimo": 1,
+      "candidatos": ["662-0.3.1", "662-0.3.2"],
+      "etiqueta": "Lenguaje musical"
+    },
+    {
+      "id": "R-1-01",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["662-1.1"],
+      "etiqueta": "Armonía I"
+    },
+    {
+      "id": "R-2-OPT",
+      "anio": 2,
+      "tipo": "optativo",
+      "minimo": 2,
+      "candidatos": ["662-4.13.1", "662-4.13.2", "662-4.13.3", "662-4.16.1", "662-4.16.2"],
+      "etiqueta": "Seminarios optativos"
+    }
+  ],
   "materias": {
     "662-0.1": {
       "nombre": "Audioperceptiva",
@@ -15,12 +56,14 @@
     "662-0.3.1": {
       "nombre": "Instrumento - Piano",
       "nombre_c": "Piano Pre",
-      "cursada": "anual"
+      "cursada": "anual",
+      "equivale_a": ["662-0.1"]
     },
     "662-0.3.2": {
       "nombre": "Instrumento - Guitarra",
       "nombre_c": "Guitarra Pre",
-      "cursada": "anual"
+      "cursada": "anual",
+      "equivale_a": ["662-0.2"]
     },
     "662-0.4": {
       "nombre": "Flauta dulce",

@@ -1,6 +1,7 @@
 {
   "plan": "662Letra",
   "nombre": "Plan 662Letra",
+  "esPlantilla": true,
   "materias": {
     "662*-0.1": {
       "nombre": "Audioperceptiva (orientaciones)",

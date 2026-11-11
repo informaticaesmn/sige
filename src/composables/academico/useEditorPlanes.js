@@ -85,6 +85,8 @@ export function useEditorPlanes() {
   const jsonTexto = ref('')
   /** Código de plan declarado por el JSON importado (para avisar si se edita). */
   const planCodigoOrigen = ref('')
+  /** Indica si el JSON importado es una plantilla (ej. 662Letra → 662A..662Q). */
+  const esPlantilla = ref(false)
 
   // --- Estado de edición ---
   const materias = ref({}) // mapa { [codigo]: MateriaEdit }
@@ -139,6 +141,8 @@ export function useEditorPlanes() {
     const rawNombre = String(datos.nombre ?? '').trim()
     planNombre.value = nombreForzado || rawNombre.replace(/^Plan\s+/i, '')
     disponible.value = datos.disponible === true
+    /** Detectar si el plan importado es una plantilla (tiene esPlantilla: true o el plan es 662Letra). */
+    esPlantilla.value = !!datos.esPlantilla || rawPlan.startsWith('662Letra')
 
     // Procesar materias
     const materiasRaw = datos.materias ?? {}

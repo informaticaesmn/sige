@@ -144,6 +144,11 @@
       "codigo": "393",
       "nombre": "393 Instrumentista",
       "disponible": false
+    },
+    {
+      "codigo": "662x",
+      "nombre": "662Letra",
+      "disponible": false
     }
   ]
 }
