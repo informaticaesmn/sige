@@ -25,7 +25,7 @@ function leerPlan(codigo) {
 
 const plan662 = normalizarPlanJson(leerPlan('662'), '662')
 const plan708 = normalizarPlanJson(leerPlan('708'), '708')
-const plan662G = normalizarPlanJson(leerPlan('662G'), '662G')
+const plan662x = normalizarPlanJson(leerPlan('662x'), '662x')
 
 describe('anioDeMateria', () => {
   it('reconoce el formato actual {plan}-{año}.{número}', () => {
