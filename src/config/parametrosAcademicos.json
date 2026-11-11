@@ -1,0 +1,19 @@
+{
+  "version": "2026.1",
+  "vigenteDesde": "2026-01-01",
+  "cursada": {
+    "vigenciaRegularAnios": 2,
+    "notaAprobacion": null,
+    "notaMinimaPromocion": null
+  },
+  "plan": {
+    "aniosVencimiento": 4,
+    "umbralPorVencerMeses": null
+  },
+  "examen": {
+    "vocalesTribunal": 2
+  },
+  "alertas": {
+    "diasAvisoVencimientoCursada": null
+  }
+}

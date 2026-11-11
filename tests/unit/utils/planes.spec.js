@@ -25,7 +25,6 @@ function leerPlan(codigo) {
 
 const plan662 = normalizarPlanJson(leerPlan('662'), '662')
 const plan708 = normalizarPlanJson(leerPlan('708'), '708')
-const plan662x = normalizarPlanJson(leerPlan('662x'), '662x')
 
 describe('anioDeMateria', () => {
   it('reconoce el formato actual {plan}-{año}.{número}', () => {
@@ -89,14 +88,20 @@ describe('normalizarPlanJson', () => {
     expect(estadoInicialDePlan(plan708)).toBe('activo')
   })
 
-  it('marca 662G como no disponible por el plan interno "62G"', () => {
-    expect(plan662G.disponible).toBe(false)
-    expect(plan662G.formato).toBe('legacy')
-    expect(plan662G.plan).toBe('62G')
-    expect(plan662G.motivo).toContain('62G')
-    expect(plan662G.motivo).toContain('662G')
-    expect(plan662G.materias).toEqual({})
-    expect(estadoInicialDePlan(plan662G)).toBeNull()
+  it('marca un legacy con plan interno distinto como no disponible', () => {
+    // `662G.json` se retiró del repo; el formato legacy se sigue leyendo para
+    // reportarlo como no disponible sin romper.
+    const legacyMismatch = [
+      { Plan: '62G', Cod: '0.1', PCod: '62G.0.1', Materia: 'Audioperceptiva', Cursada: 'ANUAL', CodC: [], CodA: [] }
+    ]
+    const plan = normalizarPlanJson(legacyMismatch, '662G')
+    expect(plan.disponible).toBe(false)
+    expect(plan.formato).toBe('legacy')
+    expect(plan.plan).toBe('62G')
+    expect(plan.motivo).toContain('62G')
+    expect(plan.motivo).toContain('662G')
+    expect(plan.materias).toEqual({})
+    expect(estadoInicialDePlan(plan)).toBeNull()
   })
 
   it('soporta el formato legacy cuando el código coincide y no hay duplicados', () => {
@@ -123,13 +128,17 @@ describe('normalizarPlanJson', () => {
     expect(estadoInicialDePlan(resultado)).toBe('ingresante')
   })
 
-  it('marca el legacy 62x como no disponible por códigos duplicados', () => {
-    const legacy62x = normalizarPlanJson(leerPlan('662x'), '62x')
-    expect(legacy62x.disponible).toBe(false)
-    expect(legacy62x.formato).toBe('legacy')
-    expect(legacy62x.plan).toBe('62x')
-    expect(legacy62x.motivo).toContain('duplicados')
-    expect(legacy62x.motivo).toContain('62x.1.1')
+  it('marca un legacy con códigos de materia duplicados como no disponible', () => {
+    const legacyDuplicado = [
+      { Plan: '62x', Cod: '1.1', PCod: '62x.1.1', Materia: 'Materia A', Cursada: '1C', CodC: [], CodA: [] },
+      { Plan: '62x', Cod: '1.1', PCod: '62x.1.1', Materia: 'Materia B', Cursada: '2C', CodC: [], CodA: [] }
+    ]
+    const plan = normalizarPlanJson(legacyDuplicado, '62x')
+    expect(plan.disponible).toBe(false)
+    expect(plan.formato).toBe('legacy')
+    expect(plan.plan).toBe('62x')
+    expect(plan.motivo).toContain('duplicados')
+    expect(plan.motivo).toContain('62x.1.1')
   })
 
   it('rechaza un plan interno que no coincide con el código', () => {
@@ -169,12 +178,17 @@ describe('catálogo de planes', () => {
 
   it('usa el fallback hardcodeado si el catálogo todavía no cargó', () => {
     const catalogo = catalogoDePlanes()
-    expect(catalogo).toContain('662')
-    expect(catalogo).toContain('708')
+    const catalogoReal = JSON.parse(
+      readFileSync(join(process.cwd(), 'public', 'planes', 'planes.json'), 'utf8')
+    )
+
+    // El fallback debe mantener paridad con `planes.json`: si se agrega o
+    // retira un plan del catálogo, también se actualiza la lista.
+    expect(catalogo).toEqual(catalogoReal.planes.map((plan) => plan.codigo))
     expect(catalogo).toContain('662A')
-    expect(catalogo).toContain('666')
     expect(catalogo).toContain('389')
-    expect(catalogo).toHaveLength(37)
+    expect(catalogo).not.toContain('662R')
+    expect(catalogo).not.toContain('709')
   })
 
   it('planesDisponibles está vacío si el catálogo no cargó (nunca asume disponibilidad)', () => {
