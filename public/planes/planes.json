@@ -96,41 +96,6 @@
       "disponible": false
     },
     {
-      "codigo": "662R",
-      "nombre": "662R Profesorado de Música con orientación en Guitarra Eléctrica",
-      "disponible": false
-    },
-    {
-      "codigo": "662S",
-      "nombre": "662S Profesorado de Música con orientación en Bajo",
-      "disponible": false
-    },
-    {
-      "codigo": "662T",
-      "nombre": "662T Profesorado de Música con orientación en Bateria",
-      "disponible": false
-    },
-    {
-      "codigo": "662U",
-      "nombre": "662U Profesorado de Música con orientación en Canto Popular",
-      "disponible": false
-    },
-    {
-      "codigo": "662V",
-      "nombre": "662V Profesorado de Música con orientación en Guitarra Popular",
-      "disponible": false
-    },
-    {
-      "codigo": "662W",
-      "nombre": "662W Profesorado de Música con orientación en Piano Popular",
-      "disponible": false
-    },
-    {
-      "codigo": "662X",
-      "nombre": "662X Profesorado de Música con orientación en Produccion Musica",
-      "disponible": false
-    },
-    {
       "codigo": "663",
       "nombre": "663 Profesorado de Música con orientación en Dirección Coral",
       "disponible": false
@@ -154,11 +119,6 @@
       "codigo": "708",
       "nombre": "708 Técnico Superior en Sonido",
       "disponible": true
-    },
-    {
-      "codigo": "709",
-      "nombre": "709 Técnico Superior en Produccion Musica",
-      "disponible": false
     },
     {
       "codigo": "389",

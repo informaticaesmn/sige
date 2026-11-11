@@ -1,0 +1,482 @@
+{
+  "plan": "665",
+  "nombre": "Plan 665",
+  "materias": {
+    "665-0.1": {
+      "nombre": "Audioperceptiva (orientaciones)",
+      "nombre_c": "Audio orientaciones",
+      "cursada": "anual",
+      "equivale_a": [
+        "663-0.1"
+      ]
+    },
+    "665-0.2": {
+      "nombre": "Educación Vocal",
+      "nombre_c": "E. Vocal",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.2"
+      ]
+    },
+    "665-0.3.1": {
+      "nombre": "Instrumento Armónico - Piano",
+      "nombre_c": "Piano 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.3.1"
+      ]
+    },
+    "665-0.3.2": {
+      "nombre": "Instrumento Armónico - Guitarra",
+      "nombre_c": "Guitarra 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.3.2"
+      ]
+    },
+    "665-0.4": {
+      "nombre": "Flauta dulce",
+      "nombre_c": "Flauta 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.4"
+      ]
+    },
+    "665-0.5": {
+      "nombre": "EDI Lectura Musical Aplicada",
+      "nombre_c": "Lectura aplicada",
+      "cursada": "anual"
+    },
+    "665-0.6.1": {
+      "nombre": "EDI Canto",
+      "nombre_c": "Canto 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.6.1",
+        "665-0.7.1"
+      ]
+    },
+    "665-0.6.2": {
+      "nombre": "EDI Percusión",
+      "nombre_c": "Percu 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.6.2",
+        "665-0.7.2"
+      ]
+    },
+    "665-0.6.3": {
+      "nombre": "EDI TICs y Música",
+      "nombre_c": "TICs",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.6.3",
+        "665-0.7.3"
+      ]
+    },
+    "665-0.6.4": {
+      "nombre": "EDI ESI",
+      "nombre_c": "ESI",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.5.1",
+        "665-0.6.7",
+        "665-0.7.7"
+      ]
+    },
+    "665-0.6.5": {
+      "nombre": "EDI Ensamble y Arreglos en Música Tonal",
+      "nombre_c": "Ensamble y Arreglos",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.6.4",
+        "665-0.7.4"
+      ]
+    },
+    "665-0.6.6": {
+      "nombre": "EDI Interculturalidad",
+      "nombre_c": "Interculturalidad",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.5.2",
+        "665-0.6.8",
+        "665-0.7.8"
+      ]
+    },
+    "665-0.6.7": {
+      "nombre": "Practica Coral",
+      "nombre_c": "Coro 0",
+      "cursada": "anual",
+      "equivale_a": [
+        "662-0.6.5",
+        "665-0.7.5"
+      ]
+    },
+    "665-1.1": {
+      "nombre": "Guitarra I",
+      "cursada": "anual",
+      "correlativas": {
+        "cursar": {
+          "and": [
+            "665-0.1",
+            "665-0.2",
+            {
+              "or": [
+                "665-0.3.1",
+                "665-0.3.2"
+              ]
+            },
+            "665-0.4",
+            "665-0.5",
+            {
+              "or": [
+                "665-0.6.1",
+                "665-0.6.2",
+                "665-0.6.3",
+                "665-0.6.4",
+                "665-0.6.5",
+                "665-0.6.6",
+                "665-0.6.7"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "665-1.2": {
+      "nombre": "Elementos Del Analisis Musical I",
+      "cursada": "anual"
+    },
+    "665-1.3": {
+      "nombre": "Musica De Camara I",
+      "cursada": "anual"
+    },
+    "665-1.4": {
+      "nombre": "Educacion Vocal",
+      "cursada": "anual"
+    },
+    "665-1.5": {
+      "nombre": "Expresion Corporal",
+      "cursada": "anual"
+    },
+    "665-1.6": {
+      "nombre": "Informatica Y Nuevos Medios I",
+      "cursada": "anual"
+    },
+    "665-1.7": {
+      "nombre": "Didactica General",
+      "cursada": "anual"
+    },
+    "665-1.8": {
+      "nombre": "Taller De Lectura, Escritura Y Oralidad",
+      "cursada": "anual"
+    },
+    "665-1.9": {
+      "nombre": "Taller De Practica Institucional Y Construccion De La Identidad Profesional",
+      "cursada": "anual"
+    },
+    "665-1.10": {
+      "nombre": "Psicologia General",
+      "cursada": "1C"
+    },
+    "665-1.11": {
+      "nombre": "Pedagogia General",
+      "cursada": "1C"
+    },
+    "665-1.12": {
+      "nombre": "Sujeto Del Aprendizaje I",
+      "cursada": "2C",
+      "correlativas": {
+        "cursar": "665-1.1"
+      }
+    },
+    "665-1.13": {
+      "nombre": "Historia Argentina Contemporanea",
+      "cursada": "2C"
+    },
+    "665-1.14": {
+      "nombre": "Acustica Y Organologia",
+      "cursada": "2C"
+    },
+    "665-2.1": {
+      "nombre": "Guitarra Ii",
+      "cursada": "anual"
+    },
+    "665-2.2": {
+      "nombre": "Elementos Del Analisis Musical Ii",
+      "cursada": "anual"
+    },
+    "665-2.3": {
+      "nombre": "Musica De Camara Ii",
+      "cursada": "anual"
+    },
+    "665-2.4": {
+      "nombre": "Canto I",
+      "cursada": "anual"
+    },
+    "665-2.5": {
+      "nombre": "Coro",
+      "cursada": "anual"
+    },
+    "665-2.6": {
+      "nombre": "Historia De La Musica I",
+      "cursada": "anual"
+    },
+    "665-2.7": {
+      "nombre": "Informatica Y Nuevos Medios Ii",
+      "cursada": "anual"
+    },
+    "665-2.8": {
+      "nombre": "Expresion Teatral",
+      "cursada": "anual"
+    },
+    "665-2.9": {
+      "nombre": "Instrumento Armonico Popular Complementario I (Piano)",
+      "cursada": "anual"
+    },
+    "665-2.10": {
+      "nombre": "Instrumento Armonico Popular Complementario I (Guitarra)",
+      "cursada": "anual"
+    },
+    "665-2.11": {
+      "nombre": "Taller De Practica Docente Y Construccion De La Identidad Profesional I",
+      "cursada": "anual"
+    },
+    "665-2.12": {
+      "nombre": "Sujeto Del Aprendizaje Ii",
+      "cursada": "1C"
+    },
+    "665-2.13": {
+      "nombre": "Didactica De La Musica Para Nivel Inicial",
+      "cursada": "1C"
+    },
+    "665-2.14": {
+      "nombre": "Historia Social De La Educacion",
+      "cursada": "2C"
+    },
+    "665-2.15": {
+      "nombre": "Didactica De La Musica Para Nivel Primario",
+      "cursada": "2C"
+    },
+    "665-3.1": {
+      "nombre": "Guitarra Iii",
+      "cursada": "anual"
+    },
+    "665-3.2": {
+      "nombre": "Elementos Del Analisis Musical Iii",
+      "cursada": "anual"
+    },
+    "665-3.3": {
+      "nombre": "Musica De Camara Iii",
+      "cursada": "anual"
+    },
+    "665-3.4": {
+      "nombre": "Didactica Especializada",
+      "cursada": "anual"
+    },
+    "665-3.5": {
+      "nombre": "Historia De La Musica Ii",
+      "cursada": "anual"
+    },
+    "665-3.6": {
+      "nombre": "Taller De Practica Docente Y Construccion De La Identidad Profesional Ii",
+      "cursada": "anual",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "665-1.1",
+            "665-1.2",
+            "665-1.3",
+            "665-1.4",
+            "665-1.5",
+            "665-1.6",
+            "665-1.7",
+            "665-1.8",
+            "665-1.9",
+            "665-1.10",
+            "665-1.11",
+            "665-1.12",
+            "665-1.13",
+            "665-1.14"
+          ]
+        }
+      }
+    },
+    "665-3.7": {
+      "nombre": "Instrumento Armonico Popular Complementario Ii (Piano O Guitarra)",
+      "cursada": "anual"
+    },
+    "665-3.8": {
+      "nombre": "Canto Ii",
+      "cursada": "anual"
+    },
+    "665-3.9": {
+      "nombre": "Direccion Coral I",
+      "cursada": "anual"
+    },
+    "665-3.10": {
+      "nombre": "Instituciones Educativas",
+      "cursada": "anual"
+    },
+    "665-3.11": {
+      "nombre": "Didactica De La Musica Para Nivel Medio",
+      "cursada": "anual"
+    },
+    "665-3.12": {
+      "nombre": "Praxis Y Elementos Tecnicos En La Musica Popular I (Latinoamericana)",
+      "cursada": "anual"
+    },
+    "665-3.13": {
+      "nombre": "Sociologia De La Educacion",
+      "cursada": ""
+    },
+    "665-3.14": {
+      "nombre": "Ensamble Con Orientacion Popular I (Latinoamericana)",
+      "cursada": ""
+    },
+    "665-3.15": {
+      "nombre": "Tecnicas Y Recursos Contemporaneos",
+      "cursada": ""
+    },
+    "665-4.1": {
+      "nombre": "Guitarra Iv",
+      "cursada": "anual"
+    },
+    "665-4.2": {
+      "nombre": "Musica De Camara Iv",
+      "cursada": "anual"
+    },
+    "665-4.3": {
+      "nombre": "Taller De Produccion Y Organizacion De Eventos Artisticos",
+      "cursada": "anual"
+    },
+    "665-4.4": {
+      "nombre": "Tecnicas De Improvisacion Musical",
+      "cursada": "anual"
+    },
+    "665-4.5": {
+      "nombre": "Residencia En La Escuela De Musica",
+      "cursada": "anual",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "665-3.1",
+            "665-3.2",
+            "665-3.3",
+            "665-3.4",
+            "665-3.5",
+            "665-3.6",
+            "665-3.7",
+            "665-3.8",
+            "665-3.9",
+            "665-3.10",
+            "665-3.11",
+            "665-3.12",
+            "665-3.13",
+            "665-3.14",
+            "665-3.15"
+          ]
+        }
+      }
+    },
+    "665-4.6": {
+      "nombre": "Metodologia De La Investigacion Con Fines Educativos Y Artisticos",
+      "cursada": "anual"
+    },
+    "665-4.7": {
+      "nombre": "Filosofia De La Educacion",
+      "cursada": "1C"
+    },
+    "665-4.8": {
+      "nombre": "Residencia En Nivel Inicial, Primario Y Medio",
+      "cursada": "1C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "665-3.1",
+            "665-3.2",
+            "665-3.3",
+            "665-3.4",
+            "665-3.5",
+            "665-3.6",
+            "665-3.7",
+            "665-3.8",
+            "665-3.9",
+            "665-3.10",
+            "665-3.11",
+            "665-3.12",
+            "665-3.13",
+            "665-3.14",
+            "665-3.15"
+          ]
+        }
+      }
+    },
+    "665-4.9": {
+      "nombre": "Praxis Y Elementos Tecnicos En La Musica Popular Ii (Tango-Rock)",
+      "cursada": "1C"
+    },
+    "665-4.10": {
+      "nombre": "Practica Orquestal",
+      "cursada": "2C"
+    },
+    "665-4.11": {
+      "nombre": "Esteticas Contemporaneas",
+      "cursada": "2C"
+    },
+    "665-4.12": {
+      "nombre": "Ensamble Con Orientacion Popular Ii (Tango-Rock)",
+      "cursada": "2C"
+    },
+    "665-4.13": {
+      "nombre": "Seminario Taller: Practica De La Direccion Coral ( En Ambitos No Formales)",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "665-3.1",
+            "665-3.2",
+            "665-3.3",
+            "665-3.4",
+            "665-3.5",
+            "665-3.6",
+            "665-3.7",
+            "665-3.8",
+            "665-3.9",
+            "665-3.10",
+            "665-3.11",
+            "665-3.12",
+            "665-3.13",
+            "665-3.14",
+            "665-3.15"
+          ]
+        }
+      }
+    },
+    "665-4.14": {
+      "nombre": "Seminario Taller: Conduccion De Conjuntos Instrumentales (En Ambitos No Formales)",
+      "cursada": "2C",
+      "correlativas": {
+        "aprobar": {
+          "and": [
+            "665-3.1",
+            "665-3.2",
+            "665-3.3",
+            "665-3.4",
+            "665-3.5",
+            "665-3.6",
+            "665-3.7",
+            "665-3.8",
+            "665-3.9",
+            "665-3.10",
+            "665-3.11",
+            "665-3.12",
+            "665-3.13",
+            "665-3.14",
+            "665-3.15"
+          ]
+        }
+      }
+    }
+  }
+}

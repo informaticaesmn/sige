@@ -72,24 +72,74 @@ posteriores a la carga.
    Dentro del pregrado no hay correlativas.
 
 ## 5. Planes (JSON): hechos y dependencias
-- 662 es el plan madre. Los planes con letra (662B, 662E, 662G...; cada letra
-  es un profesorado con orientación en un instrumento) llevan en algunas
-  materias un dato `equivale_a` con el código del espacio en el 662. El 662 y
-  el 0708 NO pueden traerlo.
-- Hay espacios optativos agrupados (ej.: al menos 2 de 5 talleres EDI) y
-  obligatorios específicos por plan (en 662G, el taller de Guitarra).
-- Códigos de materia `xxxx-AA-NN.N`: `AA = 00` es pregrado. Verificar si el
-  formato sirve para planes con letra y para el 0708 (empieza en 0708-01).
-- Estado de los JSON hoy: solo 3 cargados (662, 708 y 662G provisorio con
-  códigos legacy "62G", sin año 0 y duplicados). Yo estoy preparando los de la
-  mayoría de los planes con al menos el año 0, y acotando `planes.json` a los
-  vigentes.
+
+### Estado actual
+- Solo hay 3 JSON cargados: 662, 708 y 662G (provisorio, con códigos legacy
+  "62G", sin año 0 y con códigos duplicados). Estoy preparando los de la
+  mayoría de los planes, con al menos el año 0, y acotando `planes.json` a
+  los vigentes.
 - Dependencia crítica (D8): si una fila de la carga masiva referencia un plan
   sin JSON válido, se ABORTA toda la carga. Todo plan con ingresantes en
   febrero debe tener JSON cargado y revisado.
-- Cada JSON de febrero debe traer: año de cada materia, códigos normalizados,
-  `equivale_a` (planes con letra), grupos optativos con su mínimo y
-  obligatorios propios del plan.
+- Cada JSON de febrero debe traer: año de cada materia, códigos
+  normalizados, requisitos (ver abajo) y `equivale_a` donde corresponda.
+
+### Códigos y equivalencias
+- Códigos de materia `xxxx-AA-NN.N`: `AA = 00` es pregrado. Verificar si el
+  formato sirve para los planes con letra (662G, 662Ñ...) y para el 0708
+  (empieza en 0708-01).
+- 662 es el plan madre. Los planes con letra pueden llevar un dato
+  `equivale_a` con el código del espacio en el 662 (A VERIFICAR en los JSON
+  y en P0b: no está confirmado en cuáles materias existe). El 662 y el 0708
+  NO pueden traerlo.
+- Un espacio puede tener distinto año en distintos planes (siempre
+  obligatorios, con correlativas ya chequeadas).
+
+### Requisitos del plan (ver plan P0)
+- El plan se describe como lista de requisitos con `minimo` y `candidatos`:
+  obligatorio = grupo de 1; conmutable ("o este o este otro") = grupo de 2
+  con mínimo 1; optativo = grupo de N con mínimo M (por ejemplo, 2 de 5
+  talleres EDI, o 1 obligatorio más 2 optativos, o 3 optativos, según el
+  plan).
+- Un espacio es obligatorio u optativo según el plan, nunca ambos. Los
+  conmutables no cruzan años.
+- Lo acreditado de más no reemplaza a otro, pero queda en el historial.
+- El avance se mide en requisitos cumplidos, se calcula al leer y no se
+  guarda.
+- Abierto: ¿el mínimo de un grupo se mide en cantidad de espacios o en
+  horas?
+
+### Planes 662 con letra (plantilla 662X)
+- Hay 18 planes activos, 662A a 662Q incluida la 662Ñ (lista en
+  `planes.json`). Son idénticos en materias, correlativas y demás, salvo el
+  instrumento en las materias específicas.
+- Se mantienen desde una plantilla "662X" (`esPlantilla: true`), editada
+  desde el editor de planes de Coordinación. Nunca es asignable a
+  estudiantes: se excluye de listados, carga masiva (que la rechaza) e
+  inscripción.
+- Una tabla (`letra`, `instrumento`, `nombreCompleto`, `activo`) alimenta la
+  generación de un plan por letra. El instrumento no se extrae parseando el
+  nombre.
+- Los planes generados son de solo lectura (salvo una opción explícita de
+  "desvincular de la plantilla"). Si hay que corregir algo, se corrige la
+  plantilla y se regenera.
+- Antes de propagar: mostrar diferencias y pedir confirmación, validar los 18
+  resultados y abortar todo si falla alguno, no cambiar ni borrar códigos ya
+  usados, y registrar quién, cuándo y versión.
+- La plantilla se arma en el formato de requisitos de P0. No se generan
+  archivos hasta cerrar P0.
+- Dependencia: verificar dónde guarda hoy el editor de planes (Firestore o
+  archivos estáticos). De eso depende que la generación automática sea viable.
+- Riesgos: la Ñ en ids, nombres de archivo, claves y comparaciones (probar
+  explícitamente; si falla, usar un identificador interno sin Ñ); nombres
+  inconsistentes en `planes.json` (Viola/Violín/Violonchelo/Contrabajo/Saxo
+  con "Instrumento de", y los demás sin).
+- Preguntas abiertas: ¿qué materias cambian además del instrumento
+  fundamental (por ejemplo, el taller obligatorio de cada orientación)?
+  ¿Los optativos son iguales en todas las letras?
+- Revisión de coordinadores: que revisen un solo plan representativo (por
+  ejemplo, el 662G) y no los 18; la revisión se traslada después a la
+  plantilla.
 
 ## 6. Usuarios y modelo (decisiones vigentes)
 - `usuarios`: DNI, nombre y apellido son campos de esta colección (fuente
@@ -111,6 +161,11 @@ posteriores a la carga.
   mínimo de cada grupo optativo.
 - Cupo, horario y aula de la secuencia: desnormalizar donde sea más eficiente
   (decide el agente con costos).
+- "Condicional" tiene dos significados que no se mezclan: (a) de plan, por
+  equivalencias pendientes (estado en usuarios.planes); (b) de cursada, por
+  deber el final de una correlativa: el estudiante debe resolverlo antes de
+  que termine el período de esa cursada o pierde la posibilidad de acreditar
+  el espacio. (b) es previsión, no se implementa en febrero.
 
 ## 7. Permisos de edición de datos personales
 - Estudiante, docente y bedel NO modifican sus propios datos.
@@ -191,6 +246,7 @@ de mi aprobación y datos que necesitás de mí.
 
 | # | Plan | Para cuándo |
 |---|------|-------------|
+| P0 | Modelo: requisitos del plan (formato en JSON, cálculo de avance, condicionalidad de cursada). plantilla 662x y generación | Antes de seguir cargando JSON |
 | P1 | Modelo: calendario, ventanas y oferta, compatible con la carga de Coordinador | Diciembre |
 | P2 | Modelo: inscripciones (colección plana, `activa`/`baja`, auditoría, pase, conteo de cupo), rules, `esPrueba` | Diciembre |
 | P3 | Coordinador: ver y editar la oferta (ocupación por secuencia, editar cupo/aula/horario/docente, agregar comisiones; no cambiar ni eliminar una secuencia con inscriptos activos) | Diciembre |
@@ -239,3 +295,4 @@ Notas por plan:
 - ¿Qué permisos tiene el Admin sobre datos personales? ¿Puede el Bedel
   modificar datos de docentes?
 - Estudiantes condicionales: ¿cómo afectan la oferta?
+- ¿el mínimo de los grupos se mide en cantidad de espacios o en horas?
