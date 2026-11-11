@@ -123,13 +123,13 @@ describe('normalizarPlanJson', () => {
     expect(estadoInicialDePlan(resultado)).toBe('ingresante')
   })
 
-  it('marca el legacy 62G como no disponible por códigos duplicados', () => {
-    const legacy62G = normalizarPlanJson(leerPlan('662G'), '62G')
-    expect(legacy62G.disponible).toBe(false)
-    expect(legacy62G.formato).toBe('legacy')
-    expect(legacy62G.plan).toBe('62G')
-    expect(legacy62G.motivo).toContain('duplicados')
-    expect(legacy62G.motivo).toContain('62G.1.1')
+  it('marca el legacy 62x como no disponible por códigos duplicados', () => {
+    const legacy62x = normalizarPlanJson(leerPlan('662x'), '62x')
+    expect(legacy62x.disponible).toBe(false)
+    expect(legacy62x.formato).toBe('legacy')
+    expect(legacy62x.plan).toBe('62x')
+    expect(legacy62x.motivo).toContain('duplicados')
+    expect(legacy62x.motivo).toContain('62x.1.1')
   })
 
   it('rechaza un plan interno que no coincide con el código', () => {
