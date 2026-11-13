@@ -1,6 +1,143 @@
 {
   "plan": "664",
   "nombre": "Plan 664",
+  "requisitos": [
+    {
+      "id": "R-0-01",
+      "anio": 0,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-0.1"],
+      "etiqueta": "Audioperceptiva"
+    },
+    {
+      "id": "R-0-02",
+      "anio": 0,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-0.2"]
+    },
+    {
+      "id": "R-0-03",
+      "anio": 0,
+      "tipo": "conmutable",
+      "minimo": 1,
+      "candidatos": ["664-0.3.1", "664-0.3.2"],
+      "etiqueta": "Lenguaje musical"
+    },
+    {
+      "id": "R-1-01",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-1.1"],
+      "etiqueta": "Materia 1.1"
+    },
+    {
+      "id": "R-1-02",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-1.2"],
+      "etiqueta": "Materia 1.2"
+    },
+    {
+      "id": "R-1-03",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-1.3"],
+      "etiqueta": "Materia 1.3"
+    },
+    {
+      "id": "R-1-04",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-1.4"],
+      "etiqueta": "Materia 1.4"
+    },
+    {
+      "id": "R-1-05",
+      "anio": 1,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-1.5"],
+      "etiqueta": "Materia 1.6"
+    },
+    {
+      "id": "R-2-01",
+      "anio": 2,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-2.1"],
+      "etiqueta": "Materia 2.1"
+    },
+    {
+      "id": "R-2-02",
+      "anio": 2,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-2.2"],
+      "etiqueta": "Materia 2.2"
+    },
+    {
+      "id": "R-2-03",
+      "anio": 2,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-2.3"],
+      "etiqueta": "Materia 2.3"
+    },
+    {
+      "id": "R-3-01",
+      "anio": 3,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-3.1"],
+      "etiqueta": "Materia 3.1"
+    },
+    {
+      "id": "R-3-02",
+      "anio": 3,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-3.2"],
+      "etiqueta": "Materia 3.2"
+    },
+    {
+      "id": "R-3-03",
+      "anio": 3,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-3.3"],
+      "etiqueta": "Materia 3.3"
+    },
+    {
+      "id": "R-4-01",
+      "anio": 4,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-4.1"],
+      "etiqueta": "Materia 4.1"
+    },
+    {
+      "id": "R-4-02",
+      "anio": 4,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-4.2"],
+      "etiqueta": "Materia 4.3"
+    },
+    {
+      "id": "R-4-03",
+      "anio": 4,
+      "tipo": "obligatorio",
+      "minimo": 1,
+      "candidatos": ["664-4.3"],
+      "etiqueta": "Materia 4.4"
+    }
+  ],
   "materias": {
     "664-0.1": {
       "nombre": "Audioperceptiva (orientaciones)",
