@@ -177,6 +177,41 @@
               </span>
             </div>
 
+            <div class="flex items-center gap-3">
+              <!-- Información de requisitos y equivalencias -->
+              <div
+                v-if="hayRequisitos || hayEquivalencias"
+                class="flex items-start gap-2 text-xs"
+              >
+                <template v-if="hayRequisitos">
+                  <span class="text-primary">
+                    <i class="fas fa-share-alt fa-fw mr-1" />
+                    Requisitos: {{ requisitosCount }} grupo(s)
+                  </span>
+                  <span
+                    class="cursor-help text-primary"
+                    title="Cada requisito agrupa un conjunto de materias. Obligatorio: 1 candidato; Conmutable: varias con mínimo 1; Optativo: N de M. Los sobrantes no reemplazan a otros requisitos."
+                  >
+                    <i class="fas fa-info-circle fa-fw" />
+                  </span>
+                </template>
+                <template v-if="hayEquivalencias">
+                  <span class="text-info">
+                    <i class="fas fa-exchange-alt fa-fw mr-1" />
+                    Equivalencias: {{ equivalenciasCount }} materia(s)
+                  </span>
+                  <span
+                    class="cursor-help text-info"
+                    title="Una equivalencia dirigida (A → B) permite que una acreditación de A también cumpla B. La relación no se encadena (A→B→C no hace que C cumpla A). Los códigos auto-equivalentes son error."
+                  >
+                    <i class="fas fa-info-circle fa-fw" />
+                  </span>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
             <button
               v-if="estadoRevisionActual !== 'listo_para_publicar'"
               class="btn btn-secondary text-xs"
@@ -340,6 +375,24 @@
           </div>
         </section>
 
+        <!-- ==================== 2b. ESPACIOS Y REQUISITOS ==================== -->
+        <div
+          v-if="materiasCount > 0"
+          class="mb-4"
+        >
+          <EditorRequisitos
+            :requisitos="requisitosPlan"
+            :materias="materiasLista"
+            :anios="aniosPlan"
+            :materias-sin-requisito="materiasSinRequisito"
+            :plan-definido="!!planCodigo && materiasCount > 0"
+            @agregar="onAgregarRequisito"
+            @actualizar="onActualizarRequisito"
+            @alternar-candidato="onAlternarCandidato"
+            @eliminar="onEliminarRequisito"
+          />
+        </div>
+
         <!-- ==================== 3. VALIDACIÓN ==================== -->
         <details
           v-if="materiasCount > 0"
@@ -488,6 +541,7 @@ import { ETIQUETAS_ESTADO_REVISION } from '@/composables/academico/usePlanesPend
 import { formatearFechaHora } from '@/utils/fechas.js'
 import ListaMaterias from '@/components/ui/ListaMaterias.vue'
 import EditorMateria from '@/components/ui/EditorMateria.vue'
+import EditorRequisitos from '@/components/ui/EditorRequisitos.vue'
 import PanelComentarios from '@/components/ui/PanelComentarios.vue'
 
 const {
@@ -507,11 +561,15 @@ const {
   advertencias,
   valido,
   hayPregrado,
+  hayRequisitos,
+  hayEquivalencias,
   materiasLista,
   materiasOrdenadas,
 
   // Derivados de la vista
   materiasCount,
+  requisitosCount,
+  equivalenciasCount,
   aniosCount,
   faltantesCount,
   comentariosAbiertos,
@@ -528,6 +586,15 @@ const {
   onActualizarCondicion,
   onEliminarMateria,
   agregarMateriaEn,
+
+  // Requisitos del plan
+  requisitosPlan,
+  materiasSinRequisito,
+  aniosPlan,
+  onAgregarRequisito,
+  onActualizarRequisito,
+  onAlternarCandidato,
+  onEliminarRequisito,
 
   // Estado de revisión
   estadoRevisionActual,

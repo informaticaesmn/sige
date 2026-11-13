@@ -144,6 +144,57 @@ describe('useEditorPlanes.js', () => {
     expect(editor.advertencias.value.some((a) => a.includes('plan madre'))).toBe(true)
   })
 
+  it('preserva requisitos y equivalencias al importar y exportar', async () => {
+    const plan = {
+      plan: '663',
+      nombre: 'Plan 663',
+      requisitos: [
+        { id: 'R-0-01', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['663-0.1'] },
+        { id: 'R-0-02', anio: 0, tipo: 'conmutable', minimo: 1, candidatos: ['663-0.2'] }
+      ],
+      materias: {
+        '663-0.1': { nombre: 'Audio', cursada: 'anual', equivale_a: ['662-0.1'] },
+        '663-0.2': { nombre: 'Instrumento', cursada: 'anual', equivale_a: '662-0.2' }
+      }
+    }
+
+    const res = await editor.importarJSONPlan(plan)
+    expect(res.hayRequisitos).toBe(true)
+    expect(res.hayEquivalencias).toBe(true)
+    expect(editor.hayRequisitos.value).toBe(true)
+    expect(editor.hayEquivalencias.value).toBe(true)
+    expect(editor.requisitosCount.value).toBe(2)
+    expect(editor.equivalenciasCount.value).toBe(2)
+    // La equivalencia en string se normaliza a array.
+    expect(editor.materias.value['663-0.2'].equivale_a).toEqual(['662-0.2'])
+
+    const detalle = editor.generarJSONDetalle()
+    expect(detalle.requisitos).toEqual(plan.requisitos)
+    expect(detalle.materias['663-0.1'].equivale_a).toEqual(['662-0.1'])
+    expect(detalle.materias['663-0.2'].equivale_a).toEqual(['662-0.2'])
+  })
+
+  it('no arrastra requisitos ni equivalencias de un plan anterior', async () => {
+    await editor.importarJSONPlan({
+      plan: '663',
+      requisitos: [{ id: 'R-1', anio: 1, tipo: 'obligatorio', minimo: 1, candidatos: ['663-1.1'] }],
+      materias: { '663-1.1': { nombre: 'Uno', equivale_a: ['662-1.1'] } }
+    })
+    expect(editor.hayRequisitos.value).toBe(true)
+    expect(editor.hayEquivalencias.value).toBe(true)
+
+    await editor.importarJSONPlan({
+      plan: '708',
+      materias: { '708-1.1': { nombre: 'Electrónica' } }
+    })
+
+    expect(editor.hayRequisitos.value).toBe(false)
+    expect(editor.hayEquivalencias.value).toBe(false)
+    const detalle = editor.generarJSONDetalle()
+    expect(detalle).not.toHaveProperty('requisitos')
+    expect(detalle.materias['708-1.1'].equivale_a).toEqual([])
+  })
+
   it('generarJSONDetalle solo audita revisión cuando el plan está disponible', async () => {
     await editor.importarJSONPlan(planJsonEjemplo)
 
@@ -155,5 +206,124 @@ describe('useEditorPlanes.js', () => {
     const borrador = editor.generarJSONDetalle({ revisadoPor: 'uid-coordinador' })
     expect(borrador.revisadoPor).toBeNull()
     expect(borrador.revisadoEn).toBeNull()
+  })
+
+  describe('editor de requisitos', () => {
+    beforeEach(async () => {
+      await editor.importarJSONPlan({
+        plan: '663',
+        materias: {
+          '663-0.1': { nombre: 'Audio', anio: 0 },
+          '663-0.2': { nombre: 'Instrumento', anio: 0 },
+          '663-1.1': { nombre: 'Armonía', anio: 1 }
+        }
+      })
+    })
+
+    it('agregarRequisito crea un obligatorio vacío con id único', () => {
+      const primero = editor.agregarRequisito(0)
+      const segundo = editor.agregarRequisito(0)
+
+      expect(editor.requisitosPlan.value).toHaveLength(2)
+      expect(primero.id).toBe('R-0-01')
+      expect(segundo.id).toBe('R-0-02')
+      expect(editor.hayRequisitos.value).toBe(true)
+      expect(editor.requisitosCount.value).toBe(2)
+    })
+
+    it('alternarCandidato respeta el comportamiento excluyente del obligatorio', () => {
+      editor.agregarRequisito(0)
+      editor.alternarCandidato(0, '663-0.1')
+      expect(editor.requisitosPlan.value[0].candidatos).toEqual(['663-0.1'])
+
+      editor.alternarCandidato(0, '663-0.2')
+      expect(editor.requisitosPlan.value[0].candidatos).toEqual(['663-0.2'])
+
+      editor.alternarCandidato(0, '663-0.2')
+      expect(editor.requisitosPlan.value[0].candidatos).toEqual([])
+    })
+
+    it('cambiar a conmutable u optativo mantiene mínimo coherente', () => {
+      editor.agregarRequisito(0)
+      editor.actualizarRequisito(0, 'tipo', 'optativo')
+      editor.alternarCandidato(0, '663-0.1')
+      editor.alternarCandidato(0, '663-0.2')
+
+      expect(editor.requisitosPlan.value[0].tipo).toBe('optativo')
+      expect(editor.requisitosPlan.value[0].minimo).toBe(1)
+
+      editor.actualizarRequisito(0, 'minimo', 5)
+      expect(editor.requisitosPlan.value[0].minimo).toBe(1)
+
+      editor.actualizarRequisito(0, 'tipo', 'conmutable')
+      expect(editor.requisitosPlan.value[0].minimo).toBe(1)
+
+      editor.actualizarRequisito(0, 'tipo', 'obligatorio')
+      expect(editor.requisitosPlan.value[0].candidatos).toEqual(['663-0.1'])
+    })
+
+    it('cambiar el año descarta candidatos de otros años', () => {
+      editor.agregarRequisito(null)
+      editor.actualizarRequisito(0, 'tipo', 'conmutable')
+      editor.alternarCandidato(0, '663-0.1')
+      editor.alternarCandidato(0, '663-1.1')
+      expect(editor.requisitosPlan.value[0].candidatos).toHaveLength(2)
+
+      editor.actualizarRequisito(0, 'anio', 1)
+      expect(editor.requisitosPlan.value[0].anio).toBe(1)
+      expect(editor.requisitosPlan.value[0].candidatos).toEqual(['663-1.1'])
+    })
+
+    it('eliminarRequisito quita el grupo indicado', () => {
+      editor.agregarRequisito(0)
+      editor.agregarRequisito(1)
+      editor.eliminarRequisito(0)
+
+      expect(editor.requisitosPlan.value).toHaveLength(1)
+      expect(editor.requisitosPlan.value[0].anio).toBe(1)
+    })
+
+    it('materiasSinRequisito y materiasAsignadas reflejan la partición', () => {
+      editor.agregarRequisito(0)
+      editor.alternarCandidato(0, '663-0.1')
+
+      expect([...editor.materiasAsignadas.value]).toEqual(['663-0.1'])
+      expect(editor.materiasSinRequisito.value.map((m) => m.codigo)).toEqual([
+        '663-0.2',
+        '663-1.1'
+      ])
+    })
+
+    it('validar combina errores de materias y requisitos', async () => {
+      // Sin requisitos: la ausencia es una advertencia, no un error.
+      const sinRequisitos = await editor.validar()
+      expect(sinRequisitos.exito).toBe(true)
+      expect(sinRequisitos.advertencias).toContain('El plan no tiene requisitos.')
+
+      // Un obligatorio sin candidatos es un error.
+      editor.agregarRequisito(0)
+      const conError = await editor.validar()
+      expect(conError.exito).toBe(false)
+      expect(conError.errores.some((e) => e.includes('no tiene candidatos'))).toBe(true)
+    })
+
+    it('generarJSONDetalle serializa los requisitos editados', async () => {
+      editor.agregarRequisito(0)
+      editor.actualizarRequisito(0, 'id', 'R-0-01')
+      editor.actualizarRequisito(0, 'etiqueta', 'Audioperceptiva')
+      editor.alternarCandidato(0, '663-0.1')
+
+      const detalle = editor.generarJSONDetalle()
+      expect(detalle.requisitos).toEqual([
+        {
+          id: 'R-0-01',
+          anio: 0,
+          tipo: 'obligatorio',
+          minimo: 1,
+          candidatos: ['663-0.1'],
+          etiqueta: 'Audioperceptiva'
+        }
+      ])
+    })
   })
 })

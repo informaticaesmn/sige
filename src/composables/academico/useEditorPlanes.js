@@ -15,6 +15,7 @@ import {
   condicionAJson
 } from '@/utils/condiciones.js'
 import { anioDeMateria } from '@/utils/planes.js'
+import { validarRequisitos } from '@/utils/requisitos.js'
 
 /**
  * Normaliza el valor de cursada a uno de los valores válidos de SIGE.
@@ -44,6 +45,52 @@ function normalizarEquivalencias(valor) {
     return valor.split(',').map((v) => v.trim()).filter(Boolean)
   }
   return []
+}
+
+/**
+ * Normaliza un requisito del JSON al modelo editable del editor.
+ *
+ * Conserva `tipo` y `minimo` tal como vienen para que la validación pueda
+ * reportarlos si son inválidos; solo normaliza los tipos de datos y los
+ * candidatos a un array de códigos.
+ *
+ * @param {Object} requisito requisito crudo del JSON
+ * @param {number} indice posición en el array (para ids faltantes)
+ * @returns {Object} requisito editable
+ */
+export function normalizarRequisitoJSON(requisito, indice = 0) {
+  const datos = requisito && typeof requisito === 'object' ? requisito : {}
+  const anio =
+    datos.anio === null || datos.anio === undefined || datos.anio === ''
+      ? null
+      : Number.parseInt(String(datos.anio), 10)
+
+  return {
+    id: String(datos.id ?? `R-${indice + 1}`).trim() || `R-${indice + 1}`,
+    anio: Number.isNaN(anio) ? null : anio,
+    tipo: typeof datos.tipo === 'string' ? datos.tipo : 'obligatorio',
+    minimo: Number.isInteger(datos.minimo) ? datos.minimo : 1,
+    candidatos: normalizarEquivalencias(datos.candidatos),
+    etiqueta: typeof datos.etiqueta === 'string' ? datos.etiqueta.trim() : ''
+  }
+}
+
+/**
+ * Serializa un requisito editable al formato del JSON del plan.
+ * Omite `etiqueta` cuando está vacía.
+ * @param {Object} requisito
+ * @returns {Object}
+ */
+function serializarRequisito(requisito) {
+  const datos = {
+    id: requisito.id,
+    anio: requisito.anio ?? null,
+    tipo: requisito.tipo,
+    minimo: requisito.minimo,
+    candidatos: [...(requisito.candidatos || [])]
+  }
+  if (requisito.etiqueta) datos.etiqueta = requisito.etiqueta
+  return datos
 }
 
 /**
@@ -87,12 +134,23 @@ export function useEditorPlanes() {
   const planCodigoOrigen = ref('')
   /** Indica si el JSON importado es una plantilla (ej. 662Letra → 662A..662Q). */
   const esPlantilla = ref(false)
+  /** Requisitos del plan (grupos de espacios obligatorios/conmutables/optativos). */
+  const requisitosPlan = ref([])
 
   // --- Estado de edición ---
   const materias = ref({}) // mapa { [codigo]: MateriaEdit }
   const planCodigo = ref('')
   const planNombre = ref('')
   const disponible = ref(false)
+
+  /** Indica si el plan tiene requisitos declarados. */
+  const hayRequisitos = computed(() => requisitosPlan.value.length > 0)
+  /** Indica si alguna materia declara equivalencias. */
+  const hayEquivalencias = computed(() =>
+    Object.values(materias.value).some(
+      (materia) => Array.isArray(materia.equivale_a) && materia.equivale_a.length > 0
+    )
+  )
 
   // --- Estado de validación y exportación ---
   const errores = ref([])
@@ -144,6 +202,11 @@ export function useEditorPlanes() {
     /** Detectar si el plan importado es una plantilla (tiene esPlantilla: true o el plan es 662Letra). */
     esPlantilla.value = !!datos.esPlantilla || rawPlan.startsWith('662Letra')
 
+    // Normalizar los requisitos del plan para editarlos en la UI.
+    requisitosPlan.value = Array.isArray(datos.requisitos)
+      ? datos.requisitos.map((requisito, indice) => normalizarRequisitoJSON(requisito, indice))
+      : []
+
     // Procesar materias
     const materiasRaw = datos.materias ?? {}
     const nuevoMapa = {}
@@ -161,7 +224,11 @@ export function useEditorPlanes() {
         continue
       }
 
-      nuevoMapa[codigo] = normalizarMateriaJSON(codigo, mat)
+      // Preservar equivale_a en la materia si existe
+      const matData = { ...mat }
+      if (matData.equivale_a) matData.equivale_a = Array.isArray(matData.equivale_a) ? matData.equivale_a : [matData.equivale_a]
+
+      nuevoMapa[codigo] = normalizarMateriaJSON(codigo, matData)
     }
 
     materias.value = nuevoMapa
@@ -175,7 +242,9 @@ export function useEditorPlanes() {
     return {
       exito: true,
       materiasCount: Object.keys(nuevoMapa).length,
-      errores: erroresImport
+      errores: erroresImport,
+      hayRequisitos: hayRequisitos.value,
+      hayEquivalencias: hayEquivalencias.value
     }
   }
 
@@ -260,6 +329,149 @@ export function useEditorPlanes() {
   }
 
   // ---------------------------------------------------------------------------
+  // 2b. Edición de requisitos (espacios obligatorios, conmutables y optativos)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Genera un id único para un requisito nuevo, con el patrón `R-{anio}-{nn}`.
+   * @param {number|null} anio
+   * @returns {string}
+   */
+  function generarIdRequisito(anio) {
+    const prefijo = `R-${anio ?? 'X'}`
+    const usados = new Set(requisitosPlan.value.map((requisito) => requisito.id))
+    let numero = 1
+    let id = `${prefijo}-${String(numero).padStart(2, '0')}`
+    while (usados.has(id)) {
+      numero += 1
+      id = `${prefijo}-${String(numero).padStart(2, '0')}`
+    }
+    return id
+  }
+
+  /**
+   * Agrega un requisito vacío al plan.
+   *
+   * @param {number|null} [anio] año al que pertenece; `null` = transversal
+   * @returns {Object} requisito creado
+   */
+  function agregarRequisito(anio = null) {
+    const anioNormalizado =
+      anio === null || anio === undefined || anio === '' ? null : Number(anio)
+    const nuevo = {
+      id: generarIdRequisito(anioNormalizado),
+      anio: Number.isInteger(anioNormalizado) ? anioNormalizado : null,
+      tipo: 'obligatorio',
+      minimo: 1,
+      candidatos: [],
+      etiqueta: ''
+    }
+    requisitosPlan.value = [...requisitosPlan.value, nuevo]
+    return nuevo
+  }
+
+  /**
+   * Ajusta `minimo` a un valor válido para el tipo y la cantidad de candidatos.
+   * @param {Object} requisito
+   * @returns {Object} requisito con `minimo` corregido
+   */
+  function ajustarMinimo(requisito) {
+    const candidatos = requisito.candidatos || []
+    if (requisito.tipo === 'obligatorio' || requisito.tipo === 'conmutable') {
+      return { ...requisito, minimo: 1 }
+    }
+    if (requisito.tipo === 'optativo') {
+      const maximo = Math.max(1, candidatos.length - 1)
+      const minimo = Number.isInteger(requisito.minimo) ? requisito.minimo : 1
+      return { ...requisito, minimo: Math.min(Math.max(minimo, 1), maximo) }
+    }
+    return requisito
+  }
+
+  /**
+   * Actualiza un campo de un requisito.
+   *
+   * Mantiene la coherencia del modelo: al cambiar el tipo se reajusta el
+   * mínimo, al cambiar el año se descartan candidatos de otros años y al
+   * cambiar los candidatos se acota el mínimo.
+   *
+   * @param {number} indice posición en `requisitosPlan`
+   * @param {'id'|'anio'|'tipo'|'minimo'|'candidatos'|'etiqueta'} campo
+   * @param {any} valor
+   */
+  function actualizarRequisito(indice, campo, valor) {
+    const actual = requisitosPlan.value[indice]
+    if (!actual) return
+
+    let requisito = { ...actual, [campo]: valor }
+
+    if (campo === 'id') {
+      requisito.id = String(valor ?? '').trim()
+    }
+
+    if (campo === 'anio') {
+      const anio = valor === null || valor === '' ? null : Number(valor)
+      requisito.anio = Number.isInteger(anio) ? anio : null
+      if (requisito.anio !== null) {
+        // Los candidatos deben pertenecer al mismo año que el requisito.
+        requisito.candidatos = (requisito.candidatos || []).filter((codigo) => {
+          const materia = materias.value[codigo]
+          return materia && materia.anio === requisito.anio
+        })
+      }
+    }
+
+    if (campo === 'tipo') {
+      requisito.tipo = valor
+      if (valor === 'obligatorio' && (requisito.candidatos || []).length > 1) {
+        // Un obligatorio solo admite un candidato: se conserva el primero.
+        requisito.candidatos = [requisito.candidatos[0]]
+      }
+    }
+
+    if (campo === 'etiqueta') {
+      requisito.etiqueta = String(valor ?? '').trim()
+    }
+
+    requisito = ajustarMinimo(requisito)
+    requisitosPlan.value = requisitosPlan.value.map((item, i) =>
+      i === indice ? requisito : item
+    )
+  }
+
+  /**
+   * Agrega o quita un candidato de un requisito.
+   * En los obligatorios el comportamiento es excluyente (un solo candidato).
+   * @param {number} indice
+   * @param {string} codigo
+   */
+  function alternarCandidato(indice, codigo) {
+    const requisito = requisitosPlan.value[indice]
+    if (!requisito) return
+
+    const seleccionados = new Set(requisito.candidatos || [])
+    if (requisito.tipo === 'obligatorio') {
+      const yaEraElUnico = seleccionados.size === 1 && seleccionados.has(codigo)
+      seleccionados.clear()
+      if (!yaEraElUnico) seleccionados.add(codigo)
+    } else if (seleccionados.has(codigo)) {
+      seleccionados.delete(codigo)
+    } else {
+      seleccionados.add(codigo)
+    }
+
+    actualizarRequisito(indice, 'candidatos', [...seleccionados])
+  }
+
+  /**
+   * Elimina un requisito del plan.
+   * @param {number} indice
+   */
+  function eliminarRequisito(indice) {
+    requisitosPlan.value = requisitosPlan.value.filter((_, i) => i !== indice)
+  }
+
+  // ---------------------------------------------------------------------------
   // 3. Vistas derivadas
   // ---------------------------------------------------------------------------
 
@@ -278,14 +490,60 @@ export function useEditorPlanes() {
   })
 
   /**
-   * Lista de materias como array para SelectMateria/EditorCondicion.
-   * @returns {{ codigo: string, nombre: string }[]}
+   * Lista de materias como array para SelectMateria/EditorCondicion y para el
+   * editor de requisitos (que agrupa los candidatos por año).
+   * @returns {{ codigo: string, nombre: string, anio: number|null }[]}
    */
   const materiasLista = computed(() =>
     Object.entries(materias.value).map(([codigo, m]) => ({
       codigo,
-      nombre: m.nombre || codigo
+      nombre: m.nombre || codigo,
+      anio: Number.isInteger(m.anio) ? m.anio : anioDeMateria(codigo)
     }))
+  )
+
+  /**
+   * Códigos de materia que ya pertenecen a algún requisito.
+   * Se usa para avisar cuando una materia queda sin requisito.
+   * @returns {Set<string>}
+   */
+  const materiasAsignadas = computed(() => {
+    const asignadas = new Set()
+    for (const requisito of requisitosPlan.value) {
+      for (const codigo of requisito.candidatos || []) asignadas.add(codigo)
+    }
+    return asignadas
+  })
+
+  /**
+   * Materias del plan que todavía no pertenecen a ningún requisito.
+   * @returns {{ codigo: string, nombre: string, anio: number|null }[]}
+   */
+  const materiasSinRequisito = computed(() =>
+    materiasLista.value.filter((materia) => !materiasAsignadas.value.has(materia.codigo))
+  )
+
+  /**
+   * Años presentes en el plan, ordenados de menor a mayor.
+   * @returns {number[]}
+   */
+  const aniosPlan = computed(() => {
+    const anios = new Set()
+    for (const materia of materiasLista.value) {
+      if (Number.isInteger(materia.anio) && materia.anio >= 0) anios.add(materia.anio)
+    }
+    return [...anios].sort((a, b) => a - b)
+  })
+
+  /** Cantidad de grupos de requisitos declarados en el plan. */
+  const requisitosCount = computed(() => requisitosPlan.value.length)
+
+  /** Cantidad de materias que declaran al menos una equivalencia. */
+  const equivalenciasCount = computed(
+    () =>
+      Object.values(materias.value).filter(
+        (m) => Array.isArray(m.equivale_a) && m.equivale_a.length > 0
+      ).length
   )
 
   // ---------------------------------------------------------------------------
@@ -293,15 +551,30 @@ export function useEditorPlanes() {
   // ---------------------------------------------------------------------------
 
   /**
-   * Ejecuta validaciones sobre el mapa actual de materias.
+   * Ejecuta validaciones sobre el mapa actual de materias y los requisitos.
+   *
+   * La ausencia de requisitos no bloquea la exportación (el plan puede ser un
+   * borrador), pero se informa como advertencia.
+   *
    * @returns {Promise<{ exito: boolean, errores: string[], advertencias: string[] }>}
    */
   async function validar() {
     const resultado = validarMaterias(materias.value)
-    errores.value = resultado.errores
-    advertencias.value = resultado.advertencias || []
-    valido.value = resultado.exito
-    return resultado
+    const resultadoRequisitos = validarRequisitos(
+      {
+        materias: materias.value,
+        requisitos: requisitosPlan.value.map(serializarRequisito)
+      },
+      { permitirAusente: true }
+    )
+
+    errores.value = [...resultado.errores, ...resultadoRequisitos.errores]
+    advertencias.value = [
+      ...(resultado.advertencias || []),
+      ...resultadoRequisitos.advertencias
+    ]
+    valido.value = errores.value.length === 0
+    return { exito: valido.value, errores: errores.value, advertencias: advertencias.value }
   }
 
   // ---------------------------------------------------------------------------
@@ -401,7 +674,8 @@ export function useEditorPlanes() {
       if (m.cSiuned) materiasDetalle[codigo].cSiuned = true
     }
 
-    return {
+    // Incluir requisitos en la salida si el plan los tiene
+    const planData = {
       plan: planCodigo.value,
       nombre: planNombre.value || `Plan ${planCodigo.value}`,
       formato: 'objeto',
@@ -410,6 +684,10 @@ export function useEditorPlanes() {
       revisadoEn: disponible.value === true ? new Date().toISOString() : null,
       revisadoPor: disponible.value === true ? revisadoPor : null
     }
+    if (hayRequisitos.value) {
+      planData.requisitos = requisitosPlan.value.map(serializarRequisito)
+    }
+    return planData
   }
 
   /**
@@ -443,6 +721,9 @@ export function useEditorPlanes() {
     // Estado
     jsonTexto,
     planCodigoOrigen,
+    esPlantilla,
+    hayRequisitos,
+    hayEquivalencias,
     materias,
     planCodigo,
     planNombre,
@@ -455,6 +736,12 @@ export function useEditorPlanes() {
     // Vistas derivadas
     materiasPorAnio,
     materiasLista,
+    materiasAsignadas,
+    materiasSinRequisito,
+    aniosPlan,
+    requisitosPlan,
+    requisitosCount,
+    equivalenciasCount,
 
     // Acciones
     importarJSONPlan,
@@ -462,6 +749,10 @@ export function useEditorPlanes() {
     eliminarMateria,
     actualizarMateria,
     actualizarCondicion,
+    agregarRequisito,
+    actualizarRequisito,
+    alternarCandidato,
+    eliminarRequisito,
     validar,
     generarJSONCatalogo,
     generarJSONDetalle,

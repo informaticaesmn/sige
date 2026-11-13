@@ -58,11 +58,23 @@ export function useEditorPlanesVista() {
     hayPregrado,
     materiasPorAnio,
     materiasLista,
+    materiasAsignadas,
+    materiasSinRequisito,
+    aniosPlan,
+    requisitosPlan,
+    hayRequisitos,
+    hayEquivalencias,
+    requisitosCount,
+    equivalenciasCount,
     importarJSONPlan,
     agregarMateria,
     eliminarMateria,
     actualizarMateria,
     actualizarCondicion,
+    agregarRequisito,
+    actualizarRequisito,
+    alternarCandidato,
+    eliminarRequisito,
     validar: validarComposable,
     generarJSONCatalogo,
     generarJSONDetalle,
@@ -469,6 +481,43 @@ export function useEditorPlanesVista() {
     if (nuevoCodigo) codigoSeleccionado.value = nuevoCodigo
   }
 
+  /**
+   * Agrega un requisito y devuelve su índice para que la UI pueda enfocarlo.
+   * @param {number|null} anio
+   * @returns {number} índice del requisito creado
+   */
+  function onAgregarRequisito(anio = null) {
+    const nuevo = agregarRequisito(anio)
+    return requisitosPlan.value.findIndex((requisito) => requisito.id === nuevo.id)
+  }
+
+  /**
+   * Actualiza un campo de un requisito.
+   * @param {number} indice
+   * @param {string} campo
+   * @param {any} valor
+   */
+  function onActualizarRequisito(indice, campo, valor) {
+    actualizarRequisito(indice, campo, valor)
+  }
+
+  /**
+   * Agrega o quita un candidato de un requisito.
+   * @param {number} indice
+   * @param {string} codigo
+   */
+  function onAlternarCandidato(indice, codigo) {
+    alternarCandidato(indice, codigo)
+  }
+
+  /**
+   * Elimina un requisito del plan.
+   * @param {number} indice
+   */
+  function onEliminarRequisito(indice) {
+    eliminarRequisito(indice)
+  }
+
   /** Ejecuta la validación del plan abierto. */
   async function ejecutarValidacion() {
     mensajeExport.value = ''
@@ -572,6 +621,16 @@ export function useEditorPlanesVista() {
     onEliminarMateria,
     agregarMateriaEn,
 
+    // Requisitos del plan
+    requisitosPlan,
+    materiasAsignadas,
+    materiasSinRequisito,
+    aniosPlan,
+    onAgregarRequisito,
+    onActualizarRequisito,
+    onAlternarCandidato,
+    onEliminarRequisito,
+
     // Estado de revisión
     estadoRevisionActual,
     cambiandoEstado,
@@ -597,6 +656,12 @@ export function useEditorPlanesVista() {
     exportarDetalle,
     exportarCatalogo,
     copiarDetalle,
+
+    // Estados de requisitos y equivalencias
+    hayRequisitos,
+    hayEquivalencias,
+    requisitosCount,
+    equivalenciasCount,
 
     // Ciclo de vida / test
     inicializar,
