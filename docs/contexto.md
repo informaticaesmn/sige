@@ -43,7 +43,11 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 - `planesPendientes/{codigo}`: borradores **provisorios** del editor de planes (`codigo`, `nombre`,
   `jsonTexto`, `materiasCount`, `actualizadoEn`, `actualizadoPor`, `actualizadoPorEmail`,
   `estadoRevision`). La subcolección `planesPendientes/{codigo}/comentarios/{id}` guarda los
-  comentarios de revisión (taller editorial; ver `plan-planes-publicacion-202611.md`).
+  comentarios de revisión (taller editorial; ver
+  `planes-implementacion/planes-publicacion.md`).
+- `planesPublicados/{codigo}`: registro de planes **listos** (aprobados y publicados por Admin)
+  con `jsonTexto`, `version` y auditoría. La vidriera `public/planes/` se genera desde acá con
+  `usePlanesPublicados.js`; el runtime sigue leyendo los archivos estáticos.
 
 **Colección: `ofertaAcademica`**
 - Documento por ciclo (ej: `2026-1`).
@@ -92,8 +96,11 @@ Referencia técnica para SIGE. Para reglas de código, ver `AGENTS.md`. Para not
 
 > **Taller editorial de planes (Fase 1, 03/11/2026):** implementado `estadoRevision` en
 > `planesPendientes`, la subcolección `comentarios`, el selector de provisorios y el panel de
-> comentarios en `EditorPlanes.vue`, y las reglas asociadas. Publicación (`planesPublicados`) es
-> Fase 2. Ver [plan-planes-publicacion-202611.md](plan-planes-publicacion-202611.md).
+> comentarios en `EditorPlanes.vue`, y las reglas asociadas. **Fase 2 / E1 (13/11/2026):**
+> implementados `usePlanesPublicados.js` (`listar`, `obtener`, `publicarPlan` con `version++`,
+> `generarVidriera`), las reglas de `planesPublicados` y sus tests unitarios y de integración.
+> Falta el seed, la orquestación de publicación y la UI. Ver
+> [planes-publicacion.md](planes-implementacion/planes-publicacion.md).
 
 > **Editor compacto de planes (03/11/2026):** `EditorPlanes.vue` pasó a un layout lista + detalle
 > (`ListaMaterias.vue` + `EditorMateria.vue`) con selector sticky, resumen del plan, secciones

@@ -11,7 +11,7 @@
 //   `setDoc` del documento padre, y eso **no** toca las subcolecciones.
 // - Sobreviven a un re-import del JSON del Apps Script.
 //
-// Plan: docs/plan-planes-publicacion-202611.md (Fase 1).
+// Plan: docs/planes-implementacion/planes-publicacion.md (Fase 1).
 import { ref } from 'vue'
 import {
   addDoc,

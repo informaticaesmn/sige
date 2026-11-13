@@ -1,11 +1,42 @@
 # Plan: Taller editorial de planes y publicación (Rol Coordinación / Admin)
 
-> **Estado:** propuesto (03/11/2026). Pendiente de aprobación para implementación.
+> **Estado (13/11/2026):** Fase 1 implementada (estado de revisión, comentarios y selector de
+> provisorios). Fase 2: **E1 implementada** (registro `planesPublicados`, `publicarPlan`,
+> `generarVidriera`, rules y tests). Pendientes E2 (seed), E3 (orquestación de publicación) y
+> E4 (UI + docs de cierre).
 > **Objetivo:** separar el **taller editorial** (donde coordinación y admin revisan, comentan
 > y aprueban planes) de la **vidriera de runtime** (lo que la app y la página pública leen),
 > de modo que los planes se trabajen 100 % in-app sin afectar la ruta crítica de inscripción.
 > **Base:** extiende `plan-editor-planes-202611.md`. La nomenclatura acordada es **"provisorios"**
 > (en revisión) y **"listos"** (publicados y en uso).
+
+---
+
+## Estado de implementación (verificado 13/11/2026)
+
+| Pieza del plan | Estado | Evidencia |
+|---|---|---|
+| `estadoRevision` + auditoría (`listoParaPublicarEn/Por`; `publicadoEn` solo de lectura) | ✅ Implementado | `usePlanesPendientes.js:47,73-88,263-323` |
+| `marcarListoParaPublicar` / `volverARevision` + bandeja derivada | ✅ Implementado | `usePlanesPendientes.js:312-323`; `useGestionPlanes.js:87-89,172-187` |
+| Subcolección `planesPendientes/{codigo}/comentarios` (CRUD) | ✅ Implementado | `useComentariosPlanes.js`; `PanelComentarios.vue` |
+| Panel general y por materia, píldora de estado y botones | ✅ Implementado | `EditorPlanes.vue:52-100,155-231,511-532`; `EditorMateria.vue:125` |
+| Columna **Estado** en Carga de Datos | ✅ Implementado | `CargaDatos.vue:151,159` |
+| Rules de `estadoRevision` y `comentarios` | ✅ Implementado | `firestore.rules:96-139` |
+| Tests unitarios de Fase 1 | ✅ 45 verdes (13/11/2026) | `usePlanesPendientes.spec.js` (19), `useComentariosPlanes.spec.js` (14), `useGestionPlanes.spec.js` (12) |
+| `planesPublicados/{codigo}` + `version++` + `publicarPlan` | ✅ Implementado (E1) | `usePlanesPublicados.js` |
+| `generarVidriera` (objetos catálogo + detalles) | ✅ Implementado (E1) | `usePlanesPublicados.js`; falta descarga/commit en la UI (E4) |
+| Botón **Publicar** (solo admin) y bandeja del admin | ❌ Pendiente | `EditorPlanes.vue` solo tiene "Marcar listo para publicar" |
+| Rules de `planesPublicados` (solo admin) | ✅ Implementado (E1) | `firestore.rules` (match `planesPublicados`) |
+| `scripts/seed-planes-publicados.js` | ❌ Pendiente | no existe en `scripts/` |
+| Tests de publicación + integración de rules | ✅ Implementado (E1) | `usePlanesPublicados.spec.js` (19); `firestore-rules.spec.js` (5 casos) |
+| Docs (`modelo-datos` §9.5/§9.6, `contexto`) | 🟡 Parcial | `planesPublicados` documentado; falta el cierre de E4 |
+
+**Bloqueo detectado para la Fase 2 (requiere decisión):** el plan dice que publica solo el Admin,
+pero hoy el Admin no puede entrar a `/coordinacion/editor-planes`: el guard exige el rol exacto
+`coordinacion` (`src/router/index.js:67,122-127`) y la vista calcula `esCoordinacion` solo con ese
+rol (`useEditorPlanesVista.js:101`). Hay que decidir si se habilita Admin en esa ruta/layout (como
+dice `decisiones-y-planes-sige.md` §7, "Admin hereda los permisos de Coordinación") o si publica
+Coordinación.
 
 ---
 

@@ -404,7 +404,25 @@ condicionCursada: {
   administra otro flujo (por ejemplo `estadoRevision`).
 - Solo coordinación y admin. La **vidriera de runtime** (lo que lee la app y la página pública)
   sigue siendo `public/planes/{codigo}.json`; la promoción a "listo" vive en el taller (ver
-  `plan-planes-publicacion-202611.md`).
+  `planes-implementacion/planes-publicacion.md`).
+
+### `planesPublicados/{codigo}`
+
+- Registro de planes **listos** (aprobados y publicados) del taller editorial. ID = código
+  canónico. Lo escribe **solo Admin**; Coordinación y Admin pueden leerlo.
+- Campos: `codigo`, `nombre`, `disponible`, `jsonTexto`, `version`, `publicadoEn`,
+  `publicadoPor`, `publicadoPorEmail`, `materiasCount`, `origenActualizadoEn`.
+- `jsonTexto` es el detalle publicado (mismo objeto que `public/planes/{codigo}.json`, máx.
+  1.000.000 bytes). Se valida al publicar: JSON parseable, con materias y con el código
+  declarado igual al del documento.
+- `version` arranca en 1 y se incrementa en cada publicación. La lectura de la versión y la
+  escritura no son atómicas (Firestore Lite no tiene transacciones); a esta escala la última
+  escritura gana.
+- `disponible` lo decide el Admin al publicar y manda sobre el `disponible` del JSON: el
+  catálogo y el detalle de la vidriera se generan desde este documento.
+- La **vidriera** (`public/planes/`) se genera desde acá con `usePlanesPublicados.js`
+  (`generarVidriera()` devuelve catálogo + detalles). El MVP descarga los archivos y los
+  commitea; la app sigue leyendo los estáticos (cero lecturas Firestore en runtime).
 
 ### `planesPendientes/{codigo}/comentarios/{comentarioId}`
 

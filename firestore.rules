@@ -138,6 +138,28 @@ service cloud.firestore {
       }
     }
 
+    // --- Planes publicados (registro del taller editorial) ---
+    // Un documento por plan aprobado y publicado. Solo el admin publica o
+    // modifica; coordinación puede leer para la bandeja. La vidriera de runtime
+    // sigue siendo `public/planes/` (ver usePlanesPublicados.js).
+    match /planesPublicados/{codigo} {
+      function shapeValido() {
+        return request.resource.data.codigo is string &&
+               request.resource.data.codigo == codigo &&
+               request.resource.data.nombre is string &&
+               request.resource.data.disponible is bool &&
+               request.resource.data.jsonTexto is string &&
+               request.resource.data.jsonTexto.size() <= 1000000 &&
+               request.resource.data.version is number &&
+               request.resource.data.version >= 1 &&
+               request.resource.data.publicadoPor == request.auth.uid;
+      }
+
+      allow read: if esCoordinacion() || esAdmin();
+      allow create, update: if esAdmin() && shapeValido();
+      allow delete: if esAdmin();
+    }
+
     // --- Inscripciones de un usuario (subcolección por ciclo) ---
     // La subcolección se llama `inscripciones` + ciclo sin guiones:
     //   ciclo "2026-1" -> usuarios/{uid}/inscripciones20261/{materiaId}

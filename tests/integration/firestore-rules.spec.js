@@ -420,4 +420,68 @@ describe('Firestore Security Rules', () => {
       }))
     })
   })
+
+  describe('Planes publicados (taller editorial)', () => {
+    const crearActor = (prefijo, roles) => {
+      const email = generateTestEmail(prefijo)
+      const uid = `uid-${email.split('@')[0]}`
+      return {
+        uid,
+        db: testEnv.authenticatedContext(uid, { email, roles }).firestore()
+      }
+    }
+
+    /** Documento mínimo válido para `planesPublicados`. */
+    const planValido = (uid) => ({
+      codigo: '663',
+      nombre: 'Plan 663',
+      disponible: true,
+      jsonTexto: JSON.stringify({ plan: '663', materias: { '663-1.1': { anio: 1 } } }),
+      version: 1,
+      publicadoEn: new Date(),
+      publicadoPor: uid,
+      publicadoPorEmail: 'admin@test.com',
+      materiasCount: 1,
+      origenActualizadoEn: null
+    })
+
+    it('debe permitir a admin publicar un plan', async () => {
+      const { uid, db } = crearActor('admin-publica', ['admin'])
+
+      await assertSucceeds(setDoc(doc(db, 'planesPublicados', '663'), planValido(uid)))
+    })
+
+    it('NO debe permitir a coordinacion publicar ni actualizar', async () => {
+      const { uid: adminUid, db: adminDb } = crearActor('admin-dueno', ['admin'])
+      await assertSucceeds(setDoc(doc(adminDb, 'planesPublicados', '663'), planValido(adminUid)))
+
+      const { db: coordDb } = crearActor('coord-publica', ['coordinacion'])
+
+      await assertFails(setDoc(doc(coordDb, 'planesPublicados', '663'), planValido(adminUid)))
+      await assertFails(updateDoc(doc(coordDb, 'planesPublicados', '663'), { disponible: false }))
+    })
+
+    it('debe permitir a coordinacion leer y negar la lectura a un estudiante', async () => {
+      const { uid: adminUid, db: adminDb } = crearActor('admin-siembra', ['admin'])
+      await assertSucceeds(setDoc(doc(adminDb, 'planesPublicados', '663'), planValido(adminUid)))
+
+      const { db: coordDb } = crearActor('coord-lee', ['coordinacion'])
+      await assertSucceeds(getDoc(doc(coordDb, 'planesPublicados', '663')))
+
+      const { db: estDb } = crearActor('est-lee', ['estudiante'])
+      await assertFails(getDoc(doc(estDb, 'planesPublicados', '663')))
+    })
+
+    it('NO debe permitir publicar con `publicadoPor` de otro usuario', async () => {
+      const { db } = crearActor('admin-suplanta', ['admin'])
+
+      await assertFails(setDoc(doc(db, 'planesPublicados', '663'), planValido('uid-otro')))
+    })
+
+    it('debe permitir a admin borrar un plan publicado', async () => {
+      const { uid, db } = crearActor('admin-borra', ['admin'])
+      await assertSucceeds(setDoc(doc(db, 'planesPublicados', '663'), planValido(uid)))
+      await assertSucceeds(deleteDoc(doc(db, 'planesPublicados', '663')))
+    })
+  })
 })
