@@ -192,7 +192,7 @@ describe('catálogo de planes', () => {
     // Todos los códigos del fallback deben aparecer en planes.json
     expect(catalogoReal.planes.map((p) => p.codigo)).toEqual(expect.arrayContaining(catalogo))
     // planes.json puede tener más entradas (plantillas como 662x)
-    expect(catalogoReal.planes).toHaveLength(30)
+    expect(catalogoReal.planes).toHaveLength(29)
   })
 
   it('planesDisponibles está vacío si el catálogo no cargó (nunca asume disponibilidad)', () => {
