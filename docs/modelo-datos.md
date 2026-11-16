@@ -92,8 +92,8 @@ graph TD
 | `contadores` | **No existe.** Secuencia de `numeroLegajo`. | E5 |
 | `ofertaAcademica` | Implementada (un documento por ciclo). | — |
 | `usuarios/{uid}/inscripciones{ciclo}` | Implementada (subcolección por ciclo). | — |
-| `planesDeEstudio` | **No existe**: los planes viven en `public/planes/*.json`. | — |
-| `planesPendientes` | Implementada con `jsonTexto` (máx. 1 MB); lectura tolerante de `csvTexto` legacy. Reglas exigiendo `jsonTexto` (ver §7, §9.5). | Editor de planes |
+| `planesDeEstudio` | **No existe**: la vidriera de runtime sigue siendo `public/planes/*.json`; `planesPublicados` está inactivo y documentado sin botón ni seed. | — |
+| `planesPendientes` | Implementada con `jsonTexto` (máx. 1 MB); lectura tolerante de `csvTexto` legacy. Reglas exigiendo `jsonTexto` (ver §7, §9.5). Estado `estadoRevision` con valores `en_edicion` | Editor de planes. planesPublicados documentado como inactivo. |
 | `src/utils/condiciones.js` | **Implementada (02/11/2026):** conversión, recorrido y validación del árbol AND/OR/año (ver §9.7). | Editor de planes |
 | `src/utils/validacionPlanes.js` | **Implementada (03/11/2026):** año reconocible, nombre, correlativas, auto-referencia y advertencias de equivalencia. | Editor de planes |
 | `src/utils/planes.js` | **Implementada (02/11/2026):** `setCatalogoPlanes`, `planesDisponibles`, `validarPlanDetalle`; `resolverCodigoPlan` ya no gatea (ver §9.3). | Editor de planes |
@@ -107,6 +107,7 @@ graph TD
 | `trayectoriaAcademica` | **No existe:** historial por eventos (§8). | Fuera de alcance |
 | `resumenAcademico`, `periodosInscripcion`, `inscripcionesExamen`, `mesasExamen` | **No existen:** son diseño futuro. | Fuera de alcance |
 | `firestore.rules` | Implementa el modelo v1. Bedel no puede crear usuarios; no existen reglas de `legajos`/`importaciones`. | E4 |
+| `planesPublicados/{codigo}` | **Colección implementada, sin uso y sin datos**: sin botón Publicar ni seed. Exportación directa desde `planesPendientes` cuando el usuario lo requiere. No consumida por la app en runtime. | Taller editorial (decisión opción c) |
 
 > El modelo v2 **no requiere migrar datos históricos reales**: solo los 9 usuarios de prueba.
 > La compatibilidad de lectura durante la transición está prevista en E3.
@@ -404,12 +405,12 @@ condicionCursada: {
   administra otro flujo (por ejemplo `estadoRevision`).
 - Solo coordinación y admin. La **vidriera de runtime** (lo que lee la app y la página pública)
   sigue siendo `public/planes/{codigo}.json`; la promoción a "listo" vive en el taller (ver
-  `planes-implementacion/planes-publicacion.md`).
+  `planes-implementacion/20261115-planes-publicacion.md`).
 
 ### `planesPublicados/{codigo}`
 
-- Registro de planes **listos** (aprobados y publicados) del taller editorial. ID = código
-  canónico. Lo escribe **solo Admin**; Coordinación y Admin pueden leerlo.
+- **Colección implementada, sin uso y sin datos** (decisión opción c; sin botón Publicar ni seed).
+  ID = código canónico. Lo escribe **solo Admin**; Coordinación y Admin pueden leerlo.
 - Campos: `codigo`, `nombre`, `disponible`, `jsonTexto`, `version`, `publicadoEn`,
   `publicadoPor`, `publicadoPorEmail`, `materiasCount`, `origenActualizadoEn`.
 - `jsonTexto` es el detalle publicado (mismo objeto que `public/planes/{codigo}.json`, máx.

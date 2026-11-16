@@ -74,15 +74,23 @@ posteriores a la carga.
 ## 5. Planes (JSON): hechos y dependencias
 
 ### Estado actual
-- Solo hay 3 JSON cargados: 662, 708 y 662G (provisorio, con códigos legacy
-  "62G", sin año 0 y con códigos duplicados). Estoy preparando los de la
-  mayoría de los planes, con al menos el año 0, y acotando `planes.json` a
-  los vigentes.
+- hay 6 JSON cargados: 662, 663, 664, 665, 666, 708 y 662x (provisorio, hasta 
+  generar todos los 662Letra). Estoy preparando los de la
+  mayoría de los planes, con al menos el año 0, y `planes.json` ya
+  esta acotado a los planes vigentes.
 - Dependencia crítica (D8): si una fila de la carga masiva referencia un plan
   sin JSON válido, se ABORTA toda la carga. Todo plan con ingresantes en
   febrero debe tener JSON cargado y revisado.
 - Cada JSON de febrero debe traer: año de cada materia, códigos
   normalizados, requisitos (ver abajo) y `equivale_a` donde corresponda.
+- Circuito de planes: editor (`planesPendientes`, con revisión y
+  comentarios) → coordinador marca "listo" → exportación del JSON validado
+  (`exportarJSONValidado`, en la vista de Coordinación para todo
+  coordinador; pendiente, posterior a P0) → yo lo copio a `public/planes`.
+  La app en ejecución lee solo los estáticos. `planesPublicados` queda
+  inactivo y documentado (sin botón ni seed).
+- El cambio de rol (rolActivo) es solo visual; router y rules operan con la
+  unión de roles.
 
 ### Códigos y equivalencias
 - Códigos de materia `xxxx-AA-NN.N`: `AA = 00` es pregrado. Verificar si el
@@ -172,11 +180,21 @@ posteriores a la carga.
 - Bedel modifica estudiantes (sobre docentes: sin decidir).
 - Coordinación modifica estudiantes, docentes y bedeles, pero no los propios
   ni los de otros coordinadores.
-- Admin: sin definir. Pendiente: múltiples roles y si contraseña/email son
-  excepción vía Firebase Auth.
-- Coordinación hereda los permisos del Bedel, y Admin los de Coordinación.
-  Los componentes no deben depender del rol: visibilidad y acciones por
-  permisos.
+- Admin: los 3 usuarios admin tienen además los roles coordinacion y
+  docente (cambio de rol ya implementado). La herencia de permisos
+  (Coordinación hereda de Bedel, Admin de Coordinación) queda como
+  previsión, no se implementa. Pendiente: verificar rules y guard con roles
+  múltiples.
+- Coordinación: unos 10 usuarios (5 o 6 activos); solo los 3 admin tienen
+  además los roles coordinacion y docente. Combinación NO soportada:
+  bedel + estudiante (se evita al dar de alta; pendiente decidir cómo).
+  Combinaciones reales que sí deben funcionar: docente+estudiante,
+  docente+coordinacion, admin+coordinacion+docente.
+- Estudiante: ve solo lo propio y genera sus inscripciones. La solicitud de
+  actualización de datos y de otros trámites queda para P8.
+- Combinación NO soportada: bedel + estudiante. El rol docente se activa
+  más adelante (no en 2027); al hacerlo, revisar las rules para
+  docente+estudiante, docente+coordinacion y admin+coordinacion+docente.
 
 ## 8. Propuestas de modelo (a verificar y aprobar en P1 y P2)
 1. Calendario del ciclo (`ciclos/{año}`): inicio y fin del año escolar y de

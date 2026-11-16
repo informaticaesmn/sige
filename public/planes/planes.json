@@ -98,22 +98,22 @@
     {
       "codigo": "663",
       "nombre": "663 Profesorado de Música con orientación en Dirección Coral",
-      "disponible": false
+      "disponible": true
     },
     {
       "codigo": "664",
       "nombre": "664 Profesorado de Música con orientación en Canto Lírico",
-      "disponible": false
+      "disponible": true
     },
     {
       "codigo": "665",
       "nombre": "665 Profesorado de Música con orientación en Dirección Orquestal",
-      "disponible": false
+      "disponible": true
     },
     {
       "codigo": "666",
       "nombre": "666 Profesorado de Música con orientación en Composición",
-      "disponible": false
+      "disponible": true
     },
     {
       "codigo": "708",
@@ -145,10 +145,5 @@
       "nombre": "393 Instrumentista",
       "disponible": false
     },
-    {
-      "codigo": "662x",
-      "nombre": "662Letra",
-      "disponible": false
-    }
   ]
 }

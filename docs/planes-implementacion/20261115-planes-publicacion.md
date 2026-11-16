@@ -59,7 +59,7 @@ solo leen `ofertaAcademica/{ciclo}` (1) y `usuarios/{uid}/inscripciones{ciclo}` 
 1 doc por inscripción. El árbol de correlatividades no participa. El plan se lee solo al
 **verlo** y en el **gate de altas** (cacheado por código).
 
-Cálculo para febrero 2027 (800 estudiantes × 8 materias):
+Cálculo con la escuela completa a largo plazo (800 estudiantes × 8 materias) **— no es la escala de 2027**.
 
 | Escenario | Lecturas Firestore del plan | Free tier (50k/día) |
 |---|---|---|
@@ -67,9 +67,7 @@ Cálculo para febrero 2027 (800 estudiantes × 8 materias):
 | Firestore con cache por sesión | ~800/día | 1,6 % |
 | Firestore naïve (1 lectura por materia) | 6.400/día | 12,8 % |
 
-Aun el peor caso entra en el free tier; si lo superara, el costo es US$0,06/100.000 lecturas
-(centavos). Lo que hay que vigilar en febrero son las **escrituras** (6.400 inscripciones +
-confirmaciones de bedel ≈ 12.800/día, cerca del free tier de 20k), no la lectura de planes.
+*Nota: febrero actual tiene ~260 estudiantes; los ~6.400/día corresponden a la proyección de 800 estudiantes para 2027. Lo que hay que vigilar en febrero son las **escrituras** (inscripciones + confirmaciones de bedel), no la lectura de planes.*
 
 ### 0.3 Decisión: Opción C — "taller en Firebase, vidriera estática"
 
@@ -363,5 +361,6 @@ Cargar la skill **`testing`** antes de tocar `tests/` (trampas de mocks/orden de
 | Vidriera | `generarVidriera` + `normalizarPlanJson` leen el `{codigo}.json` generado sin errores. |
 | Editor | Selector de provisorios + panel de comentarios + publicar (admin). |
 | Reglas deploy | `npm run test:integration` (requiere Java 21) y deploy del workflow `main`. |
+| Exportar JSON validado | `exportarJSONValidado(codigo)` lee `planesPendientes/{codigo}`, exige `estadoRevision === 'listo_para_publicar'` y descarga el JSON. Vista Coordinación, disponible para todo coordinador (no solo admin). Marcada "posterior a P0" (formato requisitos puede cambiar el JSON). No implementado. |
 | Docs | `modelo-datos.md`, `contexto.md`, `notas.md` actualizados. |
 | Build | `npm run lint` + `npm run test:unit` + `npm run build`. |

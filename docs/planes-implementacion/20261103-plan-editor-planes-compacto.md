@@ -44,7 +44,7 @@ problema" obliga a recorrer visualmente 91 tarjetas.
 
 - Cambios en `useEditorPlanes` que alteren el modelo (`materias`, árbol de condiciones, JSON).
 - Cambios en Firestore, reglas, `planesPendientes` o la subcolección `comentarios`.
-- Publicación a `planesPublicados` (es la Fase 2 de `planes-publicacion.md`).
+- Publicación a `20261115-planes-publicacion.md` (es la Fase 2 de `planes-publicacion.md`).
 - Virtual scrolling (ver §10).
 
 ---
