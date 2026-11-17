@@ -51,10 +51,10 @@ posteriores a la carga.
 - Estudiante: se inscribe en las ventanas abiertas que le corresponden y
   puede dar de baja SOLO su propia inscripción y SOLO antes del cierre de la
   ventana. Cerrada la ventana, debe ir a Bedelía (por ahora).
-- Bedel (y Coordinación y Admin por herencia): alta y baja SIEMPRE, incluso
-  con la ventana cerrada y para estudiantes que no completaron su registro.
-  Siempre con auditoría (quién, cuándo, motivo opcional). La baja no borra el
-  documento.
+- Bedel: alta y baja SIEMPRE, incluso con la ventana cerrada y para
+  estudiantes sin registro completo, con auditoría (quién, cuándo, motivo
+  opcional). Admin accede por esAdmin(). Herencia Coordinación→Bedel: no
+  se implementa (ver §7).
 - Pase entre comisiones: baja en A y alta en B en una sola operación atómica,
   marcada como pase con la secuencia de origen. Lo ejecuta el Bedel, y esa
   acción es la confirmación (no hay estado pendiente). El pedido de pase
@@ -74,13 +74,18 @@ posteriores a la carga.
 ## 5. Planes (JSON): hechos y dependencias
 
 ### Estado actual
-- hay 6 JSON cargados: 662, 663, 664, 665, 666, 708 y 662x (provisorio, hasta 
-  generar todos los 662Letra). Estoy preparando los de la
-  mayoría de los planes, con al menos el año 0, y `planes.json` ya
-  esta acotado a los planes vigentes.
-- Dependencia crítica (D8): si una fila de la carga masiva referencia un plan
-  sin JSON válido, se ABORTA toda la carga. Todo plan con ingresantes en
-  febrero debe tener JSON cargado y revisado.
+- JSON cargados en `public/planes`: 662, 663, 664, 665, 666, 708 y 662x
+  (7 en total). 662x es un archivo TEMPORAL, no un plan definitivo, y
+  existe hasta generar los 662Letra. No es asignable a estudiantes.
+- Todos los planes tienen pregrado (materias con año 00), con la única
+  excepción del 0708.
+- `planes.json` está acotado a los planes vigentes. [Confirmar si incluye
+  los 18 planes con letra y si excluye 662x.]
+- Estoy preparando los JSON de la mayoría de los planes, con al menos el
+  año 0.
+- Dependencia crítica (D8): si una fila de la carga masiva referencia un
+  plan sin JSON válido, se ABORTA toda la carga. Todo plan con ingresantes
+  en febrero debe tener JSON cargado y revisado.
 - Cada JSON de febrero debe traer: año de cada materia, códigos
   normalizados, requisitos (ver abajo) y `equivale_a` donde corresponda.
 - Circuito de planes: editor (`planesPendientes`, con revisión y
@@ -89,17 +94,30 @@ posteriores a la carga.
   coordinador; pendiente, posterior a P0) → yo lo copio a `public/planes`.
   La app en ejecución lee solo los estáticos. `planesPublicados` queda
   inactivo y documentado (sin botón ni seed).
-- El cambio de rol (rolActivo) es solo visual; router y rules operan con la
-  unión de roles.
+- Verificado: el editor guarda en Firestore (`planesPendientes`) y los
+  estáticos se copian a mano; el navegador no escribe en `public/planes`.
+  Los planes generados salen del editor por exportación, no por escritura
+  directa.
+- El cambio de rol (rolActivo) es solo visual; router y rules operan con
+  la unión de roles. (Esta línea también está en §7, podés dejarla solo
+  allí.)
 
 ### Códigos y equivalencias
-- Códigos de materia `xxxx-AA-NN.N`: `AA = 00` es pregrado. Verificar si el
-  formato sirve para los planes con letra (662G, 662Ñ...) y para el 0708
-  (empieza en 0708-01).
-- 662 es el plan madre. Los planes con letra pueden llevar un dato
-  `equivale_a` con el código del espacio en el 662 (A VERIFICAR en los JSON
-  y en P0b: no está confirmado en cuáles materias existe). El 662 y el 0708
-  NO pueden traerlo.
+- Formato de código de materia en SIGE: `{plan}-{año}.{n}[.{sub}]` (por
+  ejemplo `662-0.1`, `708-1.1`). Año 0 = pregrado. El plan 0708 se llama
+  `708` en los JSON.
+- DECIDIDO: los códigos de SIGE son propios e independientes de los
+  oficiales de las resoluciones (por ejemplo 6620101), que contienen
+  errores y rectificatorias. Lo que identifica a una materia entre ambos
+  mundos es su NOMBRE: debe coincidir. Los coordinadores definen en los
+  JSON las relaciones entre requisitos y equivalencias. Una revisión
+  completa de los planes se prevé para 2028.
+- `equivale_a` existe en los JSON de 662, 663 a 666 y 662x. Es una relación
+  entre planes, no una jerarquía: 662Letra, 663, 664, 665 y 666 comparten
+  algunos espacios que no están en el 662 (662Letra y 665 son muy
+  similares), por eso algunos `equivale_a` apuntan a otros planes. "662 es
+  el plan madre" es una simplificación. Evaluar aparte (no bloquea
+  febrero).
 - Un espacio puede tener distinto año en distintos planes (siempre
   obligatorios, con correlativas ya chequeadas).
 
@@ -114,13 +132,21 @@ posteriores a la carga.
 - Lo acreditado de más no reemplaza a otro, pero queda en el historial.
 - El avance se mide en requisitos cumplidos, se calcula al leer y no se
   guarda.
-- Abierto: ¿el mínimo de un grupo se mide en cantidad de espacios o en
-  horas?
+- El formato `requisitos` YA está implementado (ver `src/utils/requisitos.js`
+  y `plan-modelo-requisitos.md`). Solo el 708 es válido y completo; 662 a 666
+  están incompletos. Antes de febrero se completan al menos los requisitos
+  de pregrado y de 1.er año. Los seminarios son de 4.° año y no importan
+  para 2027. Los EDI son de pregrado: revisarlos define los mínimos y
+  optativos de pregrado.
+- En 2027 los optativos solo se informan (no se valida el mínimo al
+  inscribirse). El avance NO se muestra a estudiantes.
+- Los mínimos se miden en espacios (nada en la escuela se calcula por horas
+  ni créditos).
 
 ### Planes 662 con letra (plantilla 662X)
 - Hay 18 planes activos, 662A a 662Q incluida la 662Ñ (lista en
   `planes.json`). Son idénticos en materias, correlativas y demás, salvo el
-  instrumento en las materias específicas.
+  instrumento en las materias específicas. Hoy no existen los JSON 662A a 662Q; se generan en P0b.
 - Se mantienen desde una plantilla "662X" (`esPlantilla: true`), editada
   desde el editor de planes de Coordinación. Nunca es asignable a
   estudiantes: se excluye de listados, carga masiva (que la rechaza) e
@@ -178,23 +204,21 @@ posteriores a la carga.
 ## 7. Permisos de edición de datos personales
 - Estudiante, docente y bedel NO modifican sus propios datos.
 - Bedel modifica estudiantes (sobre docentes: sin decidir).
-- Coordinación modifica estudiantes, docentes y bedeles, pero no los propios
-  ni los de otros coordinadores.
-- Admin: los 3 usuarios admin tienen además los roles coordinacion y
-  docente (cambio de rol ya implementado). La herencia de permisos
-  (Coordinación hereda de Bedel, Admin de Coordinación) queda como
-  previsión, no se implementa. Pendiente: verificar rules y guard con roles
-  múltiples.
-- Coordinación: unos 10 usuarios (5 o 6 activos); solo los 3 admin tienen
-  además los roles coordinacion y docente. Combinación NO soportada:
-  bedel + estudiante (se evita al dar de alta; pendiente decidir cómo).
-  Combinaciones reales que sí deben funcionar: docente+estudiante,
-  docente+coordinacion, admin+coordinacion+docente.
-- Estudiante: ve solo lo propio y genera sus inscripciones. La solicitud de
-  actualización de datos y de otros trámites queda para P8.
-- Combinación NO soportada: bedel + estudiante. El rol docente se activa
-  más adelante (no en 2027); al hacerlo, revisar las rules para
-  docente+estudiante, docente+coordinacion y admin+coordinacion+docente.
+- Coordinación modifica estudiantes, docentes y bedeles, pero no los
+  propios ni los de otros coordinadores. Son unos 10 usuarios (5 o 6
+  activos).
+- Admin: 3 usuarios, que además tienen los roles coordinacion y docente.
+  La herencia de permisos (Coordinación hereda de Bedel, Admin de
+  Coordinación) es previsión y NO se implementa.
+- Verificado: el guard del router usa `includes` sobre el array de roles;
+  las rules leen roles con `get()` a `usuarios` (cada `get()` cuenta como
+  lectura). El cambio de rol (rolActivo) es solo visual.
+- Estudiante: ve solo lo propio y genera sus inscripciones. Las
+  solicitudes de actualización y de otros trámites quedan para P8.
+- Combinación NO soportada: bedel + estudiante (cómo evitarla al dar de
+  alta: pendiente). El rol docente se activa más adelante (no en 2027); al
+  hacerlo, revisar las rules para docente+estudiante, docente+coordinacion
+  y admin+coordinacion+docente.
 
 ## 8. Propuestas de modelo (a verificar y aprobar en P1 y P2)
 1. Calendario del ciclo (`ciclos/{año}`): inicio y fin del año escolar y de
@@ -218,6 +242,8 @@ posteriores a la carga.
    datos de prueba en producción.
 7. Cada rule que lea otro documento (por ejemplo, la ventana) cuenta como
    lectura: el agente debe estimar ese costo.
+8. P2 debe comparar custom claims contra `get()` para leer roles en las
+   rules (costo de lecturas por inscripción).
 
 ## 9. Carga de la oferta y de usuarios
 - La oferta se carga SOLO desde la vista de Coordinador (ya existe, sin
@@ -264,7 +290,8 @@ de mi aprobación y datos que necesitás de mí.
 
 | # | Plan | Para cuándo |
 |---|------|-------------|
-| P0 | Modelo: requisitos del plan (formato en JSON, cálculo de avance, condicionalidad de cursada). plantilla 662x y generación | Antes de seguir cargando JSON |
+| P0 | Requisitos: auditoría de JSON y completar requisitos (formato ya implementado) | En curso |
+| P0b | Editor con requisitos, plantilla 662X y generación por letra; incluye `exportarJSONValidado`. Depende de P0 | Después de P0 |
 | P1 | Modelo: calendario, ventanas y oferta, compatible con la carga de Coordinador | Diciembre |
 | P2 | Modelo: inscripciones (colección plana, `activa`/`baja`, auditoría, pase, conteo de cupo), rules, `esPrueba` | Diciembre |
 | P3 | Coordinador: ver y editar la oferta (ocupación por secuencia, editar cupo/aula/horario/docente, agregar comisiones; no cambiar ni eliminar una secuencia con inscriptos activos) | Diciembre |
@@ -298,7 +325,6 @@ Notas por plan:
 ## 12. Mis tareas (fuera de los planes)
 - Preparar y subir los JSON de la mayoría de los planes, con al menos el
   año 0 listo.
-- Acotar `planes.json` a los planes vigentes.
 - Revisar la planilla de inscripciones de los coordinadores y probar la
   exportación para generar datos de prueba.
 - Probar la carga de oferta de Coordinador antes de P4.
@@ -306,11 +332,8 @@ Notas por plan:
 - Cargar el calendario académico 2027 cuando se publique.
 
 ## 13. Preguntas abiertas globales
-- ¿Cuántos planes con pregrado existen y cuáles tienen JSON válido?
-- ¿Los optativos solo se informan o se valida el mínimo al inscribirse?
 - ¿Los obligatorios específicos se sugieren o se exigen?
 - ¿"equivale_a" sirve también para las equivalencias del trámite de pase?
 - ¿Qué permisos tiene el Admin sobre datos personales? ¿Puede el Bedel
   modificar datos de docentes?
 - Estudiantes condicionales: ¿cómo afectan la oferta?
-- ¿el mínimo de los grupos se mide en cantidad de espacios o en horas?
