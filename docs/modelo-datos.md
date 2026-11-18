@@ -947,6 +947,23 @@ deben cumplirse; no reemplaza a `correlativas`, que sigue rigiendo la elegibilid
 > El ejemplo es **ilustrativo**. Los mínimos reales de los seminarios del `662` y de los EDI de
 > `663`-`666` los define Coordinación; no se deducen del JSON actual.
 
+**Conmutable vs. optativo.** La diferencia no está en la cantidad de candidatos, sino en qué
+representan:
+
+| | Conmutable | Optativo |
+|---|---|---|
+| Qué representa | Varias materias que ocupan **el mismo espacio** | Materias **distintas**, con contenidos distintos |
+| Qué se exige | **1**, cualquiera de ellas | **N de M** (N < M): hay que acumular N |
+| Relación entre candidatos | Alternativas intercambiables | Se suman entre sí |
+| `minimo` | `1` | `1 ≤ minimo < candidatos.length` |
+| Ejemplo real | `R-0-03`: Piano **o** Guitarra cubren “Lenguaje musical” | `R-2-OPT`: **2 de 5** seminarios |
+| Si cursa dos | La segunda no suma a este requisito; queda como sobrante | La segunda suma hasta el mínimo; el resto queda sobrante |
+
+En una frase: **conmutable = “esto o esto otro”** (con una alcanza); **optativo = “N de este
+menú”** (hay que juntar N). Por eso `tipo` es explícito: un “1 de 3” puede ser conmutable (tres
+formas de cubrir el mismo espacio) u optativo (tres talleres de los que basta uno), y lo define
+Coordinación, no la cantidad de candidatos.
+
 Reglas:
 
 - `id` único y estable dentro del plan. `etiqueta` es opcional.

@@ -81,18 +81,18 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 - Dónde: en el documento de inscripción (hoy `usuarios/{uid}/inscripciones{ciclo}`, `useInscripciones.js:19-25`; P2 la pasa a colección plana). El campo previsto es `condicionCursada` (`modelo-datos.md:368-390`); ningún código lo lee ni lo escribe (grep).
 - `fechaLimite` sale de `ciclos/{anio}`: `fin` si la cursada es anual y `periodos[].cierreCursada` para `1C`/`2C` (`modelo-datos.md:447-468`). El período ya está en el JSON (662: 63 anual, 12 `1C`, 16 `2C`). `ciclos` no existe (`modelo-datos.md:106`).
 - No usar `ofertaAcademica.etapas[].desde/hasta`: son ventanas de inscripción (`useOfertaAcademica.js:11-20`), no fin de cursada. Se congela al registrar; sin calendario queda `null` y no se autovence.
-- **SUPUESTO:** una cursada con condición pendiente no acredita hasta resolverse. Las transiciones no se deciden acá (§10).
+- **DECIDIDO (18/11/2026):** la condicionalidad es exclusiva de la cursada y dura como máximo la cursada. Si al terminar no se levantó la condición, el estudiante pierde el cursado aunque haya aprobado el espacio; no hay prórroga. **Pendiente:** quién resuelve la condición y con qué auditoría.
 
 ## 10. Preguntas abiertas
-1. ¿El mínimo de un grupo se mide en espacios o en horas?
-2. ¿Los optativos se informan o se validan al inscribirse?
-3. ¿Cuántos seminarios exige 662 y si `0.5.x`/`0.6.x` son conmutables u optativos?
-4. ¿En 664-666 `1.1` exige uno o los siete EDI? ¿Y `663-1.1`, sin correlativas?
-5. ¿Una equivalencia a un plan distinto de la madre (663 en 664) es error o es legítima?
-6. ¿Una materia acreditada puede cumplir dos requisitos vía `equivale_a` en los datos reales, o se corrige para que no ocurra?
-7. Condicionalidad: ¿qué pasa al vencer, hay prórroga, quién la resuelve y con qué auditoría? ¿Afecta el avance o solo la acreditación?
-8. ¿El avance se muestra a los estudiantes en 2027 o queda interno hasta que exista historial?
-9. ¿Los planes con requisitos incompletos siguen `disponible: true`?
+1. **RESUELTA (18/11/2026):** el mínimo se mide en **espacios**; nada se mide en horas ni créditos.
+2. **RESUELTA (18/11/2026):** el sistema **informa el mínimo** y permite inscribirse o cursar más espacios que el mínimo; no bloquea el exceso. Hoy `espaciosDisponibles` deja de ofrecer optativos al llegar al mínimo: revisar si la vista debe seguir mostrando el resto como sobrantes.
+3. **RESUELTA EN ALCANCE (18/11/2026):** los seminarios son espacios optativos de 3.º o 4.º año; no hay seminarios en pregrado, así que no hace falta resolverlos para 2027. Los EDI son espacios de pregrado, obligatorios en algunos planes y optativos en otros; los mínimos los definen los coordinadores al revisar los planes. `R-2-OPT` conserva el defecto de año (`662.json:37-43`) para corregirlo en esa revisión.
+4. **PENDIENTE (datos):** faltan cargar correlativas y revisar los planes. La vista se está preparando para instruir a los coordinadores; ellos definen si `1.1` exige uno o los siete EDI y si `663-1.1` debe tener correlativas.
+5. **RESUELTA (18/11/2026):** una equivalencia a un plan distinto de la madre es legítima, no un error: hay espacios que no existen en 662 y son comunes a varias letras (662Letra y 665 son muy similares). El criterio para emparejarlos es el **nombre del espacio**: la denominación debe coincidir.
+6. **RESUELTA (18/11/2026):** son **errores de carga**; hay que revisarlos y corregirlos para que no ocurra. Caso real: `662-0.3.1` (Instrumento - Piano) equivale a `662-0.1` (`662.json:60`), único candidato de `R-0-01`; acreditar Piano también cumple Audioperceptiva. Ídem `662-0.3.2 → 662-0.2` (`:66`).
+7. **RESUELTA EN PARTE (18/11/2026):** la condicionalidad es exclusiva de la cursada y dura como máximo la cursada. Al terminar, si no se levantó la condición, se pierde el cursado aunque el espacio esté aprobado; no hay prórroga. **Pendiente:** quién la resuelve y con qué auditoría. El cálculo de avance no necesita conocerla: se alimenta de lo que esté acreditado.
+8. **RESUELTA (18/11/2026):** en 2027 el estudiante ve, al menos al principio, **solo sus cursadas activas** según las inscripciones. El avance no se muestra por ahora; se revisa a futuro.
+9. **RESUELTA (18/11/2026):** los planes con requisitos incompletos **siguen `disponible: true`**; Coordinación carga los requisitos de pregrado.
 
 ## 11. Decisiones para mí
 1. Congelar el formato `requisitos` vigente, sin campos nuevos.
@@ -101,9 +101,9 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 4. Aprobar que `normalizarPlanJson` conserve `requisitos` y `equivale_a`, y que exportar exija validación (cambio de código, no de modelo). **Hecho en E2 (validación) y E3 (conservación).**
 5. Aprobar el orden: equivalencias y códigos antes de cargar requisitos; por plan; sin tocar `disponible`.
 6. Aprobar que `acreditadas` viaje con `planCodigo` cuando exista historial.
-7. Aprobar `condicionCursada` en la inscripción y `fechaLimite` desde `ciclos`; transiciones a preguntas abiertas.
+7. Aprobar `condicionCursada` en la inscripción y `fechaLimite` desde `ciclos`. **Regla confirmada (18/11/2026):** exclusiva de la cursada, vence con ella y sin prórroga se pierde el cursado aunque el espacio esté aprobado. Falta definir quién la resuelve y la auditoría.
 8. Aprobar que P0 no cree historial ni vistas: cálculo puro + fixtures.
-9. Aprobar corregir `662 R-2-OPT`, `663-` y las equivalencias auto/colgadas.
+9. Aprobar corregir `662 R-2-OPT`, `663-`, las equivalencias auto/colgadas y el doble cómputo `662-0.3.1 → 0.1` / `0.3.2 → 0.2` (errores de carga confirmados el 18/11/2026).
 
 ## 12. Etapas
 ### E1 — Advertencias y alcance del cálculo

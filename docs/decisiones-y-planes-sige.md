@@ -61,6 +61,10 @@ posteriores a la carga.
   hecho por el estudiante desde la app queda para P8.
 - Una sola inscripción activa por estudiante y materia (definir cómo se
   garantiza).
+- Condicionalidad de cursada: es exclusiva de la cursada y dura como máximo
+  la cursada. Si al terminar no se levantó la condición, el estudiante
+  pierde el cursado aunque haya aprobado el espacio; no hay prórroga.
+  Quién la resuelve y con qué auditoría: a definir.
 
 ## 4. Elegibilidad (tres niveles, no mezclar)
 1. Por ventana: qué planes y años pueden inscribirse. Es dato de la ventana,
@@ -119,7 +123,10 @@ posteriores a la carga.
   algunos espacios que no están en el 662 (662Letra y 665 son muy
   similares), por eso algunos `equivale_a` apuntan a otros planes. "662 es
   el plan madre" es una simplificación. Evaluar aparte (no bloquea
-  febrero).
+  febrero). Confirmado (18/11/2026): no es un error; para emparejar
+  espacios vale el nombre del espacio (la denominación debe coincidir).
+- El doble cómputo de `662` (`662-0.3.1 → 662-0.1` y `0.3.2 → 0.2`) son
+  **errores de carga** (confirmado 18/11/2026): corregir las equivalencias.
 - Un espacio puede tener distinto año en distintos planes (siempre
   obligatorios, con correlativas ya chequeadas).
 
@@ -137,9 +144,10 @@ posteriores a la carga.
 - El formato `requisitos` YA está implementado (ver `src/utils/requisitos.js`
   y `P0-plan-modelo-requisitos.md`). Solo el 708 es válido y completo; 662 a 666
   están incompletos. Antes de febrero se completan al menos los requisitos
-  de pregrado y de 1.er año. Los seminarios son de 4.° año y no importan
-  para 2027. Los EDI son de pregrado: revisarlos define los mínimos y
-  optativos de pregrado.
+  de pregrado y de 1.er año. Los seminarios son espacios optativos de 3.º o
+  4.º año (no hay seminarios en pregrado) y no importan para 2027. Los EDI
+  son de pregrado, obligatorios en algunos planes y optativos en otros: los
+  mínimos los definen los coordinadores al revisar los planes.
 - Estado del P0 (18/11/2026): el código está cerrado (E1 advertencias de
   doble cómputo, E2 validación agregada y gate de exportación, E3
   normalización que conserva `requisitos`/`equivale_a`, E4 auditoría). Falta
@@ -149,10 +157,14 @@ posteriores a la carga.
   montado en `EditorPlanes.vue:383`), valida el plan completo y bloquea la
   exportación con errores. La revisión de coordinadores puede empezar ya: lo
   que falta no es editor, es el dato aprobado.
-- En 2027 los optativos solo se informan (no se valida el mínimo al
-  inscribirse). El avance NO se muestra a estudiantes.
+- En 2027 el estudiante ve solo sus cursadas activas (según las
+  inscripciones). En los optativos el sistema informa el mínimo y permite
+  inscribirse o cursar más espacios que el mínimo (no bloquea el exceso).
+  El avance NO se muestra. Se revisa a futuro.
 - Los mínimos se miden en espacios (nada en la escuela se calcula por horas
   ni créditos).
+- Los planes con requisitos incompletos siguen `disponible: true`
+  (confirmado 18/11/2026); Coordinación carga los requisitos de pregrado.
 
 ### Planes 662 con letra (plantilla 662X)
 - Hay 18 planes activos, 662A a 662Q incluida la 662Ñ (lista en

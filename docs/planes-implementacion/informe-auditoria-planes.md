@@ -88,10 +88,12 @@ numeración: `662*-1.5→662-1.7`, `662*-3.2→662-4.3`, `662*-3.8→662-2.5`
 (`662x.json:151,373,406`).
 
 ## 5. Preguntas abiertas
-1. `662-0.6.4`, `662-0.6.5` y `662-0.6.6` no existen en `662.json`, pero cinco
-   planes las referencian: ¿faltan materias en `662` o sobran esas referencias?
-2. ¿Las equivalencias `EDI … → Espacio …` son válidas? Deben coincidir por
-   nombre según el criterio del pedido y hoy no coinciden.
+1. **RESUELTA (18/11/2026):** no faltan materias en `662` ni sobran
+   referencias: hay espacios que no existen en `662` y son comunes a varios
+   planes (662Letra y 665 son muy similares). Es legítimo.
+2. **RESUELTA EN PARTE (18/11/2026):** las equivalencias a otros planes son
+   válidas; el criterio de emparejamiento es el **nombre del espacio** (la
+   denominación debe coincidir). Revisar solo los casos donde no coincida.
 3. `663` referencia `663-0.7.1` a `663-0.7.8`: ¿el plan debe tener esos códigos
    o las 9 equivalencias están mal escritas?
 4. `R-2-OPT` (`662.json:37-43`): ¿el año correcto es 4 (el de sus 5
@@ -100,8 +102,8 @@ numeración: `662*-1.5→662-1.7`, `662*-3.2→662-4.3`, `662*-3.8→662-2.5`
    interno debería ser `662x` y sus códigos `662x-*` en lugar de `662*-*`?
 6. Las coberturas de `662`-`666` (10-18 materias) vs. `708` (29 de 29): ¿el
    avance de esos planes se mide solo por año o faltan requisitos por declarar?
-7. El doble cómputo de `662`: ¿`Instrumento - Piano` acredita Audioperceptiva a
-   propósito o la equivalencia apunta al código equivocado?
+7. **RESUELTA (18/11/2026):** son **errores de carga**; corregir las
+   equivalencias para que no ocurra.
 
 ## 6. Qué se hizo
 Se ejecutó la normalización real de `planes.js` y una réplica exacta de
