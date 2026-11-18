@@ -190,4 +190,86 @@ describe('useEditorPlanesVista.js', () => {
     confirm.mockRestore()
     wrapper.unmount()
   })
+
+  it('exportarDetalle descarga si el plan es válido (las advertencias no bloquean)', async () => {
+    h.route = { query: {} }
+    h.replace = vi.fn(() => Promise.resolve())
+    h.cargarBorrador.mockResolvedValue({
+      exito: true,
+      datos: { jsonTexto: PLAN_JSON, nombre: 'Plan 663', estadoRevision: 'en_edicion' }
+    })
+
+    const crear = vi.fn(() => 'blob:plan')
+    const revocar = vi.fn()
+    const crearOriginal = URL.createObjectURL
+    const revocarOriginal = URL.revokeObjectURL
+    URL.createObjectURL = crear
+    URL.revokeObjectURL = revocar
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    const { wrapper, api } = await montarVista()
+    await api.abrirBorrador('663')
+    await api.exportarDetalle()
+
+    expect(crear).toHaveBeenCalledTimes(1)
+    expect(revocar).toHaveBeenCalledTimes(1)
+    expect(click).toHaveBeenCalled()
+    expect(api.mensajeExport.value).toBe('Detalle 663.json descargado.')
+    // El plan no tiene requisitos: se advierte, no se bloquea.
+    expect(api.advertencias.value).toContain('El plan no tiene requisitos.')
+
+    URL.createObjectURL = crearOriginal
+    URL.revokeObjectURL = revocarOriginal
+    wrapper.unmount()
+  })
+
+  it('exportarDetalle bloquea si la validación tiene errores', async () => {
+    h.route = { query: {} }
+    h.replace = vi.fn(() => Promise.resolve())
+    h.cargarBorrador.mockResolvedValue({
+      exito: true,
+      datos: { jsonTexto: PLAN_JSON, nombre: 'Plan 663', estadoRevision: 'en_edicion' }
+    })
+
+    const crear = vi.fn(() => 'blob:plan')
+    const crearOriginal = URL.createObjectURL
+    URL.createObjectURL = crear
+
+    const { wrapper, api } = await montarVista()
+    await api.abrirBorrador('663')
+    api.onActualizarCampo('nombre', '   ')
+    await api.exportarDetalle()
+
+    expect(crear).not.toHaveBeenCalled()
+    expect(api.errores.value.length).toBeGreaterThan(0)
+    expect(api.mensajeExport.value).toContain('No se puede exportar')
+
+    URL.createObjectURL = crearOriginal
+    wrapper.unmount()
+  })
+
+  it('copiarDetalle bloquea si la validación tiene errores', async () => {
+    h.route = { query: {} }
+    h.replace = vi.fn(() => Promise.resolve())
+    h.cargarBorrador.mockResolvedValue({
+      exito: true,
+      datos: { jsonTexto: PLAN_JSON, nombre: 'Plan 663', estadoRevision: 'en_edicion' }
+    })
+
+    const escribir = vi.fn(() => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: escribir },
+      configurable: true
+    })
+
+    const { wrapper, api } = await montarVista()
+    await api.abrirBorrador('663')
+    api.onActualizarCampo('nombre', '')
+    await api.copiarDetalle()
+
+    expect(escribir).not.toHaveBeenCalled()
+    expect(api.mensajeExport.value).toContain('No se puede exportar')
+
+    wrapper.unmount()
+  })
 })

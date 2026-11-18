@@ -9,6 +9,7 @@
 
 import { anioDeMateria } from './planes.js'
 import { validarCondicion } from './condiciones.js'
+import { validarParametrosPlan, validarRequisitos } from './requisitos.js'
 
 /**
  * Detecta códigos de materia duplicados en un mapa de materias.
@@ -168,5 +169,42 @@ export function validarMaterias(materias) {
     ...validarFilasSinCodigo(materias)
   ]
   const advertencias = validarEquivalencias(materias)
+  return { exito: errores.length === 0, errores, advertencias }
+}
+
+/**
+ * Valida un plan completo: materias, requisitos y parámetros.
+ *
+ * Es el gate de publicación/exportación: `exito: false` bloquea; las
+ * advertencias solo informan. La ausencia de `requisitos` es advertencia (el
+ * plan puede ser un borrador), pero un requisito mal formado o una materia sin
+ * requisito son errores.
+ *
+ * @param {{ materias?: Record<string, Object>, requisitos?: Object[], parametros?: Object }} plan
+ * @returns {{ exito: boolean, errores: string[], advertencias: string[] }}
+ */
+export function validarPlan(plan) {
+  const materias =
+    plan?.materias && typeof plan.materias === 'object' && !Array.isArray(plan.materias)
+      ? plan.materias
+      : {}
+
+  const resultadoMaterias = validarMaterias(materias)
+  const resultadoRequisitos = validarRequisitos(
+    { materias, requisitos: plan?.requisitos },
+    { permitirAusente: true }
+  )
+  const resultadoParametros = validarParametrosPlan(plan?.parametros)
+
+  const errores = [
+    ...resultadoMaterias.errores,
+    ...resultadoRequisitos.errores,
+    ...resultadoParametros.errores
+  ]
+  const advertencias = [
+    ...resultadoMaterias.advertencias,
+    ...resultadoRequisitos.advertencias
+  ]
+
   return { exito: errores.length === 0, errores, advertencias }
 }

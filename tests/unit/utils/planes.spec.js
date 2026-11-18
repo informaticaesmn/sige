@@ -16,6 +16,7 @@ import {
   tienePregrado,
   validarPlanDetalle
 } from '@/utils/planes.js'
+import { calcularAvancePlan } from '@/utils/requisitos.js'
 
 /** Lee un JSON real de `public/planes/` desde el filesystem. */
 function leerPlan(codigo) {
@@ -88,6 +89,68 @@ describe('normalizarPlanJson', () => {
     expect(estadoInicialDePlan(plan708)).toBe('activo')
   })
 
+  it('conserva los requisitos y las equivalencias del plan 662', () => {
+    expect(plan662.requisitos.map((requisito) => requisito.id)).toEqual([
+      'R-0-01',
+      'R-0-02',
+      'R-0-03',
+      'R-1-01',
+      'R-2-OPT'
+    ])
+    expect(plan662.materias['662-0.3.1'].equivale_a).toEqual(['662-0.1'])
+    expect(plan662.materias['662-0.1'].equivale_a).toEqual([])
+  })
+
+  it('calcula avance con el plan normalizado (708)', () => {
+    const avance = calcularAvancePlan(plan708, [])
+
+    expect(plan708.requisitos).toHaveLength(29)
+    expect(avance.valido).toBe(true)
+    expect(avance.errores).toEqual([])
+    expect(avance.total.espaciosRequeridos).toBe(29)
+  })
+
+  it('normaliza un plan sin requisitos pero no inventa avance', () => {
+    const json = { plan: '999', materias: { '999-0.1': { nombre: 'Única' } } }
+    const plan = normalizarPlanJson(json, '999')
+
+    expect(plan.disponible).toBe(true)
+    expect(plan.requisitos).toEqual([])
+
+    const avance = calcularAvancePlan(plan, ['999-0.1'])
+    expect(avance.valido).toBe(false)
+    expect(avance.errores).toContain('El plan no tiene requisitos.')
+  })
+
+  it('no bloquea la normalización por requisitos inválidos (carga masiva intacta)', () => {
+    // La disponibilidad depende del catálogo y de las materias, no de los
+    // requisitos: un plan con requisitos incompletos sigue disponible para el
+    // alta de usuarios, igual que antes de conservarlos.
+    const json = {
+      plan: '999',
+      materias: { '999-0.1': { nombre: 'Única' }, '999-0.2': { nombre: 'Suelta' } },
+      requisitos: [
+        { id: 'R-0-01', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['999-0.1'] }
+      ]
+    }
+    const plan = normalizarPlanJson(json, '999')
+
+    expect(plan.disponible).toBe(true)
+    expect(plan.requisitos).toHaveLength(1)
+    // `999-0.2` no pertenece a ningún requisito: lo reporta el cálculo, pero
+    // el normalizador no cambia `disponible`.
+    expect(calcularAvancePlan(plan, []).valido).toBe(false)
+  })
+
+  it('normaliza un `equivale_a` suelto a una lista', () => {
+    const json = {
+      plan: '999',
+      materias: { '999-1.1': { nombre: 'Con equivalencia', equivale_a: '999-1.2' } }
+    }
+    const plan = normalizarPlanJson(json, '999')
+    expect(plan.materias['999-1.1'].equivale_a).toEqual(['999-1.2'])
+  })
+
   it('marca un legacy con plan interno distinto como no disponible', () => {
     // `662G.json` se retiró del repo; el formato legacy se sigue leyendo para
     // reportarlo como no disponible sin romper.
@@ -101,6 +164,7 @@ describe('normalizarPlanJson', () => {
     expect(plan.motivo).toContain('62G')
     expect(plan.motivo).toContain('662G')
     expect(plan.materias).toEqual({})
+    expect(plan.requisitos).toEqual([])
     expect(estadoInicialDePlan(plan)).toBeNull()
   })
 
@@ -124,6 +188,8 @@ describe('normalizarPlanJson', () => {
       cursar: ['999.0.1'],
       aprobar: []
     })
+    expect(resultado.materias['999.0.1'].equivale_a).toEqual([])
+    expect(resultado.requisitos).toEqual([])
     expect(tienePregrado(resultado)).toBe(true)
     expect(estadoInicialDePlan(resultado)).toBe('ingresante')
   })

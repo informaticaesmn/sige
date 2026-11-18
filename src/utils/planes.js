@@ -4,7 +4,8 @@
 //
 // La fuente de verdad de los planes es doble:
 // - `planes.json` lista códigos y nombres.
-// - `{codigo}.json` contiene las materias y sus correlatividades.
+// - `{codigo}.json` contiene las materias, sus correlatividades, sus
+//   equivalencias y (desde 11/2026) sus requisitos.
 //
 // Este módulo normaliza ambos formatos históricos y decide si un plan está
 // disponible para darse de alta. Un plan no disponible (JSON ausente, formato
@@ -114,9 +115,24 @@ function planNoDisponible(codigo, motivo, extra = {}) {
     nombre: null,
     formato: null,
     materias: {},
+    requisitos: [],
     motivo,
     ...extra
   }
+}
+
+/**
+ * Normaliza `equivale_a` a una lista de códigos.
+ *
+ * Acepta un array o un único código suelto (los JSON históricos usan las dos
+ * formas) y descarta vacíos. `[]` significa "no declara equivalencias".
+ *
+ * @param {string|string[]|null|undefined} valor
+ * @returns {string[]}
+ */
+function normalizarEquivalencias(valor) {
+  const codigos = Array.isArray(valor) ? valor : valor == null ? [] : [valor]
+  return codigos.map((codigo) => String(codigo).trim()).filter(Boolean)
 }
 
 /**
@@ -139,7 +155,10 @@ function normalizarMateriaObjeto(id, datos) {
       nombre_c: datos?.nombre_c ?? datos?.nombreCorto ?? null,
       nombreCorto: datos?.nombre_c ?? datos?.nombreCorto ?? null,
       cursada: datos?.cursada ?? null,
-      correlativas: datos?.correlativas ?? null
+      correlativas: datos?.correlativas ?? null,
+      // Se conserva para que el plan normalizado pueda calcular avance y se
+      // pueda advertir el doble cómputo (utils/requisitos.js).
+      equivale_a: normalizarEquivalencias(datos?.equivale_a)
     },
     motivo: null
   }
@@ -188,6 +207,9 @@ function normalizarFormatoObjeto(json, codigo) {
     nombre: json?.nombre || codigo,
     formato: FORMATOS_PLAN.OBJETO,
     materias,
+    // Los requisitos se conservan tal cual: `validarRequisitos` y
+    // `calcularAvancePlan` los normalizan y validan por su cuenta.
+    requisitos: Array.isArray(json?.requisitos) ? json.requisitos : [],
     motivo: null
   }
 }
@@ -257,7 +279,10 @@ function normalizarFormatoLegacy(json, codigo) {
       correlativas: {
         cursar: Array.isArray(item?.CodC) ? item.CodC : [],
         aprobar: Array.isArray(item?.CodA) ? item.CodA : []
-      }
+      },
+      // El formato legacy no declara equivalencias; se deja la lista vacía
+      // para que la forma de la materia sea la misma en ambos formatos.
+      equivale_a: []
     }
   }
 
@@ -275,6 +300,8 @@ function normalizarFormatoLegacy(json, codigo) {
     nombre: `Plan ${planInterno}`,
     formato: FORMATOS_PLAN.LEGACY,
     materias,
+    // El formato legacy no tiene requisitos propios.
+    requisitos: [],
     motivo: null
   }
 }
@@ -294,6 +321,7 @@ function normalizarFormatoLegacy(json, codigo) {
  *   nombre: string|null,
  *   formato: string|null,
  *   materias: Record<string, Object>,
+ *   requisitos: Object[],
  *   motivo: string|null
  * }}
  */

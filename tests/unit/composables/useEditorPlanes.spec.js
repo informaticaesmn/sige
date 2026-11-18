@@ -144,6 +144,27 @@ describe('useEditorPlanes.js', () => {
     expect(editor.advertencias.value.some((a) => a.includes('plan madre'))).toBe(true)
   })
 
+  it('validar acepta el plan completo y solo advierte equivalencias externas', async () => {
+    await editor.importarJSONPlan({
+      plan: '663',
+      requisitos: [
+        { id: 'R-0-01', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['663-0.1'] },
+        { id: 'R-0-02', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['663-0.2'] }
+      ],
+      materias: {
+        '663-0.1': { nombre: 'Audio', equivale_a: ['662-0.1'] },
+        '663-0.2': { nombre: 'Instrumento' }
+      }
+    })
+
+    const res = await editor.validar()
+
+    expect(res.exito).toBe(true)
+    expect(res.errores).toEqual([])
+    expect(res.advertencias.join(' ')).toContain('plan madre')
+    expect(editor.valido.value).toBe(true)
+  })
+
   it('preserva requisitos y equivalencias al importar y exportar', async () => {
     const plan = {
       plan: '663',

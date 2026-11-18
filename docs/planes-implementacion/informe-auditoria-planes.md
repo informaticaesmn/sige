@@ -1,6 +1,6 @@
 # Informe de auditoría — JSON de planes en `public/planes/`
 > 16/11/2026. Solo lectura de código y JSON; no se modificó ningún plan.
-> Contraparte: `plan-modelo-requisitos.md` (§12, E4). `VERIFICADO` = leído o
+> Contraparte: `P0-plan-modelo-requisitos.md` (§12, E4). `VERIFICADO` = leído o
 > ejecutado sobre los archivos; lo dudoso va a “Preguntas abiertas”.
 
 ## 1. Resumen por JSON

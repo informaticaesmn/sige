@@ -7,7 +7,7 @@
 
 import { ref, computed } from 'vue'
 import {
-  validarMaterias,
+  validarPlan,
   detectarPregrado
 } from '@/utils/validacionPlanes.js'
 import {
@@ -15,7 +15,6 @@ import {
   condicionAJson
 } from '@/utils/condiciones.js'
 import { anioDeMateria } from '@/utils/planes.js'
-import { validarRequisitos } from '@/utils/requisitos.js'
 
 /**
  * Normaliza el valor de cursada a uno de los valores válidos de SIGE.
@@ -553,28 +552,22 @@ export function useEditorPlanes() {
   /**
    * Ejecuta validaciones sobre el mapa actual de materias y los requisitos.
    *
-   * La ausencia de requisitos no bloquea la exportación (el plan puede ser un
+   * Usa `validarPlan`, el mismo gate que la exportación: materias, requisitos
+   * y parámetros. La ausencia de requisitos no bloquea (el plan puede ser un
    * borrador), pero se informa como advertencia.
    *
    * @returns {Promise<{ exito: boolean, errores: string[], advertencias: string[] }>}
    */
   async function validar() {
-    const resultado = validarMaterias(materias.value)
-    const resultadoRequisitos = validarRequisitos(
-      {
-        materias: materias.value,
-        requisitos: requisitosPlan.value.map(serializarRequisito)
-      },
-      { permitirAusente: true }
-    )
+    const resultado = validarPlan({
+      materias: materias.value,
+      requisitos: requisitosPlan.value.map(serializarRequisito)
+    })
 
-    errores.value = [...resultado.errores, ...resultadoRequisitos.errores]
-    advertencias.value = [
-      ...(resultado.advertencias || []),
-      ...resultadoRequisitos.advertencias
-    ]
-    valido.value = errores.value.length === 0
-    return { exito: valido.value, errores: errores.value, advertencias: advertencias.value }
+    errores.value = resultado.errores
+    advertencias.value = resultado.advertencias
+    valido.value = resultado.exito
+    return { exito: resultado.exito, errores: errores.value, advertencias: advertencias.value }
   }
 
   // ---------------------------------------------------------------------------

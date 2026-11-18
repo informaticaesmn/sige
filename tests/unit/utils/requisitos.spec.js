@@ -583,6 +583,89 @@ describe('calcularAvancePlan', () => {
     expect(resultado.total.espaciosCumplidos).toBe(2)
   })
 
+  it('devuelve advertencias vacías en un plan consistente', () => {
+    const resultado = calcularAvancePlan(crearPlanT(), [])
+    expect(resultado.advertencias).toEqual([])
+  })
+
+  it('avisa cuando una equivalencia cuenta para dos requisitos', () => {
+    const plan = crearPlan(
+      {
+        'A-1.1': { id: 'A-1.1', anio: 1, equivale_a: ['A-1.2'] },
+        'A-1.2': { id: 'A-1.2', anio: 1 }
+      },
+      [
+        {
+          id: 'R-1-01',
+          anio: 1,
+          tipo: 'obligatorio',
+          minimo: 1,
+          candidatos: ['A-1.1']
+        },
+        {
+          id: 'R-1-02',
+          anio: 1,
+          tipo: 'obligatorio',
+          minimo: 1,
+          candidatos: ['A-1.2']
+        }
+      ]
+    )
+    const resultado = calcularAvancePlan(plan, ['A-1.2'])
+
+    // Una sola acreditada cumple los dos requisitos: doble cómputo.
+    expect(resultado.valido).toBe(true)
+    expect(resultado.total.cumplidos).toBe(2)
+    expect(resultado.advertencias).toHaveLength(1)
+    expect(resultado.advertencias[0]).toContain('"A-1.1"')
+    expect(resultado.advertencias[0]).toContain('"R-1-01"')
+    expect(resultado.advertencias[0]).toContain('"R-1-02"')
+  })
+
+  it('una auto-equivalencia es error y no genera advertencia de doble cómputo', () => {
+    const plan = crearPlan(
+      { 'B-1.1': { id: 'B-1.1', anio: 1, equivale_a: ['B-1.1'] } },
+      [
+        {
+          id: 'R-1-01',
+          anio: 1,
+          tipo: 'obligatorio',
+          minimo: 1,
+          candidatos: ['B-1.1']
+        }
+      ]
+    )
+    const resultado = calcularAvancePlan(plan, ['B-1.1'])
+
+    expect(resultado.valido).toBe(false)
+    expect(hayError(resultado.errores, 'equivalente a sí misma')).toBe(true)
+    expect(resultado.advertencias).toEqual([])
+    expect(resultado.total.cumplidos).toBe(1)
+  })
+
+  it('un plan inválido reporta errores y no inventa advertencias', () => {
+    const plan = crearPlan(
+      {
+        'P-1.1': { id: 'P-1.1', anio: 1 },
+        'P-1.2': { id: 'P-1.2', anio: 1 }
+      },
+      [
+        {
+          id: 'R-1-01',
+          anio: 1,
+          tipo: 'obligatorio',
+          minimo: 1,
+          candidatos: ['P-1.1']
+        }
+      ]
+    )
+    const resultado = calcularAvancePlan(plan, ['P-1.1'])
+
+    expect(resultado.valido).toBe(false)
+    expect(hayError(resultado.errores, 'no pertenece a ningún requisito')).toBe(true)
+    expect(resultado.advertencias).toEqual([])
+  })
+
   it('acepta acreditadas como objetos o Set', () => {
     const plan = crearPlanT()
     const comoObjetos = calcularAvancePlan(plan, [

@@ -1206,5 +1206,5 @@ solo advierte y el plan puede seguir `disponible` sin avance calculable.
 - [importar-oferta.md](importar-oferta.md) — carga de la oferta académica.
 - [planes-implementacion/propuesta-modelo-datos-requisitos.md](planes-implementacion/propuesta-modelo-datos-requisitos.md)
   — propuesta completa de requisitos, historial, condicionalidad y parámetros.
-- [planes-implementacion/plan-modelo-requisitos.md](planes-implementacion/plan-modelo-requisitos.md)
-  — preguntas y decisiones previas a la propuesta.
+- [planes-implementacion/P0-plan-modelo-requisitos.md](planes-implementacion/P0-plan-modelo-requisitos.md)
+  — plan P0: requisitos, avance y estado de las etapas.

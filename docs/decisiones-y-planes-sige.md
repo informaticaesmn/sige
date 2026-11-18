@@ -79,8 +79,9 @@ posteriores a la carga.
   existe hasta generar los 662Letra. No es asignable a estudiantes.
 - Todos los planes tienen pregrado (materias con año 00), con la única
   excepción del 0708.
-- `planes.json` está acotado a los planes vigentes. [Confirmar si incluye
-  los 18 planes con letra y si excluye 662x.]
+- `planes.json` está acotado a los planes vigentes. Verificado: 29
+  entradas; incluye las 18 letras (662A a 662Q, con Ñ) y NO incluye 662x.
+  `disponible: true` solo en 662, 663, 664, 665, 666 y 708.
 - Estoy preparando los JSON de la mayoría de los planes, con al menos el
   año 0.
 - Dependencia crítica (D8): si una fila de la carga masiva referencia un
@@ -90,8 +91,9 @@ posteriores a la carga.
   normalizados, requisitos (ver abajo) y `equivale_a` donde corresponda.
 - Circuito de planes: editor (`planesPendientes`, con revisión y
   comentarios) → coordinador marca "listo" → exportación del JSON validado
-  (`exportarJSONValidado`, en la vista de Coordinación para todo
-  coordinador; pendiente, posterior a P0) → yo lo copio a `public/planes`.
+  (`exportarDetalle` por plan, que ya valida y bloquea con errores:
+  `useEditorPlanesVista.js:543-573`; `exportarJSONValidado` para la generación
+  por letra sigue pendiente, P0b) → yo lo copio a `public/planes`.
   La app en ejecución lee solo los estáticos. `planesPublicados` queda
   inactivo y documentado (sin botón ni seed).
 - Verificado: el editor guarda en Firestore (`planesPendientes`) y los
@@ -133,11 +135,20 @@ posteriores a la carga.
 - El avance se mide en requisitos cumplidos, se calcula al leer y no se
   guarda.
 - El formato `requisitos` YA está implementado (ver `src/utils/requisitos.js`
-  y `plan-modelo-requisitos.md`). Solo el 708 es válido y completo; 662 a 666
+  y `P0-plan-modelo-requisitos.md`). Solo el 708 es válido y completo; 662 a 666
   están incompletos. Antes de febrero se completan al menos los requisitos
   de pregrado y de 1.er año. Los seminarios son de 4.° año y no importan
   para 2027. Los EDI son de pregrado: revisarlos define los mínimos y
   optativos de pregrado.
+- Estado del P0 (18/11/2026): el código está cerrado (E1 advertencias de
+  doble cómputo, E2 validación agregada y gate de exportación, E3
+  normalización que conserva `requisitos`/`equivale_a`, E4 auditoría). Falta
+  E5: cargar y corregir los requisitos con aprobación de Coordinación.
+  Defectos por plan en `informe-auditoria-planes.md`.
+- El editor ya edita requisitos y candidatos (`EditorRequisitos.vue`,
+  montado en `EditorPlanes.vue:383`), valida el plan completo y bloquea la
+  exportación con errores. La revisión de coordinadores puede empezar ya: lo
+  que falta no es editor, es el dato aprobado.
 - En 2027 los optativos solo se informan (no se valida el mínimo al
   inscribirse). El avance NO se muestra a estudiantes.
 - Los mínimos se miden en espacios (nada en la escuela se calcula por horas
@@ -160,8 +171,9 @@ posteriores a la carga.
 - Antes de propagar: mostrar diferencias y pedir confirmación, validar los 18
   resultados y abortar todo si falla alguno, no cambiar ni borrar códigos ya
   usados, y registrar quién, cuándo y versión.
-- La plantilla se arma en el formato de requisitos de P0. No se generan
-  archivos hasta cerrar P0.
+- La plantilla se arma en el formato de requisitos de P0 (ya implementado).
+  Hoy `662x` no tiene requisitos: cargarlos es parte de P0b. No se generan
+  archivos hasta que P0 cierre los datos (E5).
 - Dependencia: verificar dónde guarda hoy el editor de planes (Firestore o
   archivos estáticos). De eso depende que la generación automática sea viable.
 - Riesgos: la Ñ en ids, nombres de archivo, claves y comparaciones (probar
@@ -290,8 +302,8 @@ de mi aprobación y datos que necesitás de mí.
 
 | # | Plan | Para cuándo |
 |---|------|-------------|
-| P0 | Requisitos: auditoría de JSON y completar requisitos (formato ya implementado) | En curso |
-| P0b | Editor con requisitos, plantilla 662X y generación por letra; incluye `exportarJSONValidado`. Depende de P0 | Después de P0 |
+| P0 | Requisitos: auditoría de JSON y completar requisitos (formato ya implementado) | Código cerrado; falta E5 (datos) |
+| P0b | Editor con requisitos, plantilla 662X y generación por letra; incluye `exportarJSONValidado`. Depende de P0 | Plan listo; implementar tras P0-E5 |
 | P1 | Modelo: calendario, ventanas y oferta, compatible con la carga de Coordinador | Diciembre |
 | P2 | Modelo: inscripciones (colección plana, `activa`/`baja`, auditoría, pase, conteo de cupo), rules, `esPrueba` | Diciembre |
 | P3 | Coordinador: ver y editar la oferta (ocupación por secuencia, editar cupo/aula/horario/docente, agregar comisiones; no cambiar ni eliminar una secuencia con inscriptos activos) | Diciembre |
@@ -302,6 +314,12 @@ de mi aprobación y datos que necesitás de mí.
 | P8 | Solicitudes: pedido de pase y corrección de datos | Posterior |
 
 Notas por plan:
+- P0: código cerrado (E1-E4); E5 es carga de datos con revisión de
+  Coordinación, y el editor ya sirve para esa revisión. Detalle en
+  `P0-plan-modelo-requisitos.md` e `informe-auditoria-planes.md`.
+- P0b: plan escrito en `plan-planes-letra.md` (5 etapas). Puede implementarse
+  antes de E5, pero la generación real aborta hasta que la plantilla tenga
+  requisitos aprobados.
 - P1: describir qué estructura escribe hoy la carga de oferta, qué pasa al
   recargar (reemplaza, fusiona o duplica), cómo corregir la oferta sin vista
   de edición, y qué cambiaría en ese componente (solo como propuesta).

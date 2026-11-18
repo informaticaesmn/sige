@@ -194,6 +194,51 @@ function materiaAcreditada(codigo, materia, acreditadas) {
 }
 
 /**
+ * Detecta códigos que pueden cumplir dos requisitos a la vez.
+ *
+ * Un candidato se acredita por su código o por alguna de sus `equivale_a`. Si
+ * esa equivalencia es candidata de otro requisito, acreditar una sola materia
+ * suma en ambos. No es un error de formato: se informa como advertencia porque
+ * el dato real puede ser legítimo (equivalencias con el plan madre).
+ *
+ * Solo mira el plan: no depende de datos globales ni de `acreditadas`.
+ *
+ * @param {Object[]} requisitos requisitos crudos del plan
+ * @param {Record<string, Object>} materias mapa `codigo → materia`
+ * @returns {string[]} advertencias, sin repetir pares
+ */
+function advertenciasDeDobleComputo(requisitos, materias) {
+  const requisitoDeCandidato = new Map()
+  for (const requisito of requisitos) {
+    const id = texto(requisito?.id) || 'requisito sin id'
+    for (const codigo of normalizarCodigos(requisito?.candidatos)) {
+      if (!requisitoDeCandidato.has(codigo)) requisitoDeCandidato.set(codigo, id)
+    }
+  }
+
+  const advertencias = []
+  const vistas = new Set()
+  for (const requisito of requisitos) {
+    const id = texto(requisito?.id) || 'requisito sin id'
+    for (const codigo of normalizarCodigos(requisito?.candidatos)) {
+      for (const equivalencia of equivalenciasDe(materias[codigo])) {
+        const idDestino = requisitoDeCandidato.get(equivalencia)
+        if (!idDestino || idDestino === id) continue
+
+        const clave = `${id}|${codigo}|${equivalencia}`
+        if (vistas.has(clave)) continue
+        vistas.add(clave)
+
+        advertencias.push(
+          `"${codigo}" (requisito "${id}") equivale a "${equivalencia}", candidato de "${idDestino}": acreditar una puede cumplir ambos requisitos.`
+        )
+      }
+    }
+  }
+  return advertencias
+}
+
+/**
  * Valida los requisitos de un plan.
  *
  * Revisa ids, años, tipos, mínimos, candidatos, partición de materias y
@@ -364,13 +409,15 @@ function acreditadasSinRequisito(requisitos, materias, acreditadas) {
  * @returns {{
  *   valido: boolean,
  *   errores: string[],
+ *   advertencias: string[],
  *   requisitos: Object[],
  *   anios: Object[],
  *   total: Object
  * }}
  */
 export function calcularAvancePlan(plan, acreditadas) {
-  const { errores } = validarRequisitos(plan)
+  const validacion = validarRequisitos(plan)
+  const { errores } = validacion
   const materias = mapaMaterias(plan)
   const codigosAcreditados = normalizarAcreditadas(acreditadas)
   const requisitosRaw = Array.isArray(plan?.requisitos) ? plan.requisitos : []
@@ -445,6 +492,10 @@ export function calcularAvancePlan(plan, acreditadas) {
   return {
     valido: errores.length === 0,
     errores,
+    advertencias: [
+      ...validacion.advertencias,
+      ...advertenciasDeDobleComputo(requisitosRaw, materias)
+    ],
     requisitos,
     anios,
     total

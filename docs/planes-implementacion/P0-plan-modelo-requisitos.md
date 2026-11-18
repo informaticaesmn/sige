@@ -15,12 +15,12 @@
 | `708.json` | `708` | 29 | 29 | 29 | **sí** | 0 |
 | `662x.json` | `662Letra` | 72 | 0 | 0 | **no** | 43 |
 
-- "Cubiertas" = materias que pertenecen a algún requisito. La partición exige todas y `validarRequisitos` reporta las que faltan (`requisitos.js:323-327`): solo `708` la cumple.
-- `calcularAvancePlan` devuelve `valido: false` si la validación falla (`requisitos.js:373, 446`): hoy **solo 708 tiene avance calculable**.
+- "Cubiertas" = materias que pertenecen a algún requisito. La partición exige todas y `validarRequisitos` reporta las que faltan (`requisitos.js:367-372`): solo `708` la cumple.
+- `calcularAvancePlan` devuelve `valido: false` si la validación falla (`requisitos.js:419, 493`): hoy **solo 708 tiene avance calculable**.
 - `planes.json` marca `disponible: true` en 662, 663, 664, 665, 666 y 708 (L4-6, 99-101, 104-106, 109-111, 114-116, 119-121). Letras (L9-97) y 389-393 (L123-147) en `false`; ninguno de ellos tiene JSON. **VERIFICADO:** contradice `modelo-datos.md:857-871` (solo 662 y 708).
 
 ## 2. Casos reales de conmutables y optativos
-- **En `requisitos`:** `662.json:21-27` `R-0-03` conmutable 1 de 2 (`0.3.1`/`0.3.2`, Piano/Guitarra); `662.json:37-43` `R-2-OPT` optativo 2 de 5 (seminarios `4.13.1-3` y `4.16.1-2`) con un **defecto**: declara `anio: 2` y los candidatos son de año 4, y `validarRequisitos` lo rechaza (`requisitos.js:314-316`). 663-666 solo tienen `R-0-03` (`663.json:21-27`); 708 no tiene ninguno (29 obligatorios).
+- **En `requisitos`:** `662.json:21-27` `R-0-03` conmutable 1 de 2 (`0.3.1`/`0.3.2`, Piano/Guitarra); `662.json:37-43` `R-2-OPT` optativo 2 de 5 (seminarios `4.13.1-3` y `4.16.1-2`) con un **defecto**: declara `anio: 2` y los candidatos son de año 4, y `validarRequisitos` lo rechaza (`requisitos.js:359-361`). 663-666 solo tienen `R-0-03` (`663.json:21-27`); 708 no tiene ninguno (29 obligatorios).
 - **Implícitas en `correlativas` (sin requisito):** `662.json:112-132` — `1.1` exige en `cursar` uno de `0.3.1/0.3.2`, uno de `0.5.1-3` y uno de `0.6.1-3`. Hay **11 grupos `or`**: además `1.2.x` (L1202-1236), `1.3.x`, `3.2.x`, `3.4.1-5` (L1448-1530) y `3.6.1-5` (L1562-1645); no cruzan años.
 - `664.json:276-285`, `665.json:268-277`, `666.json:268-277` — `1.1` exige uno de siete EDI `0.6.x`. `663-1.1` no tiene correlativas (verificado: sin clave).
 - **SUPUESTO:** esos grupos son conmutables u optativos reales. El mínimo (1, 2, 3...) lo define Coordinación: no se deduce del `or`.
@@ -49,27 +49,27 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 6. Corregir las equivalencias de §6 antes de habilitar la validación. No cambiar `disponible`: 663-666 ya están en `true` y quedarían con avance inválido hasta terminar sus requisitos.
 ### 5.2 Lectores del JSON y riesgo
 - **Inscripción:** no lee planes. `InscripcionesE.vue:132` usa `ofertaAcademica`; `useInscripciones.js:12-33` solo escribe. **No se rompe.**
-- **Carga masiva:** `useImportarUsuarios.js:129-161` → `validarPlanDetalle` → `normalizarPlanJson`, que solo usa `disponible`, `materias` y pregrado. Es aditivo: **no se rompe**, pero no ve `requisitos`.
+- **Carga masiva:** `useImportarUsuarios.js:129-161` → `validarPlanDetalle` → `normalizarPlanJson`, que para el alta solo usa `disponible`, `materias` y pregrado. Desde E3 el plan normalizado también conserva `requisitos` y `equivale_a`, que la carga masiva ignora: **no se rompe**.
 - **Vidriera:** `usePlanesEstudio.js:16-32` hace `fetch` del JSON crudo y conserva las claves nuevas (las ignora).
-- **Único que necesita el JSON crudo:** `calcularAvancePlan`; hoy no lo llama ninguna vista (grep en `src/`).
+- **Consumidor del plan completo:** `calcularAvancePlan` acepta el JSON crudo o el normalizado (E3); hoy no lo llama ninguna vista (grep en `src/`).
 ### 5.3 Editor de planes
-- Ya importa y exporta `requisitos` (`useEditorPlanes.js:205-207, 561-569, 677-689`) y `equivale_a` (`107-128, 670`): round-trip correcto.
-- **Hueco 1:** exportar no valida (`useEditorPlanesVista.js:536-540` vs. `522-525`): se puede descargar un plan inválido.
-- **Hueco 2:** `generarJSONDetalle` no emite `parametros` (`useEditorPlanes.js:678-690`); fuera de alcance, pero se pierde al editar.
-- **Hueco 3:** `normalizarPlanJson` descarta `requisitos` y `equivale_a` (`src/utils/planes.js:128-146, 184-192`).
+- Ya importa y exporta `requisitos` (`useEditorPlanes.js:205-207, 561-568, 670-683`) y `equivale_a` (`106-127, 663`): round-trip correcto.
+- **Exportación (E2):** `exportarDetalle`/`copiarDetalle` validan con `validarPlan` y bloquean con errores; las advertencias no bloquean (`useEditorPlanesVista.js:543-573`).
+- **Hueco 2:** `generarJSONDetalle` no emite `parametros` (`useEditorPlanes.js:671-683`); fuera de alcance, pero se pierde al editar.
+- **Conservación (E3):** `normalizarPlanJson` conserva `requisitos` (`src/utils/planes.js:210-212`) y `equivale_a` por materia (`125-137, 161`), también `[]` en legacy y en planes no disponibles (`118, 285, 304`). La disponibilidad no depende de los requisitos: la carga masiva sigue igual.
 
 ## 6. Cálculo de avance (contrato verificado)
-- `calcularAvancePlan(plan, acreditadas)` (`requisitos.js:372-452`), pura, sin Vue ni Firestore. `plan` es el JSON crudo (o equivalente con `materias` y `requisitos`); `acreditadas` acepta códigos, objetos `{codigo}` o `Set` (`98-125`), y hoy solo se usa `codigo` (`planCodigo` se ignora).
+- `calcularAvancePlan(plan, acreditadas)` (`requisitos.js:418-503`), pura, sin Vue ni Firestore. `plan` es el JSON crudo o el resultado de `normalizarPlanJson` (desde E3 conserva `requisitos` y `equivale_a`); `acreditadas` acepta códigos, objetos `{codigo}` o `Set` (`98-125`), y hoy solo se usa `codigo` (`planCodigo` se ignora).
 - **Por requisito:** `{ id, etiqueta, anio, tipo, minimo, candidatos, acreditados, cumplidos, faltan, estado, sobrantes }`; `acreditados` son solo los que cuentan hasta el mínimo y `sobrantes` el resto. **Por año:** `{ anio, requisitos, cumplidos, completo }`.
 - **Total:** `{ requisitos, cumplidos, pendientes, avance, espaciosRequeridos, espaciosCumplidos, sobrantes, acreditadasSinRequisito }`. `avance = cumplidos / requisitos` (medida oficial); `espacios*` y `sobrantes` son diagnóstico.
-- **`equivale_a`:** un candidato cuenta si está acreditado su código o alguno de sus `equivale_a`; es dirigida y **no se encadena** (`190-194`). Un código satisface dos requisitos solo si ambos lo declaran (hay test). Lo acreditado de más va a `sobrantes` y no reemplaza otro requisito; lo ajeno a todo requisito va a `acreditadasSinRequisito` (`339-350`).
-- **Hueco:** se descartan las `advertencias` de `validarRequisitos` (`requisitos.js:373`) y no se avisa del doble cómputo que pide `modelo-datos.md:1001-1003`. Solo es confiable con `valido: true`; con un plan inválido el cálculo igual cuenta y no deduplica entre requisitos.
+- **`equivale_a`:** un candidato cuenta si está acreditado su código o alguno de sus `equivale_a`; es dirigida y **no se encadena** (`190-194`). Un código satisface dos requisitos solo si ambos lo declaran (hay test). Lo acreditado de más va a `sobrantes` y no reemplaza otro requisito; lo ajeno a todo requisito va a `acreditadasSinRequisito` (`384-395`).
+- **Advertencias (E1, hecho):** `calcularAvancePlan` devuelve `advertencias` (`requisitos.js:495-498`): las de `validarRequisitos` más las de doble cómputo por `equivale_a` (`210-245`), sin datos globales. Sigue siendo confiable solo con `valido: true`: con un plan inválido el cálculo igual cuenta y no deduplica entre requisitos.
 - **Datos que hoy lo rompen:** auto-equivalencias `664-0.7.1/2/3` (`664.json:197, 206, 215`) y `662*-0.7.1/2/3` (`662x.json:64, 73, 82`); equivalencias a códigos propios inexistentes (`663-0.5 → 663-0.7.5` en `663.json:167`; `664-0.6 → 664-0.7.5` en `664.json:188`; `662*-0.6 → 662*-0.7.6` en `662x.json:55`); equivalencias a un plan que no es la madre (`664-0.1`, `665-0.1`, `666-0.1` → `663-0.1`, `equivale_a` en L146 de los tres; `662*-0.1 → 663-0.1` en `662x.json:10`); y doble cómputo en 662 (`0.3.1 → 0.1` en L60 y `0.3.2 → 0.2` en L66, cuando `0.1`/`0.2` son candidatos de `R-0-01`/`R-0-02`).
 
 ## 7. Lo que P0b necesita de este formato
 - **Plantilla 662X:** copiar `requisitos` y `equivale_a` a cada letra y remapear el prefijo (`662-...` → `662G-...`); `662*` no debe salir al JSON. Cada plan generado debe pasar `validarRequisitos`: la partición se rompe si el instrumento (candidato) se renombra mal.
 - **Generación por letra:** `id` estables e iguales entre letras; cambia el candidato del instrumento, no el requisito. Si los optativos difieren por letra, la plantilla no alcanza.
-- **`exportarJSONValidado`:** necesita un `validarPlan(plan)` agregado (materias + requisitos + parámetros); hoy el editor valida pero la exportación no lo exige (§5.3).
+- **`exportarJSONValidado`:** `validarPlan(plan)` ya existe (E2); falta que la generación por letra lo exija antes de exportar.
 
 ## 8. Historial académico: dónde vive y si alcanza
 - **No existe.** `trayectoriaAcademica` y `resumenAcademico` son diseño (`modelo-datos.md:498-683`); `ultimaAcreditacion` está previsto pero no se escribe (`3.1`, L148-149). `HAcademico.vue:1-5` es un cartel de “no disponible” y `useInscripciones.js:27-33` guarda `pendiente`, sin nota ni acreditación.
@@ -97,8 +97,8 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 ## 11. Decisiones para mí
 1. Congelar el formato `requisitos` vigente, sin campos nuevos.
 2. Aprobar que sin partición completa no se calcule avance (`valido: false`) y no se muestre un porcentaje parcial.
-3. Aprobar que `calcularAvancePlan` devuelva `advertencias` y avise del doble cómputo (cambio de código).
-4. Aprobar que `normalizarPlanJson` conserve `requisitos` y `equivale_a`, y que exportar exija validación (cambio de código, no de modelo).
+3. Aprobar que `calcularAvancePlan` devuelva `advertencias` y avise del doble cómputo (cambio de código). **Hecho en E1.**
+4. Aprobar que `normalizarPlanJson` conserve `requisitos` y `equivale_a`, y que exportar exija validación (cambio de código, no de modelo). **Hecho en E2 (validación) y E3 (conservación).**
 5. Aprobar el orden: equivalencias y códigos antes de cargar requisitos; por plan; sin tocar `disponible`.
 6. Aprobar que `acreditadas` viaje con `planCodigo` cuando exista historial.
 7. Aprobar `condicionCursada` en la inscripción y `fechaLimite` desde `ciclos`; transiciones a preguntas abiertas.
@@ -109,14 +109,17 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 ### E1 — Advertencias y alcance del cálculo
 - **Objetivo:** informar el doble cómputo sin depender de datos globales. **Archivos:** `src/utils/requisitos.js` y su spec.
 - **Pasos:** agregar `advertencias` (las de `validarRequisitos` más la de código compartido); tests de 1→2, auto-equivalencia y plan inválido.
+- **HECHO (18/11/2026):** `calcularAvancePlan` devuelve `advertencias`; `advertenciasDeDobleComputo` detecta el 1→2. Specs: 52 tests en `requisitos.spec.js`.
 - **No se toca:** JSON, vistas, editor, Firestore. **Lecturas:** ninguna. **Verificación:** `npx vitest run tests/unit/utils/requisitos.spec.js`.
 ### E2 — Validación agregada y gate de exportación
 - **Objetivo:** `validarPlan(plan)` que sume materias, requisitos y parámetros; exportar solo si pasa. **Archivos:** `src/utils/validacionPlanes.js`, `useEditorPlanes.js`, `useEditorPlanesVista.js` y sus specs.
 - **Pasos:** componer el resultado; bloquear `exportarDetalle`/`copiarDetalle` con errores; mostrar advertencias sin bloquear.
+- **HECHO (18/11/2026):** `validarPlan` en `validacionPlanes.js:186`; el editor valida con él (`useEditorPlanes.js:561`) y la vista bloquea con errores (`useEditorPlanesVista.js:543-573`).
 - **No se toca:** JSON publicados, reglas, vistas de estudiante. **Lecturas:** ninguna nueva (validación en memoria; el borrador se abre con el flujo actual). **Verificación:** specs del editor y round-trip importar→exportar.
 ### E3 — Normalización que conserva el plan completo
 - **Objetivo:** que `normalizarPlanJson` no pierda `requisitos` ni `equivale_a`. **Archivos:** `src/utils/planes.js` y sus specs.
 - **Pasos:** agregarlos al plan normalizado; confirmar que la carga masiva no cambia (`estadoInicialDePlan`, `tienePregrado`).
+- **HECHO (18/11/2026):** `normalizarPlanJson` devuelve `requisitos` y `equivale_a` (`planes.js:210-212, 161`); `disponible` no cambia y `calcularAvancePlan` funciona con el plan normalizado. Specs: 36 tests en `planes.spec.js` (incluye un 708 normalizado con avance válido 29/29) y 8 de `useImportarUsuarios` intactos.
 - **No se toca:** JSON, Firestore, editor. **Lecturas:** ninguna. **Verificación:** specs de `planes` y `useImportarUsuarios`; un plan normalizado debe calcular avance.
 ### E4 — Auditoría de los 7 JSON (solo lectura)
 - **Objetivo:** informe de defectos por plan (materias sin requisito, años cruzados, `663-`, equivalencias auto/colgadas, grupos `or` sin requisito). **Archivos:** script de solo lectura en `scripts/` o informe manual.
@@ -131,6 +134,6 @@ Ya definido (`modelo-datos.md:913-969`), implementado y en uso. Se propone **con
 - Los 7 JSON ya declaran `requisitos`, pero solo 708 es válido y completo (29/29); 662-666 cubren entre 10 y 18 materias y 662x no tiene ninguno.
 - Hay conmutables/optativos declarados (662 `R-0-03`, `R-2-OPT`) y 11 grupos `or` implícitos en 662; el mínimo lo define Coordinación.
 - El formato `xxxx-AA-NN.N` no se usa: es `{plan}-{año}.{n}`; `708` no aparece como `0708` y las letras no tienen JSON.
-- El cálculo puro ya existe y está testeado; faltan advertencias, gate de exportación y conservar el plan completo al normalizar.
+- El cálculo puro ya existe y está testeado; E1 (advertencias de doble cómputo), E2 (gate de exportación) y E3 (conservar el plan completo al normalizar) están hechos. Solo queda E5, que depende de Coordinación.
 - No hay historial: el avance se prueba con fixtures hasta que exista.
 - Condicionalidad: campo en la inscripción y `fechaLimite` desde `ciclos`.

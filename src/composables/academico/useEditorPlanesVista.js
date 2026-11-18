@@ -532,9 +532,27 @@ export function useEditorPlanesVista() {
     mensajeExport.value = 'Catálogo planes.json descargado.'
   }
 
+  /**
+   * Valida el plan abierto y devuelve el JSON de detalle si se puede exportar.
+   *
+   * Los errores bloquean (`null` y mensaje en `mensajeExport`); las
+   * advertencias solo quedan visibles en la UI y no impiden exportar.
+   *
+   * @returns {Promise<Object|null>}
+   */
+  async function generarDetalleExportable() {
+    const resultado = await validarComposable()
+    if (!resultado.exito) {
+      mensajeExport.value = `No se puede exportar: hay ${resultado.errores.length} error(es) de validación.`
+      return null
+    }
+    return generarJSONDetalle({ revisadoPor: user.value?.uid || null })
+  }
+
   /** Exporta el detalle del plan abierto. */
-  function exportarDetalle() {
-    const detalle = generarJSONDetalle({ revisadoPor: user.value?.uid || null })
+  async function exportarDetalle() {
+    mensajeExport.value = ''
+    const detalle = await generarDetalleExportable()
     if (!detalle) return
     descargarJSON(detalle, `${planCodigo.value}.json`)
     mensajeExport.value = `Detalle ${planCodigo.value}.json descargado.`
@@ -542,7 +560,8 @@ export function useEditorPlanesVista() {
 
   /** Copia el detalle del plan abierto al portapapeles. */
   async function copiarDetalle() {
-    const detalle = generarJSONDetalle({ revisadoPor: user.value?.uid || null })
+    mensajeExport.value = ''
+    const detalle = await generarDetalleExportable()
     if (!detalle) return
 
     try {

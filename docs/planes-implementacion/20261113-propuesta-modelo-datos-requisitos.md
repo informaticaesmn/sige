@@ -3,7 +3,7 @@
 > 11/11/2026. **Aplicado** a `modelo-datos.md` el 11/11/2026 como extensión v3. No se
 > modificó código. Se conserva como documento de trabajo y fundamento de las decisiones.
 > Incorpora las respuestas del 11/11 a las preguntas abiertas de
-> [`plan-modelo-requisitos.md`](plan-modelo-requisitos.md).
+> [`P0-plan-modelo-requisitos.md`](P0-plan-modelo-requisitos.md).
 > **VERIFICADO** = leído en archivo; **PROPUESTA** = cambio a aprobar.
 
 ## 1. La opción en una página
@@ -801,7 +801,7 @@ Orden aplicado en `modelo-datos.md` el 11/11/2026; se conserva como registro de 
 12. **§11 Migración:** agregar el paso “cargar `requisitos` en los 7 JSON, con revisión
     humana; no inventar mínimos”. No hay migración de Firestore por esto.
 13. **§12 Documentación relacionada:** enlazar este documento y
-    `plan-modelo-requisitos.md`.
+    `P0-plan-modelo-requisitos.md`.
 
 ### 10.1 Antes / después del JSON del plan
 

@@ -1,4 +1,4 @@
-Reemplazado por plan-modelo-requisitos.md; su afirmación sobre requisitos es incorrecta
+Reemplazado por P0-plan-modelo-requisitos.md; su afirmación sobre requisitos es incorrecta
 
 # P0 — Requisitos del plan, avance y condicionalidad de cursada
 > 10/11/2026. Solo lectura de código y JSON. **VERIFICADO** = leído en

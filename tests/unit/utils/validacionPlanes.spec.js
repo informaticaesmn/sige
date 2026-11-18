@@ -6,7 +6,8 @@ import {
   validarCorrelativasExistentes,
   validarEquivalencias,
   validarMaterias,
-  validarNombresMaterias
+  validarNombresMaterias,
+  validarPlan
 } from '@/utils/validacionPlanes.js'
 
 /** Materia base del editor. */
@@ -156,6 +157,83 @@ describe('validarMaterias', () => {
     })
     expect(resultado.exito).toBe(false)
     expect(resultado.errores.length).toBeGreaterThan(0)
+  })
+})
+
+describe('validarPlan', () => {
+  /** Plan mínimo válido: dos materias de año 0, una por requisito. */
+  function planValido() {
+    return {
+      materias: {
+        '663-0.1': materia(),
+        '663-0.2': materia({ nombre: 'Instrumento' })
+      },
+      requisitos: [
+        { id: 'R-0-01', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['663-0.1'] },
+        { id: 'R-0-02', anio: 0, tipo: 'obligatorio', minimo: 1, candidatos: ['663-0.2'] }
+      ]
+    }
+  }
+
+  it('acepta un plan completo sin errores ni advertencias', () => {
+    expect(validarPlan(planValido())).toEqual({
+      exito: true,
+      errores: [],
+      advertencias: []
+    })
+  })
+
+  it('trata la ausencia de requisitos como advertencia, no como error', () => {
+    const resultado = validarPlan({ materias: { '663-0.1': materia() } })
+    expect(resultado.exito).toBe(true)
+    expect(resultado.errores).toEqual([])
+    expect(resultado.advertencias).toContain('El plan no tiene requisitos.')
+  })
+
+  it('bloquea si un requisito es inválido', () => {
+    const plan = planValido()
+    plan.requisitos[0] = {
+      id: 'R-0-01',
+      anio: 0,
+      tipo: 'obligatorio',
+      minimo: 1,
+      candidatos: ['663-0.1', '663-0.2']
+    }
+    const resultado = validarPlan(plan)
+    expect(resultado.exito).toBe(false)
+    expect(resultado.errores.some((e) => e.includes('obligatorio'))).toBe(true)
+  })
+
+  it('bloquea si hay materias sin requisito', () => {
+    const plan = planValido()
+    plan.materias['663-0.3'] = materia({ nombre: 'Suelta' })
+    const resultado = validarPlan(plan)
+    expect(resultado.exito).toBe(false)
+    expect(resultado.errores.some((e) => e.includes('no pertenece a ningún requisito'))).toBe(
+      true
+    )
+  })
+
+  it('bloquea si los parámetros del plan no son válidos', () => {
+    const plan = { ...planValido(), parametros: { version: '2027.1' } }
+    const resultado = validarPlan(plan)
+    expect(resultado.exito).toBe(false)
+    expect(resultado.errores.some((e) => e.includes('"version"'))).toBe(true)
+  })
+
+  it('no bloquea por equivalencias externas y sí por materias sin nombre', () => {
+    const conEquivalencia = planValido()
+    conEquivalencia.materias['663-0.1'] = materia({ equivale_a: ['662-0.1'] })
+
+    const ok = validarPlan(conEquivalencia)
+    expect(ok.exito).toBe(true)
+    expect(ok.advertencias).toHaveLength(1)
+    expect(ok.advertencias[0]).toContain('plan madre')
+
+    conEquivalencia.materias['663-0.2'] = materia({ nombre: '  ' })
+    const conError = validarPlan(conEquivalencia)
+    expect(conError.exito).toBe(false)
+    expect(conError.errores.some((e) => e.includes('no tiene nombre'))).toBe(true)
   })
 })
 
